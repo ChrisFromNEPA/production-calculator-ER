@@ -24,6 +24,37 @@
   let mAutoRotate = true, mWireframe = false, mNormals = true;
   let mFrameId = 0, mViewerInit = false;
 
+  // Motion is presentation-only. Keep model selection and calculations
+  // identical when motion is reduced, while exposing measurable state hooks.
+  function modelsReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function emitModelMetric(type, detail) {
+    var payload = Object.assign({ type: type, at: performance.now() }, detail || {});
+    window.dispatchEvent(new CustomEvent('models:metric', { detail: payload }));
+    if (Array.isArray(window.__CMG_MODEL_METRICS__)) window.__CMG_MODEL_METRICS__.push(payload);
+  }
+
+  function setModelStatus(state, message, entry) {
+    var viewer = document.getElementById('models-viewer');
+    if (!viewer) return;
+    viewer.dataset.modelState = state;
+    viewer.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+    var status = document.getElementById('models-status');
+    if (!status) {
+      status = document.createElement('p');
+      status.id = 'models-status';
+      status.className = 'models-viewer-status';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      viewer.appendChild(status);
+    }
+    status.textContent = message || '';
+    status.hidden = !message;
+    emitModelMetric('state', { state: state, file: entry && entry.file, textured: !!(entry && entry.textured) });
+  }
+
   // ────────────────────────────────────────────────────────────────────────
   // § GALLERY
   // ────────────────────────────────────────────────────────────────────────
@@ -140,7 +171,7 @@
     mControls = new THREE.OrbitControls(mCamera, mRenderer.domElement);
     mControls.enableDamping = true;
     mControls.dampingFactor = 0.08;
-    mControls.autoRotate = mAutoRotate;
+    mControls.autoRotate = mAutoRotate && !modelsReducedMotion();
     mControls.autoRotateSpeed = 1.6;
 
     // lights
@@ -268,7 +299,24 @@
     mScene.add(mNormalsHelper);
   }
 
+  function updateAnimationPicker(entry) {
+    var wrap = document.getElementById('models-animation-wrap');
+    var select = document.getElementById('models-animation');
+    if (!wrap || !select) return;
+    select.replaceChildren(new Option('Camera motion only', ''));
+    var clips = Array.isArray(entry.confirmedAnimations) ? entry.confirmedAnimations : [];
+    var playable = !!(window.CMG_FEATURE_FLAGS?.r3f_v1 && window.cmgLoadR3F);
+    clips.forEach(function (clip) { select.appendChild(new Option(clip, clip)); });
+    select.value = '';
+    wrap.hidden = !playable || clips.length === 0;
+    select.disabled = !playable || clips.length === 0;
+  }
+
   function loadModel(entry) {
+    updateAnimationPicker(entry);
+    var startedAt = performance.now();
+    setModelStatus('loading', 'Loading ' + entry.name + '…', entry);
+    emitModelMetric('load-start', { file: entry.file, textured: !!entry.textured });
     if (!window.CMG_FEATURE_FLAGS?.r3f_v1 && !window.THREE && window.cmgLoadLegacy3D) {
       window.cmgLoadLegacy3D().then(function () { loadModel(entry); }).catch(function (err) {
         console.error('Legacy 3D preview failed:', err);
@@ -279,14 +327,27 @@
       modelsCurrent = entry;
       mCurrentEntry = entry;
       renderModelsGallery();
+      var r3fStage = document.getElementById('models-stage-controls');
+      var r3fName = document.getElementById('models-model-name');
+      var r3fMeta = document.getElementById('models-model-meta');
+      if (r3fStage) r3fStage.hidden = false;
+      if (r3fName) r3fName.textContent = entry.name;
+      if (r3fMeta) r3fMeta.textContent = entry.confirmedAnimations?.length
+        ? entry.confirmedAnimations.length + ' verified gameplay clips · ' + (entry.textured ? 'textured' : 'untextured')
+        : (entry.textured ? 'textured' : 'untextured');
       document.getElementById('models-hint')?.remove();
       var r3fContainer = document.getElementById('models-viewer');
       if (r3fContainer) {
         r3fContainer.replaceChildren();
+        setModelStatus('loading', 'Loading ' + entry.name + '…', entry);
         window.cmgLoadR3F().then(function (api) {
-          api.mount(r3fContainer, { mode: 'gallery', entry: entry });
+          api.mount(r3fContainer, { mode: 'gallery', entry: entry, reducedMotion: modelsReducedMotion() });
+          setModelStatus('ready', entry.textured ? 'Textured model ready.' : 'Model ready; texture unavailable.', entry);
+          emitModelMetric('load-success', { file: entry.file, textured: !!entry.textured, durationMs: performance.now() - startedAt });
         }).catch(function (err) {
           console.error('R3F preview failed:', err);
+          setModelStatus('error', '3D preview unavailable; model metadata remains available. Try selecting it again.', entry);
+          emitModelMetric('load-error', { file: entry.file, error: String(err && err.message || err) });
           r3fContainer.innerHTML = '<div class="models-viewer-hint">3D preview unavailable; metadata remains available.</div>';
         });
       }
@@ -329,15 +390,21 @@
           updateNormalsHelper();
           fitCameraToObject(mCurrentGroup);
           collectModelTextures(gltf);
+          setModelStatus('ready', entry.textured ? 'Textured model ready.' : 'Model ready; texture unavailable.', entry);
+          emitModelMetric('load-success', { file: entry.file, textured: !!entry.textured, durationMs: performance.now() - startedAt });
         } catch (e) {
           console.error('Model setup failed:', entry.file, e);
           if (metaEl) metaEl.textContent += ' — ⚠ setup error';
+          setModelStatus('error', 'Model loaded, but the preview could not be prepared. Metadata remains available.', entry);
+          emitModelMetric('load-error', { file: entry.file, error: String(e && e.message || e) });
         }
       },
       undefined,
       function (err) {
         console.error('Model load failed:', entry.file, err);
         if (metaEl) metaEl.textContent += ' — ⚠ load failed';
+        setModelStatus('error', '3D preview unavailable; model metadata remains available. Try selecting it again.', entry);
+        emitModelMetric('load-error', { file: entry.file, error: String(err && err.message || err) });
       }
     );
   }
@@ -814,7 +881,16 @@
   // § ENTRY (wired from app-init.js)
   // ────────────────────────────────────────────────────────────────────────
 
+  function updateR3fOptIn() {
+    var panel = document.getElementById('models-r3f-optin');
+    var button = document.getElementById('models-enable-r3f');
+    var enabled = !!window.CMG_FEATURE_FLAGS?.r3f_v1;
+    if (panel) panel.hidden = !enabled;
+    if (button) button.disabled = enabled;
+  }
+
   function initModelsView() {
+    updateR3fOptIn();
     var gallery = document.getElementById('models-gallery');
     if (!gallery) return;
     if (!modelsManifest) loadModelsManifest();
@@ -822,6 +898,28 @@
   }
 
   function wireModelsEvents() {
+    window.addEventListener('models:animation', function (event) {
+      var detail = event.detail || {};
+      if (!mCurrentEntry || detail.file !== mCurrentEntry.file) return;
+      var message = detail.state === 'playing'
+        ? 'Playing verified gameplay clip: ' + detail.clip + '.'
+        : (modelsReducedMotion() ? 'Reduced motion enabled; gameplay playback is paused.' : 'Camera motion only.');
+      setModelStatus(detail.state, message, mCurrentEntry);
+      // Metric names include animation-playing / animation-idle for browser QA.
+      emitModelMetric('animation-' + detail.state, { file: detail.file, clip: detail.clip });
+    });
+
+    document.getElementById('models-enable-r3f')?.addEventListener('click', function () {
+      if (typeof window.setCMGFeatureFlag !== 'function') return;
+      window.setCMGFeatureFlag('r3f_v1', true);
+      updateR3fOptIn();
+      var manifestReady = modelsManifest ? Promise.resolve(modelsManifest) : loadModelsManifest();
+      manifestReady.then(function () {
+        if (modelsCurrent) loadModel(modelsCurrent);
+        else setModelStatus('ready', 'Enhanced 3D preview enabled. Select a compatible model to play verified clips.', null);
+      });
+    });
+
     document.getElementById('models-gallery')?.addEventListener('click', function (e) {
       var card = e.target.closest('.model-card');
       if (card && modelsManifest) {
@@ -951,10 +1049,14 @@
       if (window.CMG_FEATURE_FLAGS?.r3f_v1 && window.CMG3D) window.CMG3D.setViewerOptions(options);
     }
 
+    document.getElementById('models-animation')?.addEventListener('change', function () {
+      setR3fViewerOption({ animation: this.value || null });
+    });
+
     document.getElementById('models-autorotate')?.addEventListener('click', function () {
       mAutoRotate = !mAutoRotate;
       this.classList.toggle('active', mAutoRotate);
-      setR3fViewerOption({ autoRotate: mAutoRotate });
+      setR3fViewerOption({ autoRotate: mAutoRotate && !modelsReducedMotion() });
     });
     document.getElementById('models-wireframe')?.addEventListener('click', function () {
       mWireframe = !mWireframe;

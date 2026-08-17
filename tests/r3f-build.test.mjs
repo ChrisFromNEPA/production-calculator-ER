@@ -19,7 +19,7 @@ describe('lazy React/R3F build', () => {
   });
 
   it('loads the bridge lazily and preserves the legacy viewer by default', () => {
-    assert.match(html, /src="src\/ui\/r3f-loader\.js\?v=1"/);
+    assert.match(html, /src="src\/ui\/r3f-loader\.js\?v=2"/);
     assert.match(loader, /src\/generated\/er-3d-workbench\.js/);
     assert.match(html, /data-cmg-r3f-v1="off"/);
     assert.match(readFileSync(join(root, 'src', 'views', 'models.js'), 'utf8'), /r3f_v1/);

@@ -495,6 +495,10 @@
   <section id="view-models" class="view" role="tabpanel" aria-label="Models">
     <h3 class="view-title">🧊 Model &amp; Texture Workbench</h3>
     <p class="muted" style="font-size:0.75rem;max-width:760px">Interactive 3D armor/item viewer from the Empire Rising client. Drag to orbit, scroll to zoom, right-drag to pan. Select a model to inspect its pieces and skin atlases; export textures as PNG for editing, or re-import an edited texture to preview it live. <span id="models-count" class="muted"></span></p>
+    <div class="models-r3f-optin" id="models-r3f-optin" role="status" hidden>
+      <span>Enhanced playback is optional and loads only after you choose it.</span>
+      <button type="button" id="models-enable-r3f" class="models-stage-btn">Enable animated 3D preview</button>
+    </div>
     <div class="models-subtabs">
       <button type="button" id="models-tab-3d" class="models-subtab active">🧊 3D Models</button>
       <button type="button" id="models-tab-studio" class="models-subtab">🧍 Character Studio</button>
@@ -522,6 +526,7 @@
           <div class="models-model-meta" id="models-model-meta"></div>
           <div class="models-stage-buttons">
             <button id="models-autorotate" class="models-stage-btn active" title="Toggle auto-rotate">🔄 Auto</button>
+            <label class="models-stage-animation" id="models-animation-wrap" hidden>🎬 <select id="models-animation" aria-label="Gameplay animation"><option value="">Camera motion only</option></select></label>
             <button id="models-wireframe" class="models-stage-btn" title="Toggle wireframe">🕸️ Wire</button>
             <button id="models-normal" class="models-stage-btn active" title="Toggle face normals">🧭 Normals</button>
             <button id="models-grid" class="models-stage-btn" title="Toggle floor grid">📐 Grid</button>
@@ -724,7 +729,7 @@
 <script src="src/ui/motion.js?v=1"></script>
 <script src="src/app-core.js?v=49"></script>
 <script src="src/ui/value-transition.js?v=1"></script>
-<script src="src/ui/r3f-loader.js?v=1"></script>
+<script src="src/ui/r3f-loader.js?v=2"></script>
 <script src="src/ui/spatial-emphasis.js?v=1"></script>
 <script src="src/app.js?v=82"></script>
 <script src="src/ui/legacy-3d-loader.js?v=1"></script>

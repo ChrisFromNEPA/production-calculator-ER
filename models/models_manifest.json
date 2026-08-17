@@ -1600,6 +1600,24 @@
    "game_category": "Enemies"
   },
   {
+   "file": "Enemies/runner_animated.glb",
+   "name": "runner (animated)",
+   "category": "Enemies",
+   "bytes": 2475492,
+   "dims": [
+    87.4,
+    61.4,
+    135.4
+   ],
+   "nodes": 54,
+   "lods": 10,
+   "game_category": "Enemies",
+   "animationManifest": "Enemies/runner_animation_manifest.json",
+   "confirmedAnimations": [
+    "Idle", "Idle2", "Idle3", "Walk_F", "Walk_B", "Run_F", "Run_B", "Jump", "Fall", "Land", "Attack1", "Attack2", "Attack3", "Stun"
+   ]
+  },
+  {
    "file": "Enemies/runner.glb",
    "name": "runner",
    "category": "Enemies",

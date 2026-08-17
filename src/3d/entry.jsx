@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Canvas } from '@react-three/fiber';
-import { Bounds, Center, Grid, OrbitControls, useGLTF, useTexture } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Bounds, Center, Grid, OrbitControls, useAnimations, useGLTF, useTexture } from '@react-three/drei';
 
 class WebGLErrorBoundary extends React.Component {
   constructor(props) {
@@ -17,8 +17,13 @@ class WebGLErrorBoundary extends React.Component {
   }
 }
 
-function LoadedModel({ entry, options }) {
-  const { scene } = useGLTF(`models/${entry.file}`);
+function LoadedModel({ entry, options, reducedMotion }) {
+  const { scene, animations } = useGLTF(`models/${entry.file}`);
+  const { actions } = useAnimations(animations, scene);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    invalidate();
+  }, [invalidate, scene, animations]);
   useEffect(() => {
     scene.traverse((node) => {
       if (!node.isMesh || !node.material) return;
@@ -26,6 +31,21 @@ function LoadedModel({ entry, options }) {
       materials.forEach((material) => { material.wireframe = Boolean(options?.wireframe); });
     });
   }, [scene, options?.wireframe]);
+  useEffect(() => {
+    Object.values(actions).forEach((action) => action.stop());
+    const name = options?.animation;
+    const detail = { file: entry.file, clip: name || null, state: 'idle' };
+    if (!name || reducedMotion || !actions[name]) {
+      window.dispatchEvent(new CustomEvent('models:animation', { detail }));
+      return undefined;
+    }
+    const action = actions[name];
+    action.reset().fadeIn(0.18).play();
+    window.dispatchEvent(new CustomEvent('models:animation', {
+      detail: { file: entry.file, clip: name, state: 'playing' },
+    }));
+    return () => action.fadeOut(0.12).stop();
+  }, [actions, entry.file, options?.animation, reducedMotion]);
   return <Center><primitive object={scene} dispose={null} /></Center>;
 }
 
@@ -67,7 +87,7 @@ function SceneContents({ entry, options, mode, outfit }) {
       <Grid args={[6, 24]} position={[0, -1.2, 0]} visible={Boolean(options?.grid)} />
       <React.Suspense fallback={null}>
         <Bounds fit clip observe margin={1.2}>
-          {mode === 'studio' && outfit ? <OutfitScene outfit={outfit} /> : entry?.file ? <LoadedModel entry={entry} options={options} /> : (
+          {mode === 'studio' && outfit ? <OutfitScene outfit={outfit} /> : entry?.file ? <LoadedModel entry={entry} options={options} reducedMotion={reducedMotion} /> : (
             <mesh>
               <boxGeometry args={[0.8, 0.8, 0.8]} />
               <meshStandardMaterial color="#ff2d95" wireframe />

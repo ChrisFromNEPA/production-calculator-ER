@@ -1,0 +1,914 @@
+{
+  "schema": "er-ltb-animation-manifest/v1",
+  "modelIdentity": "Enemies/runner",
+  "sourceFormat": "LithTech LTB v9/v25",
+  "sourceSha256": "556988c581420eaa78343376f0792fe610452054553b3bb4c5a58193617773c0",
+  "generatedArtifact": "/tmp/lithparse/runner_animated.glb",
+  "clipCount": 43,
+  "clips": [
+    {
+      "clipIndex": 0,
+      "clipId": "Dims_Default",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 2,
+      "durationMs": 1,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          277293,
+          278289
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 0
+      }
+    },
+    {
+      "clipIndex": 1,
+      "clipId": "Idle",
+      "actionLabel": "idle",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 21,
+      "durationMs": 4000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          278289,
+          288431
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 1
+      }
+    },
+    {
+      "clipIndex": 2,
+      "clipId": "Idle2",
+      "actionLabel": "idle",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 31,
+      "durationMs": 3000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          288431,
+          304114
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 2
+      }
+    },
+    {
+      "clipIndex": 3,
+      "clipId": "Idle3",
+      "actionLabel": "idle",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 31,
+      "durationMs": 4000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          304114,
+          318837
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 3
+      }
+    },
+    {
+      "clipIndex": 4,
+      "clipId": "Walk_F",
+      "actionLabel": "walk_forward",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 21,
+      "durationMs": 1500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          318837,
+          331381
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 4
+      }
+    },
+    {
+      "clipIndex": 5,
+      "clipId": "Walk_B",
+      "actionLabel": "walk_backward",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 21,
+      "durationMs": 1500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          331381,
+          343925
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 5
+      }
+    },
+    {
+      "clipIndex": 6,
+      "clipId": "Run_F",
+      "actionLabel": "run_forward",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 21,
+      "durationMs": 666,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          343925,
+          356468
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 6
+      }
+    },
+    {
+      "clipIndex": 7,
+      "clipId": "Run_B",
+      "actionLabel": "run_backward",
+      "labelConfidence": "confirmed_name",
+      "loopable": true,
+      "keyframes": 21,
+      "durationMs": 666,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          356468,
+          369011
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 7
+      }
+    },
+    {
+      "clipIndex": 8,
+      "clipId": "Turn_L",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": true,
+      "keyframes": 11,
+      "durationMs": 500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          369011,
+          374895
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 8
+      }
+    },
+    {
+      "clipIndex": 9,
+      "clipId": "Turn_R",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": true,
+      "keyframes": 11,
+      "durationMs": 500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          374895,
+          380699
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 9
+      }
+    },
+    {
+      "clipIndex": 10,
+      "clipId": "Attack1",
+      "actionLabel": "attack_1",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          380699,
+          391964
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 10
+      }
+    },
+    {
+      "clipIndex": 11,
+      "clipId": "Attack2",
+      "actionLabel": "attack_2",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          391964,
+          404669
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 11
+      }
+    },
+    {
+      "clipIndex": 12,
+      "clipId": "Attack3",
+      "actionLabel": "attack_3",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 16,
+      "durationMs": 500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          404669,
+          413604
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 12
+      }
+    },
+    {
+      "clipIndex": 13,
+      "clipId": "Death1",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          413604,
+          426308
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 13
+      }
+    },
+    {
+      "clipIndex": 14,
+      "clipId": "Death1_still",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 2,
+      "durationMs": 200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          426308,
+          427304
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 14
+      }
+    },
+    {
+      "clipIndex": 15,
+      "clipId": "Death2",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          427304,
+          440008
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 15
+      }
+    },
+    {
+      "clipIndex": 16,
+      "clipId": "Death2_still",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 2,
+      "durationMs": 200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          440008,
+          441004
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 16
+      }
+    },
+    {
+      "clipIndex": 17,
+      "clipId": "Death3",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          441004,
+          453708
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 17
+      }
+    },
+    {
+      "clipIndex": 18,
+      "clipId": "Death3_still",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 2,
+      "durationMs": 200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          453708,
+          454704
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 18
+      }
+    },
+    {
+      "clipIndex": 19,
+      "clipId": "Death4",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          454704,
+          467408
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 19
+      }
+    },
+    {
+      "clipIndex": 20,
+      "clipId": "Death4_still",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 2,
+      "durationMs": 200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          467408,
+          468404
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 20
+      }
+    },
+    {
+      "clipIndex": 21,
+      "clipId": "Recoil_T",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 166,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          468404,
+          471960
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 21
+      }
+    },
+    {
+      "clipIndex": 22,
+      "clipId": "Recoil_LS",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 167,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          471960,
+          475477
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 22
+      }
+    },
+    {
+      "clipIndex": 23,
+      "clipId": "Recoil_RS",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 167,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          475477,
+          478954
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 23
+      }
+    },
+    {
+      "clipIndex": 24,
+      "clipId": "Recoil_H",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 166,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          478954,
+          482550
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 24
+      }
+    },
+    {
+      "clipIndex": 25,
+      "clipId": "Recoil_RA",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 167,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          482550,
+          486147
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 25
+      }
+    },
+    {
+      "clipIndex": 26,
+      "clipId": "Recoil_LA",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 167,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          486147,
+          489624
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 26
+      }
+    },
+    {
+      "clipIndex": 27,
+      "clipId": "Recoil_RL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 166,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          489624,
+          493101
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 27
+      }
+    },
+    {
+      "clipIndex": 28,
+      "clipId": "Recoil_LL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 6,
+      "durationMs": 167,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          493101,
+          496618
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 28
+      }
+    },
+    {
+      "clipIndex": 29,
+      "clipId": "Transition",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 666,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          496618,
+          509166
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 29
+      }
+    },
+    {
+      "clipIndex": 30,
+      "clipId": "WB_A1_CL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          509166,
+          521880
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 30
+      }
+    },
+    {
+      "clipIndex": 31,
+      "clipId": "WalkHurt_F",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          521880,
+          534428
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 31
+      }
+    },
+    {
+      "clipIndex": 32,
+      "clipId": "RB_A1_CL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 666,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          534428,
+          547138
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 32
+      }
+    },
+    {
+      "clipIndex": 33,
+      "clipId": "WalkHurt_B",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1500,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          547138,
+          559846
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 33
+      }
+    },
+    {
+      "clipIndex": 34,
+      "clipId": "WF_A1_TL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 16,
+      "durationMs": 1000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          559846,
+          569506
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 34
+      }
+    },
+    {
+      "clipIndex": 35,
+      "clipId": "WB_A1_TL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 16,
+      "durationMs": 1000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          569506,
+          579166
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 35
+      }
+    },
+    {
+      "clipIndex": 36,
+      "clipId": "RF_A1_TL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 16,
+      "durationMs": 700,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          579166,
+          588826
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 36
+      }
+    },
+    {
+      "clipIndex": 37,
+      "clipId": "RB_A1_TL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 16,
+      "durationMs": 700,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          588826,
+          598486
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 37
+      }
+    },
+    {
+      "clipIndex": 38,
+      "clipId": "Jump",
+      "actionLabel": "jump",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 11,
+      "durationMs": 333,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          598486,
+          605248
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 38
+      }
+    },
+    {
+      "clipIndex": 39,
+      "clipId": "Fall",
+      "actionLabel": "fall",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 2,
+      "durationMs": 200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          605248,
+          606236
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 39
+      }
+    },
+    {
+      "clipIndex": 40,
+      "clipId": "Land",
+      "actionLabel": "land",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 11,
+      "durationMs": 333,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          606236,
+          613078
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 40
+      }
+    },
+    {
+      "clipIndex": 41,
+      "clipId": "Stun",
+      "actionLabel": "stun",
+      "labelConfidence": "confirmed_name",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1000,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          613078,
+          623860
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 41
+      }
+    },
+    {
+      "clipIndex": 42,
+      "clipId": "WF_A1_CL",
+      "actionLabel": null,
+      "labelConfidence": "unlabeled",
+      "loopable": false,
+      "keyframes": 21,
+      "durationMs": 1200,
+      "source": {
+        "archive": "/home/hermes/er-client-download/EmpireRisingLive.zip",
+        "internalPath": "EmpireRisingLive/game/Resources/Models/Enemies/runner.ltb",
+        "byteRange": [
+          623860,
+          636574
+        ]
+      },
+      "generated": {
+        "glb": "runner_animated.glb",
+        "animationIndex": 42
+      }
+    }
+  ],
+  "sourceBytes": 638134
+}

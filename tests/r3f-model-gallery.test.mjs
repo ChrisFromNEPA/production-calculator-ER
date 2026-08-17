@@ -27,6 +27,29 @@ describe('R3F model gallery', () => {
     assert.match(entry, /<Bounds[^>]*fit[^>]*clip[^>]*observe[^>]*margin=\{1\.2\}/);
   });
 
+  it('invalidates the demand-render frame after an animated model resolves', () => {
+    assert.match(entry, /useThree/);
+    assert.match(entry, /invalidate\(\)/);
+  });
+
+  it('plays only manifest-confirmed clips and disables playback for reduced motion', () => {
+    assert.match(entry, /useAnimations\(animations, scene\)/);
+    assert.match(entry, /options\?\.animation/);
+    assert.match(entry, /CustomEvent\('models:animation'/);
+    assert.match(models, /Playing verified gameplay clip/);
+    assert.match(models, /emitModelMetric\(/);
+    assert.match(models, /confirmedAnimations/);
+
+    assert.match(models, /models-animation/);
+  });
+
+  it('provides a user-facing opt-in before loading the enhanced player', () => {
+    assert.match(models, /models-enable-r3f/);
+    assert.match(models, /setCMGFeatureFlag\('r3f_v1', true\)/);
+    assert.match(models, /updateR3fOptIn\(\)/);
+    assert.match(readFileSync(join(root, 'index.html'), 'utf8'), /models-r3f-optin/);
+  });
+
   it('supports interactive orbiting but defaults the new scene to static motion', () => {
     assert.match(entry, /<OrbitControls[^>]*makeDefault[^>]*enableDamping/);
     assert.match(entry, /autoRotate=\{Boolean\(options\?\.autoRotate\) && !reducedMotion\}/);

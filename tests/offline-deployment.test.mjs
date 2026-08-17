@@ -62,7 +62,7 @@ describe('offline and deployment verification', () => {
 
   it('keeps the page entry references versioned and the generated bundle lazy', () => {
     assert.doesNotMatch(html, /src="src\/generated\/er-3d-workbench\.js\?v=1"/);
-    assert.match(html, /src="src\/ui\/r3f-loader\.js\?v=1"/);
+    assert.match(html, /src="src\/ui\/r3f-loader\.js\?v=2"/);
     assert.match(html, /src="src\/ui\/legacy-3d-loader\.js\?v=1"/);
     assert.match(html, /src="src\/ui\/chart-loader\.js\?v=1"/);
     // Chart.js itself must never be part of the page entry — only its loader.
