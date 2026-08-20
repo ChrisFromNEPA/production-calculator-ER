@@ -1,0 +1,57 @@
+name: Data correction
+description: Report a game-data, recipe, stat, colony, or asset metadata correction.
+title: "[Data]: "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Data changes must be traceable. Do not include private account information or credentials.
+  - type: input
+    id: subject
+    attributes:
+      label: Item or record
+      description: Name the item, recipe, stat, colony, faction, or asset metadata record.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current calculator value
+      description: What does the calculator currently show?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Correct value
+      description: What should it show, including units and batch size when relevant?
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source or evidence
+      description: Provide a public URL, published sheet row, or sanitized in-game evidence.
+    validations:
+      required: true
+  - type: input
+    id: checked_at
+    attributes:
+      label: Verification date
+      placeholder: YYYY-MM-DD
+    validations:
+      required: true
+  - type: textarea
+    id: uncertainty
+    attributes:
+      label: Uncertainty or notes
+      description: Explain conflicting evidence, assumptions, or whether the source may change.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, private player data, and unsanitized workspace exports.
+          required: true

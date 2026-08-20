@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a reproducible problem in the calculator.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please remove private player data, credentials, tokens, and unsanitized workspace exports before submitting.
+  - type: input
+    id: area
+    attributes:
+      label: Area affected
+      description: Which tab, workflow, item, recipe, or deployment surface is affected?
+      placeholder: Calculator / Inventory / Colonies / Models / deployment
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and the result you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Give the smallest sequence that reproduces the problem.
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: checked_at
+    attributes:
+      label: Date checked
+      description: When did you observe this behavior?
+      placeholder: YYYY-MM-DD
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include a public source, sanitized screenshot, console error, or share hash when relevant.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, operating system, and whether this was the live site or a local build.
+      placeholder: Firefox 128 on Windows 11; live site
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, private player data, and unsanitized workspace exports.
+          required: true
