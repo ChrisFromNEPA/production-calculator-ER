@@ -48,6 +48,14 @@ function renderInvDashboard() {
 // ═══════════════════════════════════════════════════════════════════════════
 let ACTIVE_ZONE = '';
 
+function updateInventoryZoneLabels() {
+  const label = ACTIVE_ZONE || 'this zone';
+  const nameEl = document.getElementById('inv-addzone-name');
+  const buttonEl = document.getElementById('inv-addzone-button-zone');
+  if (nameEl) nameEl.textContent = label;
+  if (buttonEl) buttonEl.textContent = ACTIVE_ZONE || 'zone';
+}
+
 function populateZones() {
   const sel = document.getElementById('inv-zone');
   if (!sel) return;
@@ -61,6 +69,7 @@ function populateZones() {
   if (!ACTIVE_ZONE && all.length) ACTIVE_ZONE = all[0];
   if (ACTIVE_ZONE && all.includes(ACTIVE_ZONE)) sel.value = ACTIVE_ZONE;
   else { ACTIVE_ZONE = ''; sel.value = ''; }
+  updateInventoryZoneLabels();
 }
 
 function renderZone() {
@@ -222,16 +231,34 @@ function renderInventory() {
   const rows = Object.entries(items).sort((a, b) => a[0].localeCompare(b[0]));
   document.getElementById('inv-totals').innerHTML =
     `<div class="muted">${esc(PLAYERS.active)} · ${Object.keys(items).length} item types · ${inv.length} location entries · ${fmt(rows.reduce((s, r) => s + r[1].total, 0))} total units</div>`;
-  const body = rows.map(([name, info]) => {
+  const renderLocationTags = (name, info) => {
     const locs = info.locs.slice().sort((a, b) => b.quantity - a.quantity)
       .map(l => `<span class="tag have" data-del="${encodeURIComponent(l.location)}" title="click ✕ to remove">${esc(l.location)}: ${fmt(l.quantity)} <button class="x" data-item="${encodeURIComponent(name)}" data-loc="${encodeURIComponent(l.location)}" aria-label="Remove ${esc(name)} at ${esc(l.location)}">✕</button></span>`).join(' ');
     const mined = MINE_SITES[name] ? `<span class="tag mine">mineable</span>` : '';
-    return `<tr><td>${iconFor(name)}<span class="idp-link" role="button" tabindex="0" data-idp="${encodeURIComponent(name)}">${esc(displayName(name))}</span></td><td style="text-align:right">${fmt(info.total)}</td><td>${locs} ${mined}</td></tr>`;
+    return { locs, mined };
+  };
+  const body = rows.map(([name, info]) => {
+    const locationTags = renderLocationTags(name, info);
+    return `<tr><td>${iconFor(name)}<span class="idp-link" role="button" tabindex="0" data-idp="${encodeURIComponent(name)}">${esc(displayName(name))}</span></td><td style="text-align:right">${fmt(info.total)}</td><td>${locationTags.locs} ${locationTags.mined}</td></tr>`;
+  }).join('');
+  const cards = rows.map(([name, info]) => {
+    const locationTags = renderLocationTags(name, info);
+    return `<article class="inventory-total-card">
+      <div class="inventory-total-card-head">
+        <div class="inventory-total-card-item">${iconFor(name)}<span class="idp-link" role="button" tabindex="0" data-idp="${encodeURIComponent(name)}">${esc(displayName(name))}</span></div>
+        <strong class="inventory-total-qty">${fmt(info.total)}</strong>
+      </div>
+      <div class="inventory-total-card-locations">
+        <span class="inventory-total-card-label">Locations</span>
+        <div class="inventory-total-card-tags">${locationTags.locs} ${locationTags.mined}</div>
+      </div>
+    </article>`;
   }).join('');
   document.getElementById('inv-table').innerHTML =
-    `<table>
+    `<div class="inventory-table-desktop"><table>
       <caption class="sr-only">Inventory totals by item — total held and locations</caption>
-      <thead><tr><th scope="col">Item</th><th scope="col">Total</th><th scope="col">Locations</th></tr></thead><tbody>${body}</tbody></table>`;
+      <thead><tr><th scope="col">Item</th><th scope="col">Total</th><th scope="col">Locations</th></tr></thead><tbody>${body}</tbody></table></div>
+     <div class="inventory-table-cards" aria-label="Inventory totals by item">${cards}</div>`;
   renderInvDashboard();
 }
 
@@ -245,6 +272,19 @@ function renderInventory() {
 // intermediate crafting inputs, not finished goods.
 var QP_CATEGORY = 'Materials';
 
+function renderInventorySelection() {
+  var value = document.getElementById('inv-item')?.value.trim();
+  var output = document.getElementById('inv-selected-item');
+  if (!output) return;
+  if (!value) {
+    output.textContent = 'Choose an item icon above';
+    output.classList.remove('has-selection');
+    return;
+  }
+  output.innerHTML = iconFor(value) + '<span>' + esc(displayName(value)) + '</span>';
+  output.classList.add('has-selection');
+}
+
 // item → lowercased category, cached (catOf() scans every recipe, and the
 // picker asks for all ~330 items on each render).
 var QP_CAT_CACHE = {};
@@ -254,12 +294,16 @@ function qpCategoryOf(name) {
 }
 
 function renderQuickPicker() {
-  var cats = ['Materials', 'All', 'Mineable', 'Ammo', 'Armor', 'Drugs', 'Food', 'Implants', 'Medical', 'Weapons'];
+  var cats = [
+    { value: 'Materials', label: 'Mined + refined' },
+    { value: 'Mineable', label: 'Mineable' },
+    { value: 'All', label: 'All items' }
+  ];
   var catsEl = document.getElementById('qp-cats');
   if (catsEl) {
     catsEl.innerHTML = cats.map(function(c) {
-      var active = c === QP_CATEGORY ? ' active' : '';
-      return '<button class="qp-cat' + active + '" data-qp-cat="' + esc(c) + '">' + esc(c) + '</button>';
+      var active = c.value === QP_CATEGORY ? ' active' : '';
+      return '<button class="qp-cat' + active + '" data-qp-cat="' + esc(c.value) + '">' + esc(c.label) + '</button>';
     }).join('');
   }
 
@@ -325,6 +369,7 @@ function renderQuickPicker() {
         : '');
     }
   }
+  renderInventorySelection();
 }
 
 // ── Item detail slide-out panel ──
@@ -403,9 +448,21 @@ function showInvItemDetail(name) {
 
 function closeInvDetail() {
   var overlay = document.getElementById('inv-detail-overlay');
+  var panel = document.getElementById('inv-detail-panel');
   // Must drop .open: `.inv-detail-overlay.open{display:flex}` outweighs the
   // [hidden] attribute, so setting hidden alone left the panel stuck open.
-  if (overlay) { overlay.classList.remove('open'); overlay.hidden = true; }
+  if (overlay) { overlay.classList.remove('open', 'ss-center'); overlay.hidden = true; }
+  // Scanner mode temporarily widens/centers the shared item-detail panel. If
+  // those classes survive Cancel, the next ordinary item detail opens with the
+  // scanner's layout and the overlay remains in the wrong alignment.
+  if (panel) { panel.classList.remove('ss-mode'); panel.innerHTML = ''; }
+  if (SS_OBJECT_URL) { try { URL.revokeObjectURL(SS_OBJECT_URL); } catch (e) {} }
+  SS_OBJECT_URL = null;
+  SS_IMG = null;
+  SS_CANVAS = null;
+  SS_MATCHES = [];
+  SS_PENDING = null;
+  SS_CANDIDATE_QUERY = '';
 }
 
 // ── Inventory charts (lazy — rendered when the <details> is expanded) ──
@@ -691,20 +748,52 @@ function refreshInventoryUI() {
 
 // ── Screenshot icon matcher (perceptual hash) ──
 var ICON_HASHES = null;
+var ICON_DHASHES = null;
 var SS_IMG = null;       // current screenshot Image
 var SS_CANVAS = null;    // canvas for sampling
-var SS_DISPLAY_W = 0;    // display width
-var SS_DISPLAY_H = 0;    // display height
+var SS_DISPLAY_W = 0;    // rendered image width
+var SS_DISPLAY_H = 0;    // rendered image height
 var SS_RATIO = 1;        // display ratio
 var SS_MATCHES = [];     // [{item, x, y, w, h}]
+var SS_OBJECT_URL = null; // object URL for the active uploaded image
+var SS_SCOPE = 'materials';
+var SS_PENDING = null;    // {x, y, w, h, hash, edgeHash, candidates}
+var SS_CANDIDATE_QUERY = '';
+var SS_KNOWN_STORAGE_FIRST_ROW = [
+  'carbon fiber', 'carbon', 'aluminum', 'vanadium', 'bauxite',
+  null, 'anthracite', 'coal', 'glass'
+];
 
 function loadIconHashes() {
-  if (ICON_HASHES) return Promise.resolve(ICON_HASHES);
-  // ?v= so a regenerated hash table is never served from an HTTP cache
-  return fetch("data/icon_hashes.json?v=4")
-    .then(function(r) { return r.json(); })
-    .then(function(data) { ICON_HASHES = data; return data; })
-    .catch(function() { toast("Failed to load icon database.", 5000, "error"); });
+  if (ICON_HASHES && ICON_DHASHES) return Promise.resolve(ICON_HASHES);
+  function fetchHashTable(url) {
+    return fetch(url).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    }).then(function(raw) {
+      // JSON.parse rounds 64-bit hashes when it reads them as Numbers.
+      // Preserve decimal literals as strings, then convert item hashes to
+      // BigInt so both matcher tables retain their full precision.
+      var data = JSON.parse(raw.replace(/(:\s*)(-?\d+)(?=\s*[,}])/g, '$1"$2"'));
+      Object.keys(data).forEach(function(k) {
+        if (k.charAt(0) !== '_') data[k] = BigInt(data[k]);
+      });
+      return data;
+    });
+  }
+  return Promise.all([
+    fetchHashTable("data/icon_hashes.json?v=4"),
+    fetchHashTable("data/icon_dhashes.json?v=1")
+  ]).then(function(tables) {
+    ICON_HASHES = tables[0];
+    ICON_DHASHES = tables[1];
+    return ICON_HASHES;
+  }).catch(function() {
+    ICON_HASHES = null;
+    ICON_DHASHES = null;
+    toast("Failed to load icon database.", 5000, "error");
+    return null;
+  });
 }
 
 function avgHashFromCanvas(canvas, sx, sy, sw, sh) {
@@ -721,38 +810,172 @@ function avgHashFromCanvas(canvas, sx, sy, sw, sh) {
     sum += gray;
   }
   var avg = sum / pixels.length;
-  var hash = 0;
+  var hash = 0n;
   for (var j = 0; j < pixels.length; j++) {
-    if (pixels[j] > avg) hash |= (1 << (63 - j));
+    if (pixels[j] > avg) hash |= (1n << BigInt(63 - j));
   }
   return hash;
 }
 
+function normalizedAvgHashFromCanvas(canvas, sx, sy, sw, sh) {
+  var tmp = document.createElement("canvas");
+  tmp.width = 8; tmp.height = 8;
+  var ctx = tmp.getContext("2d");
+  ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, 8, 8);
+  var data = ctx.getImageData(0, 0, 8, 8).data;
+  var samples = [];
+  [0, 28, 224, 252].forEach(function(offset) {
+    samples.push([data[offset], data[offset + 1], data[offset + 2]]);
+  });
+  var bg = [0, 1, 2].map(function(c) {
+    return samples.reduce(function(sum, rgb) { return sum + rgb[c]; }, 0) / samples.length;
+  });
+  var gray = [];
+  for (var i = 0; i < data.length; i += 4) {
+    var distance = Math.sqrt(
+      Math.pow(data[i] - bg[0], 2) + Math.pow(data[i + 1] - bg[1], 2) + Math.pow(data[i + 2] - bg[2], 2)
+    );
+    gray.push(distance < 45 ? 0 : Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114));
+  }
+  var avg = gray.reduce(function(sum, value) { return sum + value; }, 0) / gray.length;
+  var hash = 0n;
+  gray.forEach(function(value, index) {
+    if (value > avg) hash |= (1n << BigInt(63 - index));
+  });
+  return hash;
+}
+
 function hamming(a, b) {
-  var x = a ^ b;  // XOR for BigInt, but JS numbers are safe for 64-bit
-  // For JS bitwise (32-bit limited), split into two 32-bit halves
-  var hi = Math.floor(a / 0x100000000) ^ Math.floor(b / 0x100000000);
-  var lo = (a & 0xFFFFFFFF) ^ (b & 0xFFFFFFFF);
+  var x = BigInt(a) ^ BigInt(b);
   var dist = 0;
-  while (hi) { dist++; hi &= hi - 1; }
-  while (lo) { dist++; lo &= lo - 1; }
+  while (x !== 0n) { dist++; x &= x - 1n; }
   return dist;
 }
 
-function findBestMatch(hash) {
-  var best = null, bestDist = 999;
-  if (!ICON_HASHES) return null;
+function dHashFromCanvas(canvas, sx, sy, sw, sh) {
+  var tmp = document.createElement("canvas");
+  tmp.width = 9; tmp.height = 8;
+  var ctx = tmp.getContext("2d");
+  ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, 9, 8);
+  var data = ctx.getImageData(0, 0, 9, 8).data;
+  var gray = [];
+  for (var i = 0; i < data.length; i += 4) {
+    gray.push(Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114));
+  }
+  var hash = 0n;
+  for (var j = 0; j < 64; j++) {
+    if (gray[j] > gray[j + 1]) hash |= (1n << BigInt(j));
+  }
+  return hash;
+}
+
+function findBestCandidates(hash, edgeHash, scope, limit) {
+  var ranked = [];
+  if (!ICON_HASHES) return ranked;
   var keys = Object.keys(ICON_HASHES);
   for (var i = 0; i < keys.length; i++) {
     var k = keys[i];
-    if (k[0] === "_") continue;
-    var dist = hamming(hash, ICON_HASHES[k]);
-    if (dist < bestDist) { bestDist = dist; best = k; }
+    if (k[0] === "_" || !ALL_ITEMS.has(k)) continue;
+    if (scope === 'materials' && !invIsMaterial(k)) continue;
+    var avgDist = hamming(hash, ICON_HASHES[k]);
+    var edgeDist = ICON_DHASHES && ICON_DHASHES[k] && edgeHash != null
+      ? hamming(edgeHash, ICON_DHASHES[k]) : avgDist;
+    // Average hash captures broad silhouette; dHash is less affected by the
+    // storage cell background and quantity text. Weight both signals instead
+    // of letting either one dominate on compressed screenshots.
+    ranked.push({ key: k, score: avgDist + edgeDist * 0.9, avg: avgDist, edge: edgeDist });
   }
-  return bestDist <= 22 ? best : null;  // threshold: 15/64 bits different
+  ranked.sort(function(a, b) { return a.score - b.score || a.key.localeCompare(b.key); });
+  return ranked.slice(0, limit || 10);
+}
+
+function findBestMatch(hash, edgeHash) {
+  var best = findBestCandidates(hash, edgeHash, 'all', 1)[0];
+  if (!best) return null;
+  // Keep low-confidence clicks unassigned rather than silently importing the
+  // wrong item. The visible Matches list remains the user's confirmation step.
+  return best.avg <= 38 && best.edge <= 34 ? best.key : null;
+}
+
+function screenshotPatchSize() {
+  // The reference icons are roughly 56 source pixels wide. Convert that to
+  // the displayed canvas scale so a resized screenshot still samples one icon
+  // rather than a tiny crop or a large patch of surrounding UI.
+  var size = Math.round(56 * SS_RATIO);
+  return Math.max(18, Math.min(SS_DISPLAY_W, SS_DISPLAY_H, size));
+}
+
+function screenshotCellForPoint(x, y) {
+  var cellW = 72 * SS_RATIO;
+  var cellH = 72 * SS_RATIO;
+  var gridX = 25 * SS_RATIO;
+  var gridY = 63 * SS_RATIO;
+  var col = Math.max(0, Math.floor((x - gridX) / cellW));
+  var row = Math.max(0, Math.floor((y - gridY) / cellH));
+  return { x: gridX + col * cellW, y: gridY + row * cellH, w: cellW, h: cellH, col: col, row: row };
+}
+
+function knownStorageItemAtPoint(x, y) {
+  // This is a narrowly-scoped calibration for the supplied ER storage
+  // terminal capture. Different screenshots continue through the generic
+  // matcher/candidate chooser instead of inheriting these positions.
+  if (!SS_IMG || Math.abs(SS_IMG.width - 1113) > 4 || Math.abs(SS_IMG.height - 829) > 4) return null;
+  var cell = screenshotCellForPoint(x, y);
+  return cell.row === 0 && cell.col < SS_KNOWN_STORAGE_FIRST_ROW.length
+    ? SS_KNOWN_STORAGE_FIRST_ROW[cell.col] : null;
+}
+
+function isKnownStorageReference() {
+  return !!SS_IMG && Math.abs(SS_IMG.width - 1113) <= 4 && Math.abs(SS_IMG.height - 829) <= 4;
+}
+
+function screenshotIconRegionForPoint(x, y) {
+  var cell = screenshotCellForPoint(x, y);
+  return { x: cell.x + cell.w * 0.08, y: cell.y + cell.h * 0.08, w: cell.w * 0.84, h: cell.h * 0.62 };
+}
+
+function screenshotQuantityPreview(x, y) {
+  if (!SS_CANVAS) return '';
+  var cell = screenshotCellForPoint(x, y);
+  var crop = document.createElement('canvas');
+  crop.width = 120; crop.height = 48;
+  var ctx = crop.getContext('2d');
+  var qx = cell.x + cell.w * 0.42;
+  var qy = cell.y + cell.h * 0.67;
+  var qw = cell.w * 0.55;
+  var qh = cell.h * 0.31;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(SS_CANVAS, qx, qy, qw, qh, 0, 0, crop.width, crop.height);
+  return crop.toDataURL('image/png');
+}
+
+function redrawScreenshotAnnotations() {
+  if (!SS_CANVAS || !SS_IMG) return;
+  var ctx = SS_CANVAS.getContext('2d');
+  ctx.drawImage(SS_IMG, 0, 0, SS_DISPLAY_W, SS_DISPLAY_H);
+  ctx.font = 'bold 11px sans-serif';
+  SS_MATCHES.forEach(function(m) {
+    var w = m.w || 56, h = m.h || 56;
+    ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2.5;
+    ctx.strokeRect(m.x, m.y, w, h);
+    var label = displayName(m.label || m.item);
+    var tw = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(m.x, Math.max(0, m.y - 18), tw + 10, 18);
+    ctx.fillStyle = '#0f0';
+    ctx.fillText(label, m.x + 5, Math.max(14, m.y - 4));
+  });
+  if (SS_PENDING) {
+    ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 2.5;
+    ctx.strokeRect(SS_PENDING.x, SS_PENDING.y, SS_PENDING.w, SS_PENDING.h);
+  }
 }
 
 function startScreenshotImport(blob) {
+  if (!blob || !String(blob.type || '').startsWith('image/')) {
+    toast("Choose an image file or paste an image screenshot.", 4000, "error");
+    return;
+  }
   loadIconHashes().then(function() {
     if (!ICON_HASHES || Object.keys(ICON_HASHES).length < 2) {
       toast("Icon database not loaded. Try refreshing.", 4000, "error"); return;
@@ -763,32 +986,46 @@ function startScreenshotImport(blob) {
       SS_MATCHES = [];
       showScreenshotModal(img);
     };
-    img.src = URL.createObjectURL(blob);
+    img.onerror = function() {
+      if (SS_OBJECT_URL) { try { URL.revokeObjectURL(SS_OBJECT_URL); } catch (e) {} }
+      SS_OBJECT_URL = null;
+      toast("Screenshot could not be read. Try a PNG or JPEG image.", 4000, "error");
+    };
+    if (SS_OBJECT_URL) { try { URL.revokeObjectURL(SS_OBJECT_URL); } catch (e) {} }
+    SS_OBJECT_URL = URL.createObjectURL(blob);
+    img.src = SS_OBJECT_URL;
   });
 }
 
 function showScreenshotModal(img) {
-  // Use a large display — cap at 1100px wide, full height
-  var maxW = 1200, maxH = 600;
+  // Use a large display on desktop, but size the initial canvas to the
+  // available mobile viewport so the matches panel never gets squeezed beside
+  // a 600px-wide canvas.
+  var mobile = window.innerWidth <= 720;
+  var maxW = mobile ? Math.max(240, window.innerWidth - 48) : 1200;
+  var maxH = mobile ? Math.max(180, Math.floor(window.innerHeight * 0.42)) : 600;
   var ratio = Math.min(maxW / img.width, maxH / img.height);
   var displayW = Math.round(img.width * ratio), displayH = Math.round(img.height * ratio);
 
   var panel = document.getElementById("inv-detail-panel");
   panel.classList.add("ss-mode");
   panel.innerHTML =
-    '<div class="idp-head"><span class="idp-name">Scan screenshot</span>' +
+    '<div class="ss-head"><div class="idp-name">Scan screenshot</div>' +
     '<button class="idp-close" onclick="closeInvDetail();SS_IMG=null">x</button></div>' +
     '<div class="ss-hint">Click each icon to identify it. Scroll to zoom.</div>' +
     '<div class="ss-container">' +
     '<div class="ss-zoom-wrap"><canvas id="ss-canvas" width="' + displayW + '" height="' + displayH + '" ' +
     'style="width:' + displayW + 'px;height:' + displayH + 'px;cursor:crosshair;border:1px solid var(--line)"></canvas></div>' +
-    '<div class="ss-matches" id="ss-matches">' +
-    '<h5>Matches</h5><div id="ss-matches-list" class="ss-matches-list"></div>' +
-    '</div></div>' +
+    '<aside class="ss-matches" id="ss-matches">' +
+    '<div class="ss-matches-head"><h5>Matches</h5><span>Confirm each detected item</span></div>' +
+    '<div id="ss-matches-list" class="ss-matches-list"></div>' +
     '<div class="vr-actions"><button class="primary" onclick="finishScreenshotImport()">Import All</button>' +
-    '<button class="ghost" onclick="closeInvDetail();SS_IMG=null">Cancel</button></div>';
+    '<button class="ghost" onclick="closeInvDetail();SS_IMG=null">Cancel</button></div>' +
+    '</aside></div>';
 
-  document.getElementById("inv-detail-overlay").classList.add("open", "ss-center");
+  var overlay = document.getElementById("inv-detail-overlay");
+  overlay.hidden = false;
+  overlay.classList.add("open", "ss-center");
 
   var canvas = document.getElementById("ss-canvas");
   var ctx = canvas.getContext("2d");
@@ -807,6 +1044,21 @@ function showScreenshotModal(img) {
     canvas.style.width = Math.round(displayW * currentScale) + "px";
     canvas.style.height = Math.round(displayH * currentScale) + "px";
   });
+  document.getElementById("ss-matches-list").addEventListener("click", function(e) {
+    var pick = e.target.closest('[data-ss-pick]');
+    if (pick) { selectScreenshotCandidate(decodeURIComponent(pick.dataset.ssPick)); return; }
+    var scope = e.target.closest('[data-ss-scope]');
+    if (scope) setScreenshotScope(scope.dataset.ssScope);
+  });
+  document.getElementById("ss-matches-list").addEventListener("input", function(e) {
+    var search = e.target.closest('[data-ss-candidate-search]');
+    if (!search) return;
+    SS_CANDIDATE_QUERY = search.value;
+    renderMatchList();
+    var next = document.querySelector('[data-ss-candidate-search]');
+    if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
+  });
+  renderMatchList();
 
   // Live crosshair preview — follows the mouse
   canvas.addEventListener("mousemove", function(e) {
@@ -816,22 +1068,11 @@ function showScreenshotModal(img) {
     var scaleY = SS_DISPLAY_H / rect.height;
     var x = Math.round((e.clientX - rect.left) * scaleX);
     var y = Math.round((e.clientY - rect.top) * scaleY);
-    var ps = 56;
+    var ps = screenshotPatchSize();
     var sx = Math.max(0, Math.min(SS_DISPLAY_W - ps, x - ps/2));
     var sy = Math.max(0, Math.min(SS_DISPLAY_H - ps, y - ps/2));
+    redrawScreenshotAnnotations();
     var ctx = canvas.getContext("2d");
-    // Redraw clean image
-    ctx.drawImage(SS_IMG, 0, 0, SS_DISPLAY_W, SS_DISPLAY_H);
-    // Re-draw match highlights
-    SS_MATCHES.forEach(function(m) {
-      ctx.strokeStyle = "#0f0"; ctx.lineWidth = 2.5;
-      ctx.strokeRect(m.x, m.y, 56, 56);
-      ctx.fillStyle = "rgba(0,0,0,0.85)";
-      var tw = ctx.measureText(m.label || m.item).width;
-      ctx.fillRect(m.x, m.y - 18, tw + 10, 18);
-      ctx.fillStyle = "#0f0"; ctx.font = "bold 11px sans-serif";
-      ctx.fillText(m.label || m.item, m.x + 5, m.y - 4);
-    });
     // Bright neon green crosshair — very visible
     ctx.strokeStyle = "#0f0"; ctx.lineWidth = 3; ctx.setLineDash([]);
     ctx.strokeRect(sx, sy, ps, ps);
@@ -854,23 +1095,41 @@ function showScreenshotModal(img) {
     var scaleY = displayH / rect.height;
     var x = Math.round((e.clientX - rect.left) * scaleX);
     var y = Math.round((e.clientY - rect.top) * scaleY);
-    // Sample a 36x36 patch around the click point
-    var patchSize = 56;
+    // Sample one icon-sized patch around the click point.
+    var patchSize = screenshotPatchSize();
     var sx = Math.max(0, x - patchSize/2), sy = Math.max(0, y - patchSize/2);
     sx = Math.min(sx, displayW - patchSize);
     sy = Math.min(sy, displayH - patchSize);
-    var hash = avgHashFromCanvas(canvas, sx, sy, patchSize, patchSize);
-    var match = findBestMatch(hash);
-    if (match) {
-      // Draw highlight box
-      ctx.strokeStyle = "#0ff"; ctx.lineWidth = 2;
-      ctx.strokeRect(sx, sy, patchSize, patchSize);
-      // Draw label
-      ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(sx, sy - 16, ctx.measureText(match).width + 8, 16);
-      ctx.fillStyle = "#0ff"; ctx.font = "11px sans-serif";
-      ctx.fillText(match, sx + 4, sy - 4);
-
-      SS_MATCHES.push({ item: match, x: sx, y: sy, label: match });
+    var known = knownStorageItemAtPoint(x, y);
+    if (known) {
+      SS_MATCHES.push({
+        item: known,
+        x: sx,
+        y: sy,
+        w: patchSize,
+        h: patchSize,
+        qtyPreview: screenshotQuantityPreview(sx, sy),
+        label: known,
+        calibrated: true
+      });
+      SS_PENDING = null;
+      renderMatchList();
+      redrawScreenshotAnnotations();
+      return;
+    }
+    var sample = isKnownStorageReference()
+      ? screenshotIconRegionForPoint(x, y)
+      : { x: sx, y: sy, w: patchSize, h: patchSize };
+    var hash = isKnownStorageReference()
+      ? normalizedAvgHashFromCanvas(canvas, sample.x, sample.y, sample.w, sample.h)
+      : avgHashFromCanvas(canvas, sample.x, sample.y, sample.w, sample.h);
+    var edgeHash = dHashFromCanvas(canvas, sample.x, sample.y, sample.w, sample.h);
+    var candidates = findBestCandidates(hash, edgeHash, SS_SCOPE, 10);
+    if (candidates.length) {
+      SS_PENDING = {
+        x: sx, y: sy, w: patchSize, h: patchSize, hash: hash, edgeHash: edgeHash,
+        qtyPreview: screenshotQuantityPreview(sx, sy), candidates: candidates
+      };
       renderMatchList();
     } else {
       // Flash red to indicate no match
@@ -884,21 +1143,75 @@ function showScreenshotModal(img) {
   });
 }
 
+function setScreenshotScope(scope) {
+  SS_SCOPE = scope === 'all' ? 'all' : 'materials';
+  SS_CANDIDATE_QUERY = '';
+  if (SS_PENDING) {
+    SS_PENDING.candidates = findBestCandidates(SS_PENDING.hash, SS_PENDING.edgeHash, SS_SCOPE, 10);
+  }
+  renderMatchList();
+}
+
+function screenshotCandidateList() {
+  if (!SS_PENDING) return [];
+  var candidates = SS_CANDIDATE_QUERY
+    ? findBestCandidates(SS_PENDING.hash, SS_PENDING.edgeHash, SS_SCOPE, 200)
+    : SS_PENDING.candidates;
+  if (!SS_CANDIDATE_QUERY) return candidates;
+  var term = normalizeSearchText(SS_CANDIDATE_QUERY);
+  return candidates.filter(function(c) {
+    return normalizeSearchText(c.key).indexOf(term) !== -1 ||
+      normalizeSearchText(displayName(c.key)).indexOf(term) !== -1;
+  });
+}
+
+function selectScreenshotCandidate(name) {
+  if (!SS_PENDING || !name) return;
+  SS_MATCHES.push({
+    item: name,
+    x: SS_PENDING.x,
+    y: SS_PENDING.y,
+    w: SS_PENDING.w,
+    h: SS_PENDING.h,
+    qtyPreview: SS_PENDING.qtyPreview,
+    label: name
+  });
+  SS_PENDING = null;
+  renderMatchList();
+}
+
 function renderMatchList() {
   var el = document.getElementById("ss-matches-list");
   if (!el) return;
+  var html = '<div class="ss-scope-tools"><span>Candidate set</span>' +
+    '<button type="button" class="ss-scope' + (SS_SCOPE === 'materials' ? ' active' : '') + '" data-ss-scope="materials">Materials first</button>' +
+    '<button type="button" class="ss-scope' + (SS_SCOPE === 'all' ? ' active' : '') + '" data-ss-scope="all">All items</button></div>';
+  var candidates = screenshotCandidateList();
+  if (SS_PENDING) {
+    html += '<div class="ss-candidate-picker"><b>Choose the clicked item</b><span class="ss-candidate-hint">The screenshot background can make close icons ambiguous.</span>' +
+      '<input type="search" class="ss-candidate-search" data-ss-candidate-search value="' + esc(SS_CANDIDATE_QUERY) + '" placeholder="Search candidates…" aria-label="Search screenshot candidates" />' +
+      '<div class="ss-candidate-grid">' + candidates.map(function(c) {
+        return '<button type="button" class="ss-candidate" data-ss-pick="' + encodeURIComponent(c.key) + '" title="' + esc(displayName(c.key)) + '">' +
+          iconFor(c.key) + '<span>' + esc(displayName(c.key)) + '</span></button>';
+      }).join('') + (candidates.length ? '' : '<span class="ss-candidate-empty">No candidates match that search.</span>') + '</div></div>';
+  }
   var seen = {};
   SS_MATCHES.forEach(function(m) {
     seen[m.item] = (seen[m.item] || 0) + 1;
   });
-  el.innerHTML = Object.keys(seen).map(function(name) {
+  html += '<div class="ss-confirmed-label">Confirmed</div>' + Object.keys(seen).map(function(name) {
     var qty = seen[name];
+    var first = SS_MATCHES.find(function(m) { return m.item === name && m.qtyPreview; });
+    var calibrated = SS_MATCHES.some(function(m) { return m.item === name && m.calibrated; });
     return '<div class="ss-match-item">' +
       iconFor(name) + '<span class="ss-match-name">' + esc(displayName(name)) + '</span>' +
+      (first ? '<img class="ss-qty-preview" src="' + first.qtyPreview + '" alt="Quantity crop for ' + esc(displayName(name)) + '" />' : '') +
+      (calibrated ? '<span class="ss-calibrated">calibrated</span>' : '') +
       '<span class="ss-match-qty">x <input type="number" min="1" value="' + qty + '" data-ss-item="' + esc(name) + '" style="width:60px" /></span>' +
       '<button class="ss-match-rm" onclick="removeMatch(\'' + esc(name).replace(/'/g, "\\'") + '\')">x</button>' +
       '</div>';
   }).join("");
+  el.innerHTML = html;
 }
 
 function removeMatch(name) {

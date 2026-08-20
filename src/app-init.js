@@ -718,10 +718,11 @@ document.addEventListener('DOMContentLoaded', () => {
     var btn = e.target.closest('[data-qp-cat]'); if (!btn) return;
     QP_CATEGORY = btn.dataset.qpCat; renderQuickPicker();
   });
-  // Quick-picker: item button clicks → fill inv-item field
+  // Quick-picker: item button clicks → select an item and jump to quantity
   document.getElementById('qp-grid').addEventListener('click', e => {
     var btn = e.target.closest('[data-qp-item]'); if (!btn) return;
     document.getElementById('inv-item').value = btn.dataset.qpItem;
+    renderInventorySelection();
     renderQuickPicker(); // reflect the selection in the grid
     const q = document.getElementById('inv-qty');
     q.focus(); q.select(); // type the amount straight away
@@ -734,6 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const only = document.querySelectorAll('#qp-grid [data-qp-item]');
     if (only.length === 1) {
       document.getElementById('inv-item').value = only[0].dataset.qpItem;
+      renderInventorySelection();
       const q = document.getElementById('inv-qty'); q.focus(); q.select();
     }
   });
@@ -776,6 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('inv-zone').addEventListener('change', e => {
     ACTIVE_ZONE = e.target.value;
+    updateInventoryZoneLabels();
     // Selections belong to the zone they were made in — carrying them across
     // would arm the move bar with items the user can no longer see.
     ZONE_MOVE_SELECTED.clear(); updateMoveBar();
@@ -787,7 +790,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('inv-addzone').addEventListener('click', () => {
     const zone = ACTIVE_ZONE;
     if (!zone) { toast('Pick a zone/colony first.'); return; }
-    const item = document.getElementById('inv-item').value.trim();
+    const typedItem = document.getElementById('inv-item').value.trim() || document.getElementById('qp-search').value.trim();
+    const searchKey = normalizeSearchText(typedItem);
+    const item = Array.from(ALL_ITEMS).find(name =>
+      normalizeSearchText(name) === searchKey || normalizeSearchText(displayName(name)) === searchKey
+    ) || typedItem;
     const qty = Math.max(0, parseInt(document.getElementById('inv-qty').value, 10) || 0);
     if (!item) { toast('Pick or type an item first.'); return; }
     if (!ALL_ITEMS.has(item)) { toast(`"${item}" isn't a known item — pick one from the list.`); return; }
@@ -800,13 +807,16 @@ document.addEventListener('DOMContentLoaded', () => {
       .reduce((s, e) => s + e.quantity, 0);
     applyEntry(item, zone, qty, 'add');
     document.getElementById('inv-item').value = '';
+    document.getElementById('qp-search').value = '';
     document.getElementById('inv-qty').value = 1;
     ACTIVE_ZONE = zone;
     refreshInventoryUI();
     document.getElementById('inv-zone').value = zone;
     toast(`+${fmt(qty)} ${displayName(item)} at ${zone} (now ${fmt(before + qty)}).`, 2500, 'success');
     // Ready for the next item — stocking a zone is a repetitive task.
-    document.getElementById('qp-search')?.focus();
+    const nextItem = document.getElementById('qp-search');
+    nextItem?.focus();
+    nextItem?.select();
   });
   document.getElementById('inv-item').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inv-addzone').click(); });
   document.getElementById('zone-body').addEventListener('input', e => {

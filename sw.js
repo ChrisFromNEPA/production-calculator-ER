@@ -25,6 +25,7 @@ const SHELL = [
   './src/armor_classes.js',
   './src/factions.js',
   './data/icon_hashes.json',
+  './data/icon_dhashes.json',
   './icons/icon_catalog.json',
   './src/app-core.js',
   './src/colony-work.js',

@@ -13,7 +13,7 @@
   @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 700 900; font-display: swap; src: url('fonts/orbitron-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/jetbrains-mono-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 </style>
-<link rel="stylesheet" href="src/styles.css?v=41" />
+<link rel="stylesheet" href="src/styles.css?v=53" />
 <link rel="stylesheet" href="src/styles/ux-release.css?v=7" />
 <link rel="stylesheet" href="src/styles/surviving-reference.css?v=2" />
 </head>
@@ -298,16 +298,24 @@
       </div>
       <div class="inv-charts-note muted" id="inv-charts-empty" hidden>Nothing stocked yet — add items below and the charts will fill in.</div>
     </details>
-    <div class="editor ui-panel">
-      <h4>Inventory by colony / zone — <span id="inv-player-tag">you</span></h4>
-      <div class="editor-row zone-row">
-        <label>Zone / Colony
-          <select id="inv-zone" aria-label="Select zone">
-            <option value="" disabled selected>select zone…</option>
-          </select>
-        </label>
-        <span id="zone-total" class="zone-total muted" aria-live="polite"></span>
-      </div>
+    <div class="inventory-layout">
+      <div class="editor ui-panel inventory-editor">
+        <div class="inventory-editor-head">
+          <div>
+            <span class="inventory-kicker">STOCK LEDGER</span>
+            <h4>Inventory by colony / zone — <span id="inv-player-tag">you</span></h4>
+            <p class="inventory-intro">Choose where the items are stored, then add what you have. Each player and colony is tracked separately.</p>
+          </div>
+          <span class="inventory-local-note">Saved in this browser</span>
+        </div>
+        <div class="inventory-zone-picker">
+          <label for="inv-zone"><span class="inventory-step">1</span> Storage zone / colony
+            <select id="inv-zone" aria-label="Select zone">
+              <option value="" disabled selected>select zone…</option>
+            </select>
+          </label>
+          <span id="zone-total" class="zone-total muted" aria-live="polite"></span>
+        </div>
       <div class="zone-movebar" id="zone-movebar" hidden>
         <label>Move selected to
           <select id="zone-move-target" aria-label="Target zone"></select>
@@ -319,28 +327,56 @@
       <div id="zone-body" class="zone-body">
         <div class="muted">Pick a zone above to view and edit its stock. Use <b>Add item</b> to log new material gathered at that zone.</div>
       </div>
-      <div class="zone-addrow">
-        <div class="quick-pick">
-          <div class="qp-cats" id="qp-cats"></div>
-          <input id="qp-search" class="qp-search" type="text" placeholder="🔍 search all items to add…" autocomplete="off" aria-label="Search items to add" />
-          <div class="qp-grid" id="qp-grid"></div>
-          <div class="qp-manual">
-            <input id="inv-item" list="inv-item-list" placeholder="or type an exact item name…" autocomplete="off" aria-label="Item to add" />
-            <datalist id="inv-item-list"></datalist>
+      <div class="zone-addrow inventory-add-flow">
+        <div class="inventory-add-head">
+          <div>
+            <span class="inventory-step">2</span>
+            <strong>Add stock to <span id="inv-addzone-name">this zone</span></strong>
           </div>
+          <span class="inventory-add-hint">Pick an item, enter the amount, and add it to the existing stack.</span>
         </div>
-        <input id="inv-qty" type="number" min="0" value="1" aria-label="Quantity to add" />
-        <button id="inv-addzone">+ Add</button>
-        <span class="muted">adds to what you already have here · edit a row above to set an exact number</span>
+        <div class="inventory-picker">
+          <div class="inventory-picker-head">
+            <div>
+              <strong>Choose a mined or refined item</strong>
+              <span class="inventory-picker-note">Icons show the materials most useful for final-item production.</span>
+            </div>
+            <span class="inventory-picker-mode">MATERIALS FIRST</span>
+          </div>
+          <input id="qp-search" class="qp-search" type="text" placeholder="🔍 Search mined + refined materials…" autocomplete="off" aria-label="Search mined and refined items" />
+          <div class="qp-cats" id="qp-cats"></div>
+          <div class="qp-grid" id="qp-grid"></div>
+        </div>
+        <div class="inventory-add-fields">
+          <div class="inventory-item-field">
+            <span class="inventory-field-label">Selected item</span>
+            <div id="inv-selected-item" class="inventory-selected-item" aria-live="polite">Choose an item icon above</div>
+            <input id="inv-item" type="hidden" value="" aria-label="Selected item to add" />
+          </div>
+          <label class="inventory-qty-field" for="inv-qty">Quantity
+            <input id="inv-qty" type="number" min="0" value="1" aria-label="Quantity to add" />
+          </label>
+          <button id="inv-addzone" type="button">+ Add to <span id="inv-addzone-button-zone">zone</span></button>
+        </div>
       </div>
+      </div>
+      <aside class="inventory-overview ui-panel">
+        <div class="inventory-overview-head">
+          <div>
+            <span class="inventory-kicker">WORKSPACE VIEW</span>
+            <h4>All stored items</h4>
+          </div>
+          <span class="inventory-overview-note">Across every zone</span>
+        </div>
+        <div class="controls inventory-controls">
+          <input id="inv-search" placeholder="Filter items or locations…" aria-label="Filter inventory" />
+          <label class="selall"><input type="checkbox" id="inv-materials-only" /> materials only</label>
+          <button id="inv-scan-shot" class="ghost" title="Paste or upload a screenshot of your colony storage">Scan Screenshot</button>
+        </div>
+        <div id="inv-totals"></div>
+        <div id="inv-table" class="ui-table-wrap"></div>
+      </aside>
     </div>
-    <div class="controls">
-      <input id="inv-search" placeholder="filter items / locations…" aria-label="Filter inventory" />
-      <label class="selall"><input type="checkbox" id="inv-materials-only" /> materials only</label>
-      <button id="inv-scan-shot" class="ghost" title="Paste or upload a screenshot of your colony storage">Scan Screenshot</button>
-    </div>
-    <div id="inv-totals"></div>
-    <div id="inv-table" class="ui-table-wrap"></div>
 
   </section>
 
@@ -749,9 +785,9 @@
 <script src="src/views/character.js?v=2"></script>
 <script src="src/views/reference.js?v=10"></script>
 <script src="src/views/gear.js?v=21"></script>
-<script src="src/views/inventory.js?v=26"></script>
+<script src="src/views/inventory.js?v=38"></script>
 <script src="src/views/player.js?v=5"></script>
-<script src="src/app-init.js?v=48"></script>
+<script src="src/app-init.js?v=51"></script>
 <script src="src/ui/trust-indicators.js?v=1"></script>
 
 </body>
