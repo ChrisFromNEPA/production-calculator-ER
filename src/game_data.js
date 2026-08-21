@@ -1377,6 +1377,25 @@ window.GAME_DATA = {
     },
     {
       "output": {
+        "item": "ER-X Rubber Rounds",
+        "quantity": 4,
+        "category": "Ammunition"
+      },
+      "inputs": [
+        {
+          "item": "rubber",
+          "quantity": 2
+        },
+        {
+          "item": "chemicals",
+          "quantity": 2
+        }
+      ],
+      "process": "manufacture",
+      "_source": "user"
+    },
+    {
+      "output": {
         "item": "DOA 187",
         "quantity": 1,
         "category": "Guns",

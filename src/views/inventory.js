@@ -293,17 +293,52 @@ function qpCategoryOf(name) {
   return QP_CAT_CACHE[name];
 }
 
+// Re-rendering the picker replaces its grid node. Preserve the document
+// viewport around those small UI updates so selecting an item or adding a
+// stack never makes the page jump to the focused control.
+function inventoryViewportSnapshot() {
+  var root = document.scrollingElement || document.documentElement;
+  return { left: root.scrollLeft, top: root.scrollTop };
+}
+
+function restoreInventoryViewport(snapshot) {
+  if (!snapshot) return;
+  var root = document.scrollingElement || document.documentElement;
+  root.scrollLeft = snapshot.left;
+  root.scrollTop = snapshot.top;
+}
+
+function preserveInventoryViewport(work) {
+  var snapshot = inventoryViewportSnapshot();
+  var result = work();
+  restoreInventoryViewport(snapshot);
+  requestAnimationFrame(function() { restoreInventoryViewport(snapshot); });
+  return result;
+}
+
+function markQuickPickerSelection(name) {
+  document.querySelectorAll('#qp-grid [data-qp-item]').forEach(function(btn) {
+    var selected = btn.dataset.qpItem === name;
+    btn.classList.toggle('selected', selected);
+    btn.setAttribute('aria-selected', selected ? 'true' : 'false');
+  });
+}
+
 function renderQuickPicker() {
   var cats = [
     { value: 'Materials', label: 'Mined + refined' },
     { value: 'Mineable', label: 'Mineable' },
+    { value: 'Medical', label: 'Medikits' },
+    { value: 'Ammunition', label: 'Ammo' },
+    { value: 'Drugs', label: 'Boosters / drugs' },
+    { value: 'Food & Drink', label: 'Food' },
     { value: 'All', label: 'All items' }
   ];
   var catsEl = document.getElementById('qp-cats');
   if (catsEl) {
     catsEl.innerHTML = cats.map(function(c) {
       var active = c.value === QP_CATEGORY ? ' active' : '';
-      return '<button class="qp-cat' + active + '" data-qp-cat="' + esc(c.value) + '">' + esc(c.label) + '</button>';
+      return '<button type="button" role="tab" class="qp-cat' + active + '" data-qp-cat="' + esc(c.value) + '" aria-selected="' + (c.value === QP_CATEGORY ? 'true' : 'false') + '" aria-controls="qp-grid">' + esc(c.label) + '</button>';
     }).join('');
   }
 
@@ -321,7 +356,7 @@ function renderQuickPicker() {
     // CATEGORIES is an ARRAY of category names, not an item→category map, so
     // CATEGORIES[name] was always undefined and every category tab came back
     // empty. catOf() resolves the item's real category (cached below).
-    return qpCategoryOf(name).indexOf(QP_CATEGORY.toLowerCase()) !== -1;
+    return qpCategoryOf(name) === QP_CATEGORY.toLowerCase();
   });
 
   // Free-text search across ALL items. Without this the grid capped at 60 of
@@ -344,8 +379,14 @@ function renderQuickPicker() {
     return { name: name, qty: atZone[name] || 0, mined: !!MINE_SITES[name] };
   });
   scored.sort(function(a,b) { return b.qty - a.qty || a.name.localeCompare(b.name); });
-  var cap = term ? 200 : 60; // searching implies intent — show far more matches
+  // Materials are a focused 45-item-ish set and should all be available on a
+  // large monitor. The desktop CSS removes the internal height cap for this
+  // category; other broad lists stay bounded until the user searches.
+  var cap = QP_CATEGORY === 'Materials' ? scored.length : (term ? 200 : 60);
   var top = scored.slice(0, cap);
+
+  var countEl = document.getElementById('qp-count');
+  if (countEl) countEl.textContent = filtered.length + ' item' + (filtered.length === 1 ? '' : 's');
 
   var gridEl = document.getElementById('qp-grid');
   if (gridEl) {
@@ -359,7 +400,7 @@ function renderQuickPicker() {
         var have = s.qty > 0 ? '<span class="qp-have">' + fmt(s.qty) + '</span>' : '';
         var minedTag = s.mined ? '<span class="qp-mined" aria-hidden="true">⛏</span>' : '';
         var isSel = s.name === sel ? ' selected' : '';
-        return '<button class="qp-item' + isSel + '" data-qp-item="' + esc(s.name) + '"' +
+        return '<button type="button" role="option" aria-selected="' + (isSel ? 'true' : 'false') + '" class="qp-item' + isSel + '" data-qp-item="' + esc(s.name) + '"' +
           ' title="' + esc(displayName(s.name)) + (s.qty > 0 ? ' — ' + fmt(s.qty) + ' here' : '') + '">' +
           minedTag + have + iconFor(s.name) +
           '<span class="qp-name">' + esc(displayName(s.name)) + '</span></button>';

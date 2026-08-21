@@ -2,6 +2,31 @@
 
 All notable public releases are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Inventory add-stock category tabs for mined/refined materials, mineables,
+  Medikits, ammo, boosters/drugs, food, and all items.
+- ER-X Rubber Rounds: 4 rounds per batch from 2 rubber and 2 chemicals.
+- Dedicated ER-X Rubber Rounds icon sourced from the existing ER-X ammo asset.
+- Regression coverage for the inventory picker and ER-X ammunition data.
+
+### Improved
+
+- Inventory keeps the Stock Ledger and Add stock workflow full width, with
+  Workspace View below it instead of a narrow side rail.
+- Large displays show the full mined/refined item grid; mobile keeps the picker
+  compact and internally scrollable.
+- Selecting or adding stock preserves the page position and focused control.
+- Theme palette contrast and stylesheet/service-worker cache busting were
+  tightened for the public UI.
+
+### Verification
+
+- `npm run check` passes with 379 tests, a production Pages build, and baseline
+  verification.
+
 ## [1.1.0] — All-Factions Public Player Support (local candidate)
 
 ### Added

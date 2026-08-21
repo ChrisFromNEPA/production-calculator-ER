@@ -4,6 +4,10 @@ A free, offline-capable production planner for **Empire Rising**. Use it to turn
 
 [**Open the live calculator**](https://chrisfromnepa.github.io/production-calculator-ER/)
 
+[![CI](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml)
+[![GitHub Pages](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
+
 > **Independent community project.** This project is not affiliated with or endorsed by the Empire Rising development team.
 
 Created by **John Snow** with members of the **Colonization & Mining Guild (CMG)** and community contributors.
@@ -21,6 +25,55 @@ Created by **John Snow** with members of the **Colonization & Mining Guild (CMG)
 - Includes reference tools for drugs, battle nodes, colonies, models, the item catalog, character assets, and community notes.
 
 No account, password, API key, shared guild database, or installation is required to use the public site.
+
+## Quick orientation
+
+This is a **browser-local production planner for Empire Rising**. It is useful
+when you want to answer one of these questions quickly:
+
+- What do I need to obtain, refine, and manufacture to make an item?
+- How much of a material do I already have at a specific colony or storage zone?
+- Which refinement path or production colony is cheaper under my assumptions?
+- What does a gear, medikit, booster, ammo item, or food plan require?
+
+The normal player path is:
+
+1. Create a local player profile.
+2. Choose a faction for economic context, or leave it **Unaffiliated**.
+3. Record the inventory you actually own.
+4. Choose a final item and quantity.
+5. Select production/refinement colonies and calculate.
+6. Work through the obtain, move, refine, and manufacture steps.
+
+The calculator does not require an account and does not infer ownership,
+inventory, recipes, or rebates from faction membership.
+
+### Inventory at a glance
+
+The **Inventory** tab is a two-step stock ledger:
+
+1. Choose the storage colony or zone.
+2. Add stock to that location using the item browser.
+
+The add-stock browser provides focused tabs for **Mined + refined** materials,
+**Mineable** items, **Medikits**, **Ammo**, **Boosters / drugs**, **Food**, and
+**All items**. On large monitors the mined/refined set expands into a full
+grid; on phones it remains a compact, internally scrollable picker. Selecting
+an item or adding a stack preserves the page position so repeated stocking is
+fast. **Workspace View** below the ledger summarizes totals across every zone
+and supports filtering, materials-only mode, and screenshot scanning.
+
+### What the numbers mean
+
+- **Estimated investment** is the gross player spend under the selected prices,
+  path, destination, taxes, transport, and inventory assumptions.
+- **Faction return** is modeled colony-owner income, not an automatic personal
+  discount.
+- **Net faction cost** is a planning figure after the modeled return.
+- **Cost per unit** spreads the plan investment across the requested output.
+
+Important values are dated snapshots and local assumptions, not live market or
+ownership feeds.
 
 ## Start here: your first production plan
 
@@ -57,7 +110,7 @@ For the complete rules, see [Factions and economics](docs/factions-and-economics
 | Area | Purpose |
 | --- | --- |
 | **Calculator** | Choose targets, configure quantity and destination, and build production plans. |
-| **Inventory** | Record materials and finished items already owned by the active player. |
+| **Inventory** | Choose a colony/zone, add mined/refined materials or other stock, review per-zone quantities, and scan/filter the all-zones workspace. |
 | **Gear** | Assemble an armor/booster loadout, review its stats, and send required pieces to the calculator. |
 | **Colonies** | Maintain local colony ownership and tax assumptions; export or import a reproducible world snapshot. |
 | **Drugs** | Browse drug reference data. |
@@ -196,10 +249,13 @@ Useful references:
 git clone https://github.com/ChrisFromNEPA/production-calculator-ER.git
 cd production-calculator-ER
 npm ci
-python3 -m http.server 8765
+npm run local:host
 ```
 
-Open <http://localhost:8765/> in a browser. Serving the repository over HTTP is preferable to opening `index.html` directly because service workers, modules, and asset paths follow browser origin rules.
+Open <http://localhost:4173/> on the development machine. From another
+machine on the trusted LAN, use `http://<linux-lan-ip>:4173/` instead. Serving
+the repository over HTTP is preferable to opening `index.html` directly because
+service workers, modules, and asset paths follow browser origin rules.
 
 ### Long-running LAN development server
 

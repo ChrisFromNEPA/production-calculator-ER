@@ -13,8 +13,8 @@
   @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 700 900; font-display: swap; src: url('fonts/orbitron-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/jetbrains-mono-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 </style>
-<link rel="stylesheet" href="src/styles.css?v=53" />
-<link rel="stylesheet" href="src/styles/ux-release.css?v=7" />
+<link rel="stylesheet" href="src/styles.css?v=57" />
+<link rel="stylesheet" href="src/styles/ux-release.css?v=8" />
 <link rel="stylesheet" href="src/styles/surviving-reference.css?v=2" />
 </head>
 <body>
@@ -341,10 +341,10 @@
               <strong>Choose a mined or refined item</strong>
               <span class="inventory-picker-note">Icons show the materials most useful for final-item production.</span>
             </div>
-            <span class="inventory-picker-mode">MATERIALS FIRST</span>
+            <span class="inventory-picker-meta"><span class="inventory-picker-mode">MATERIALS FIRST</span><span id="qp-count" class="qp-count" aria-live="polite"></span></span>
           </div>
           <input id="qp-search" class="qp-search" type="text" placeholder="🔍 Search mined + refined materials…" autocomplete="off" aria-label="Search mined and refined items" />
-          <div class="qp-cats" id="qp-cats"></div>
+          <div class="qp-cats" id="qp-cats" role="tablist" aria-label="Item categories to add to stock"></div>
           <div class="qp-grid" id="qp-grid"></div>
         </div>
         <div class="inventory-add-fields">

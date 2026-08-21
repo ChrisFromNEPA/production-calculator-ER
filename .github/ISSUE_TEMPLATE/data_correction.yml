@@ -19,7 +19,7 @@ body:
     id: current
     attributes:
       label: Current calculator value
-      description: What does the calculator currently show?
+      description: What should the calculator currently show? Include units and batch size when relevant.
     validations:
       required: true
   - type: textarea
@@ -33,7 +33,7 @@ body:
     id: source
     attributes:
       label: Source or evidence
-      description: Provide a public URL, published sheet row, or sanitized in-game evidence.
+      description: Provide a public URL, published sheet row, sanitized in-game evidence, or the exact recipe/asset source.
     validations:
       required: true
   - type: input

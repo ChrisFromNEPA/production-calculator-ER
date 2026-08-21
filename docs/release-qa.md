@@ -1,4 +1,18 @@
-# v1.0.0 Release QA
+# Release QA and deployment evidence
+
+## Current public deployment
+
+- URL: <https://chrisfromnepa.github.io/production-calculator-ER/>
+- Source branch: `main`
+- Last verified public commit: `ca975209efeec755fc775307b1b65ec9e3a7739b` (`fix: improve inventory screenshot matching (#7)`)
+- Deployment workflow: [GitHub Pages Actions](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
+- Local working-tree changes are not public until they pass CI, merge to `main`, and complete the Pages deployment.
+
+The public site is a static GitHub Pages application. A release is considered
+verified only after the exact commit passes CI and CodeQL, the Pages workflow
+builds and deploys that SHA, and the live site serves the expected artifact.
+
+## Historical v1.0.0 release QA
 
 ## Deployment target
 
@@ -35,7 +49,7 @@ Verified against the deployed Pages artifact:
 
 The Hermes browser harness could not attach to the available Chromium instance in this environment (`chrome-not-running`). The Chromium fallback verified the deployed DOM and artifact reachability, but did not replace a full interactive accessibility traversal. Future UI changes should repeat the interactive browser matrix when the harness is available.
 
-## v1.1.0 all-factions candidate gate
+## Historical v1.1.0 all-factions candidate gate
 
 The local candidate adds canonical faction profiles, neutral colony-world snapshots, cross-faction economics, workspace portability, neutral public knowledge surfaces, and direct public hash routes. It is not yet a public release.
 

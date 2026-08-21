@@ -716,33 +716,46 @@ document.addEventListener('DOMContentLoaded', () => {
   // Quick-picker: category tab clicks
   document.getElementById('qp-cats').addEventListener('click', e => {
     var btn = e.target.closest('[data-qp-cat]'); if (!btn) return;
-    QP_CATEGORY = btn.dataset.qpCat; renderQuickPicker();
+    preserveInventoryViewport(() => {
+      QP_CATEGORY = btn.dataset.qpCat;
+      renderQuickPicker();
+    });
   });
   // Quick-picker: item button clicks → select an item and jump to quantity
   document.getElementById('qp-grid').addEventListener('click', e => {
     var btn = e.target.closest('[data-qp-item]'); if (!btn) return;
+    var viewport = inventoryViewportSnapshot();
     document.getElementById('inv-item').value = btn.dataset.qpItem;
     renderInventorySelection();
-    renderQuickPicker(); // reflect the selection in the grid
+    // Do not rebuild the grid here: replacing it was the source of the page
+    // jump and also discarded the user's internal grid scroll position.
+    markQuickPickerSelection(btn.dataset.qpItem);
     const q = document.getElementById('inv-qty');
-    q.focus(); q.select(); // type the amount straight away
+    q.focus({ preventScroll: true }); q.select(); // type the amount straight away
+    restoreInventoryViewport(viewport);
+    requestAnimationFrame(() => restoreInventoryViewport(viewport));
   });
   // Quick-picker: free-text search across all items
-  document.getElementById('qp-search')?.addEventListener('input', () => renderQuickPicker());
+  document.getElementById('qp-search')?.addEventListener('input', () => preserveInventoryViewport(() => renderQuickPicker()));
   document.getElementById('qp-search')?.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
+    e.preventDefault();
     // Enter with exactly one match selects it and jumps to quantity.
     const only = document.querySelectorAll('#qp-grid [data-qp-item]');
     if (only.length === 1) {
+      var viewport = inventoryViewportSnapshot();
       document.getElementById('inv-item').value = only[0].dataset.qpItem;
       renderInventorySelection();
-      const q = document.getElementById('inv-qty'); q.focus(); q.select();
+      markQuickPickerSelection(only[0].dataset.qpItem);
+      const q = document.getElementById('inv-qty'); q.focus({ preventScroll: true }); q.select();
+      restoreInventoryViewport(viewport);
+      requestAnimationFrame(() => restoreInventoryViewport(viewport));
     }
   });
   // Enter in the quantity box adds — the picker focuses this field, so without
   // it the fastest path still required reaching for the mouse.
   document.getElementById('inv-qty').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('inv-addzone').click();
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('inv-addzone').click(); }
   });
   // Per-row move: open/close the inline partial-move form
   document.getElementById('zone-body').addEventListener('click', e => {
@@ -785,9 +798,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderZone();
     // The picker's "have" badges are per-zone, so it has to re-render too —
     // without this it kept showing the previously selected colony's stock.
-    renderQuickPicker();
+    preserveInventoryViewport(() => renderQuickPicker());
   });
   document.getElementById('inv-addzone').addEventListener('click', () => {
+    const viewport = inventoryViewportSnapshot();
     const zone = ACTIVE_ZONE;
     if (!zone) { toast('Pick a zone/colony first.'); return; }
     const typedItem = document.getElementById('inv-item').value.trim() || document.getElementById('qp-search').value.trim();
@@ -815,8 +829,10 @@ document.addEventListener('DOMContentLoaded', () => {
     toast(`+${fmt(qty)} ${displayName(item)} at ${zone} (now ${fmt(before + qty)}).`, 2500, 'success');
     // Ready for the next item — stocking a zone is a repetitive task.
     const nextItem = document.getElementById('qp-search');
-    nextItem?.focus();
+    nextItem?.focus({ preventScroll: true });
     nextItem?.select();
+    restoreInventoryViewport(viewport);
+    requestAnimationFrame(() => restoreInventoryViewport(viewport));
   });
   document.getElementById('inv-item').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inv-addzone').click(); });
   document.getElementById('zone-body').addEventListener('input', e => {

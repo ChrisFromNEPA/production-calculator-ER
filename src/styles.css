@@ -2924,6 +2924,17 @@ button.x:hover { color: #ff5577; }
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
+.inventory-picker-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+.qp-count {
+  color: var(--muted);
+  font-size: 0.56rem;
+  white-space: nowrap;
+}
 .inventory-add-fields {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 6.5rem auto;
@@ -3085,7 +3096,11 @@ button.x:hover { color: #ff5577; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   gap: 0.3rem; margin-bottom: 0.25rem;
+  min-height: 13rem;
   max-height: 13rem; overflow-y: auto;
+  overflow-anchor: none;
+  align-items: start;
+  align-content: start;
 }
 .qp-item {
   position: relative;
@@ -3189,10 +3204,16 @@ button.x:hover { color: #ff5577; }
 /* grid-wide message rows (no matches / "+N more") */
 .qp-empty { font-size: 0.6875rem; padding: 0.25rem 0; grid-column: 1 / -1; }
 
-/* The editor gets the full working width at 1080-ish laptop sizes. The
-   overview becomes a companion rail once there is room for both surfaces. */
+/* Keep the stock ledger and add-stock workflow as the primary full-width
+   surface. The workspace overview follows below it so the repeated stocking
+   task never gets squeezed into a skinny side rail. */
 @media (max-width: 1180px) {
   .inventory-layout { grid-template-columns: 1fr; }
+}
+@media (min-width: 1181px) {
+  .inventory-layout { grid-template-columns: minmax(0, 1fr); }
+  .inventory-add-flow { overflow-anchor: none; }
+  .qp-grid { max-height: none; overflow-y: visible; }
 }
 @media (min-width: 1800px) {
   .inventory-layout {
@@ -3200,11 +3221,13 @@ button.x:hover { color: #ff5577; }
   }
   .inventory-editor-head { margin-bottom: 1.2rem; }
   .inventory-add-flow { padding: 1rem; }
+  .qp-grid { grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr)); gap: 0.4rem; }
 }
 @media (min-width: 3000px) {
   .inventory-layout { gap: 1.5rem; }
   .inventory-add-fields { grid-template-columns: minmax(0, 1fr) 8rem auto; }
   .inventory-intro { font-size: 0.75rem; }
+  .qp-grid { grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: 0.45rem; }
 }
 @media (max-width: 720px) {
   main { padding-bottom: 5rem; }
@@ -3217,6 +3240,7 @@ button.x:hover { color: #ff5577; }
   .inventory-add-head { align-items: flex-start; flex-direction: column; gap: 0.3rem; }
   .inventory-picker-head { flex-direction: column; gap: 0.25rem; }
   .inventory-picker-mode { align-self: flex-start; }
+  .inventory-picker-meta { align-items: flex-start; flex-direction: column; gap: 0.15rem; }
   .inventory-add-fields { grid-template-columns: minmax(0, 1fr) 5.5rem; }
   .inventory-add-fields > button { grid-column: 1 / -1; width: 100%; }
   .inventory-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: center; }
@@ -3225,7 +3249,7 @@ button.x:hover { color: #ff5577; }
   .qp-browse > summary { align-items: flex-start; flex-direction: column; gap: 0.15rem; }
   .qp-cats { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.25rem; scrollbar-width: thin; }
   .qp-cat { flex: 0 0 auto; min-height: 2rem; }
-  .qp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 11rem; }
+  .qp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 11rem; max-height: 11rem; }
   .qp-item { min-height: 5rem; }
   .inventory-table-desktop { display: none; }
   .inventory-table-cards { display: grid; gap: 0.5rem; }
@@ -3621,8 +3645,8 @@ button.x:hover { color: #ff5577; }
 [data-theme="trans"] {
   --bg: #eef2ff; --bg2: #e4eafc; --panel: #ffffff; --panel2: #f5f2fa;
   --line: #c8d4f0; --line-bright: #a0b0e0; --text: #1a1a30; --muted: #7a7aaa;
-  --accent: #4dc8f0; --accent-bright: #80dcff; --accent-dim: #2898d0;
-  --cyan: #f598b0; --cyan-dim: #d87890;
+  --accent: #0070a0; --accent-bright: #00658f; --accent-dim: #005880;
+  --cyan: #b01855; --cyan-dim: #8b123f;
   --purple: #d0b0f0; --purple-dim: #b090d0;
   --warn: #f598b0; --bad: #e04060; --good: #4dc8f0;
   --surplus: #e0a030;
@@ -3653,11 +3677,11 @@ button.x:hover { color: #ff5577; }
 [data-theme="trans"] tbody tr:hover { background: rgba(77,200,240,.05); }
 [data-theme="trans"] input:focus, [data-theme="trans"] select:focus { box-shadow: 0 0 8px rgba(77,200,240,.4); }
 [data-theme="trans"] select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='%234dc8f0'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='%230070a0'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 8px center; background-size: 10px 6px;
 }
-[data-theme="trans"] .tab.active { border-bottom-color: #4dc8f0; color: #4dc8f0; }
-[data-theme="trans"] .gear-stat-panel h4 { color: #4dc8f0; }
+[data-theme="trans"] .tab.active { border-bottom-color: var(--accent); color: var(--accent); }
+[data-theme="trans"] .gear-stat-panel h4 { color: var(--accent); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    PRIDE THEME — rainbow neon on dark void

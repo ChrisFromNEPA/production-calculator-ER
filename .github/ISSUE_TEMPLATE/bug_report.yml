@@ -13,7 +13,7 @@ body:
     attributes:
       label: Area affected
       description: Which tab, workflow, item, recipe, or deployment surface is affected?
-      placeholder: Calculator / Inventory / Colonies / Models / deployment
+      placeholder: Calculator / Inventory add stock / Gear / Colonies / Models / Pages
     validations:
       required: true
   - type: textarea

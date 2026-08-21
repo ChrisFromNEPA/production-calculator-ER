@@ -2,6 +2,10 @@
 
 Thanks for helping improve Empire Rising Production Calculator.
 
+This repository ships a static, client-side, local-first calculator. It has no
+login, shared inventory service, analytics backend, or production API. Changes
+should preserve that boundary unless a design proposal explicitly changes it.
+
 ## Before opening a pull request
 
 1. Read the README, disclaimer, and relevant documentation.
@@ -15,16 +19,45 @@ Thanks for helping improve Empire Rising Production Calculator.
 
 ```bash
 npm ci
-npm test
-npm run build:3d
-npm run test:3d
-npm run test:budgets
+npm run local:host       # working-tree server on port 4173
+npm run check            # tests, Pages build, and baseline verification
+npm run assets:check     # required after asset/provenance changes
+```
+
+For a browser on another machine in the private LAN, open the Linux host's LAN
+address rather than `localhost` or `127.0.0.1`.
+
+Focused checks are available when relevant:
+
+```bash
+npm run test:sw-update   # clean-profile service-worker lifecycle
+npm run test:3d          # optional React Three Fiber build
+npm run test:budgets     # 3D transfer/performance budgets
 ```
 
 ## Pull requests
 
-Use a focused branch and a descriptive commit message. UI changes should include screenshots or a short browser verification note. Data changes should include a before/after explanation and provenance. Changes affecting storage, sharing, or network behavior must describe their privacy impact.
+Use a focused branch and a descriptive commit message. UI changes should
+include screenshots or a short browser verification note at the affected
+viewport sizes. Data changes should include a before/after explanation,
+exact item/recipe names, batch quantities, provenance, and the date checked.
+Changes affecting storage, sharing, or network behavior must describe their
+privacy impact.
 
 ## Data corrections
 
-Open a data-correction issue with the item/recipe, the observed value, the source or in-game evidence, and the date checked. Do not paste private account data or credentials.
+Open a data-correction issue with the item/recipe, the observed value, the
+source or in-game evidence, and the date checked. For recipe corrections,
+include output quantity, every input quantity, and the process. For icons or
+other binary assets, include the source asset identity and provenance record.
+Do not paste private account data or credentials.
+
+## Source and generated files
+
+- Edit `data/` for canonical game, recipe, faction, and world data.
+- Run the appropriate generator, such as `node scripts/build-data.mjs`, after
+  changing canonical data.
+- Do not hand-edit generated files in `src/generated/`, `src/game_data.js`, or
+  the Pages `dist/` artifact.
+- Keep game-derived assets distinct from MIT application code and update their
+  provenance records when required.
