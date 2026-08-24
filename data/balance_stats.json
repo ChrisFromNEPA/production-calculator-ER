@@ -1,13 +1,29 @@
 {
   "_meta": {
     "source": "ER - Balance Sheet (Google Sheets, published HTML, gid=29503079)",
+    "source_mode": "live-published-csv",
     "source_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&single=true",
     "source_csv_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pub?gid=29503079&single=true&output=csv",
     "sheet_title": "ER - Balance Sheet",
     "sheet_gid": "29503079",
-    "fetched": "2026-08-16",
+    "source_gid": "29503079",
+    "schema_version": 1,
+    "retrieved_utc": "2026-08-24T06:25:35Z",
+    "fetched": "2026-08-24",
+    "csv_sha256": "d9a326e0e9428e0b54891f71b8e1b13a38b9efc57f7efb7ec97c11f2c093e067",
     "rows_raw": 397,
     "rows_unique": 386,
+    "dupes_dropped": 11,
+    "duplicate_behavior": "identical-dupes-dropped",
+    "changed_items": {
+      "recipes_matched": 386,
+      "stats_added": [],
+      "stats_updated": [],
+      "stats_cleared": [],
+      "rows_raw": 397,
+      "rows_unique": 386,
+      "dupes_dropped": 11
+    },
     "note": "Live combat stats \u2014 authoritative for recipe output.stats."
   },
   "items": [
