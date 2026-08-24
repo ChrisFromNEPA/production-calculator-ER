@@ -29,6 +29,15 @@ function slotRuntime(saved = null) {
 }
 
 describe('shared energy and cooling slot model', () => {
+  it('keeps the shared slot guidance aligned with the level model and costs', () => {
+    const index = readFileSync(join(root, 'index.html'), 'utf8');
+    assert.match(index, /Energy<\/b> and <b>cooling<\/b> both run 1[–-]20/);
+    assert.match(index, /recommended default is <b>15 energy, 15 cooling<\/b>/);
+    assert.match(index, /1\.5 UC<\/b> per energy level and <b>1 UC/);
+    assert.match(index, /mining, refinement, and production/);
+    assert.doesNotMatch(index, /Energy<\/b> runs 1[–-]21 and <b>cooling<\/b> 0[–-]21/);
+  });
+
   it('uses levels 1 through 20 and defaults both settings to level 15', () => {
     const slots = slotRuntime();
     assert.equal(JSON.stringify(slots.values()), JSON.stringify([15, 15]));
