@@ -59,8 +59,11 @@ describe('shared energy and cooling slot model', () => {
 describe('drug production-plan instruction', () => {
   it('renders a spaced, labeled instruction and preserves canonical string codes', () => {
     const drug = data.drugs.find(d => d.name === 'Benzedrine');
+    const leadingZeroDrug = data.drugs.find(d => d.name === 'Dexedrine');
     assert.equal(typeof drug.code, 'string');
     assert.equal(drug.code, '2936');
+    assert.equal(typeof leadingZeroDrug.code, 'string');
+    assert.equal(leadingZeroDrug.code, '0578');
     const match = app.match(/function drugProductionInstruction\([\s\S]*?\n\}/);
     assert.ok(match, 'app.js must define drugProductionInstruction');
     const sandbox = { esc: value => String(value).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])) };
@@ -70,6 +73,8 @@ describe('drug production-plan instruction', () => {
     const text = rendered.replace(/<[^>]+>/g, '');
     assert.match(text, /Production code:\s*2936/);
     assert.match(text, /Power:\s*Low/);
+    const leadingZeroText = sandbox.renderDrugInstruction(leadingZeroDrug).replace(/<[^>]+>/g, '');
+    assert.match(leadingZeroText, /Production code:\s*0578/);
     assert.match(rendered, /prod-code/);
   });
 });
