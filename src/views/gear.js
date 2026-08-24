@@ -409,18 +409,24 @@ function closeGearPicker() {
 }
 
 // Move the highlighted option (roving tabindex + aria-activedescendant).
+function gearPickerNavigableOptions(options) {
+  return options.filter(el => el.getAttribute('aria-disabled') !== 'true');
+}
+
 function moveGearPickerActive(key) {
   const listbox = document.getElementById('gear-picker-items');
   const options = Array.from(listbox.querySelectorAll('.gear-picker-item'));
-  if (!options.length) return;
-  let index = gearPickerActiveIndex;
-  if (key === 'ArrowDown') index = Math.min(index + 1, options.length - 1);
+  const navigable = gearPickerNavigableOptions(options);
+  if (!navigable.length) return;
+  let index = navigable.indexOf(options[gearPickerActiveIndex]);
+  if (index < 0) index = key === 'ArrowUp' || key === 'End' ? navigable.length - 1 : 0;
+  if (key === 'ArrowDown') index = Math.min(index + 1, navigable.length - 1);
   else if (key === 'ArrowUp') index = Math.max(index - 1, 0);
   else if (key === 'Home') index = 0;
-  else if (key === 'End') index = options.length - 1;
-  gearPickerActiveIndex = index;
-  options.forEach((el, i) => { el.tabIndex = i === index ? 0 : -1; });
-  const active = options[index];
+  else if (key === 'End') index = navigable.length - 1;
+  const active = navigable[index];
+  gearPickerActiveIndex = options.indexOf(active);
+  options.forEach(el => { el.tabIndex = el === active ? 0 : -1; });
   listbox.setAttribute('aria-activedescendant', active.id);
   active.focus();
 }
@@ -617,7 +623,10 @@ function showGearPicker(slotName, armorType) {
       if (selected) { gearPickerActiveIndex = i; activeFound = true; }
       el.tabIndex = disabled ? -1 : (i === gearPickerActiveIndex ? 0 : -1);
     });
-    if (!activeFound || gearPickerActiveIndex >= optionEls.length) gearPickerActiveIndex = 0;
+    const navigableOptions = gearPickerNavigableOptions(optionEls);
+    if (!activeFound || gearPickerActiveIndex >= optionEls.length || optionEls[gearPickerActiveIndex]?.getAttribute('aria-disabled') === 'true') {
+      gearPickerActiveIndex = optionEls.indexOf(navigableOptions[0]);
+    }
     optionEls.forEach((el, i) => { el.tabIndex = el.getAttribute('aria-disabled') === 'true' ? -1 : (i === gearPickerActiveIndex ? 0 : -1); });
     if (optionEls.length) {
       body.setAttribute('aria-activedescendant', optionEls[gearPickerActiveIndex].id);

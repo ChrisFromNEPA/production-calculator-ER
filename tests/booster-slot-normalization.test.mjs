@@ -166,6 +166,20 @@ describe('picker occupancy and other-slot exclusion contract', () => {
     assert.match(gear, /Before → After/);
     assert.match(gear, /perk formula unsupported/i);
   });
+
+  it('keyboard navigation skips aria-disabled options', () => {
+    const match = gear.match(/function\s+gearPickerNavigableOptions\s*\([^)]*\)\s*\{[\s\S]*?\n\}/);
+    assert.ok(match, 'gear.js must define gearPickerNavigableOptions()');
+    const sandbox = {};
+    vm.createContext(sandbox);
+    vm.runInContext(match[0], sandbox);
+    const options = [
+      { getAttribute: () => null },
+      { getAttribute: name => name === 'aria-disabled' ? 'true' : null },
+      { getAttribute: () => null },
+    ];
+    assert.deepEqual(Array.from(sandbox.gearPickerNavigableOptions(options)), [options[0], options[2]]);
+  });
 });
 
 function indexHtml() {
