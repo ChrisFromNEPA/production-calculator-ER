@@ -1507,7 +1507,46 @@ tr td:first-child { white-space: nowrap; }
   line-height: 1;
 }
 
-/* ── Done (checked) transfer and mine card ── */
+/* One next action leads the itinerary; completed cards stay deliberately quiet. */
+.flow-card.current-objective,
+.colony-work-refine-card.current-objective,
+.recipe-card.current-objective {
+  position: relative;
+  z-index: 1;
+  border-width: 2px;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel2));
+  box-shadow: 0 0 16px rgba(255,45,149,.2);
+  transform: scale(1.015);
+}
+.flow-card.current-objective .flow-name,
+.recipe-card.current-objective .rc-cb-label {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.flow-card.current-objective::before,
+.colony-work-refine-card.current-objective::before,
+.recipe-card.current-objective::before {
+  content: 'NEXT OBJECTIVE';
+  position: absolute;
+  top: -0.55rem;
+  right: .65rem;
+  padding: .12rem .35rem;
+  border-radius: 3px;
+  background: var(--accent);
+  color: #000;
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-card.current-objective,
+  .colony-work-refine-card.current-objective,
+  .recipe-card.current-objective { transform: none; }
+}
+
+
 
 .flow-card.move.done,
 .flow-card.get.done {

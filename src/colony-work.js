@@ -148,5 +148,24 @@
       });
   }
 
-  return { buildColonyWorkQueue };
+  function workActionId(action) {
+    action = action || {};
+    if (action.kind === 'manufacture') return 'manufacture|' + action.item;
+    if (action.kind === 'move-batch') {
+      return 'move-batch|' + (action.from || action.colony || '') + '|' + (action.items || []).map(item =>
+        [item.kind, item.item, item.from, item.to].join('|')).join(';');
+    }
+    return [action.kind || 'action', action.item || '', action.from || '', action.to || '', action.colony || ''].join('|');
+  }
+
+  function currentColonyObjective(queue, manufacture, completed) {
+    completed = completed || {};
+    const actions = [];
+    (queue || []).forEach(group => (group.actions || []).forEach(action => actions.push(action)));
+    (manufacture || []).forEach(action => actions.push({ ...action, kind: 'manufacture' }));
+    const action = actions.find(candidate => !completed[workActionId(candidate)]);
+    return action ? { action, kind: action.kind, id: workActionId(action) } : null;
+  }
+
+  return { buildColonyWorkQueue, currentColonyObjective, workActionId };
 });

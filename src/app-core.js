@@ -1062,6 +1062,7 @@ function fmtUC(n) {
 }
 
 function stepCard(s, isFinal) {
+  const isCurrent = arguments[2] === true;
   const r = DATA.recipes[RECIPES_BY_OUTPUT[s.item][0]._idx];
   let pathNote = '';
   if (r.inputs_alternatives) {
@@ -1108,7 +1109,7 @@ function stepCard(s, isFinal) {
         <span class="production-progress-note">Local tracker only — the plan totals above stay unchanged.</span>
       </div>`;
 
-  return `<div class="recipe-card ${s.process}${isFinal ? ' compact-manufacture' : ''}${PRODUCE_DONE[encodeURIComponent(s.item)] ? ' done' : ''}${progressComplete ? ' progress-complete' : ''}">
+  return `<div class="recipe-card ${s.process}${isFinal ? ' compact-manufacture' : ''}${PRODUCE_DONE[encodeURIComponent(s.item)] ? ' done' : ''}${progressComplete ? ' progress-complete' : ''}${isCurrent ? ' current-objective' : ''}" data-current-objective="${isCurrent ? 'true' : 'false'}"${isCurrent ? ' aria-current="step"' : ''}>
       <div class="rc-cb-row">
         <label class="transport-check">
           <input type="checkbox" data-produce-key="${encodeURIComponent(s.item)}" onclick="toggleProduceCheck(this)"${PRODUCE_DONE[encodeURIComponent(s.item)] ? ' checked' : ''} />

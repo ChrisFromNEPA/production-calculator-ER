@@ -994,10 +994,37 @@ function renderAcquireSection(plan) {
 // owned, refine where selected, then move refined inputs to final production.
 // The queue intentionally reuses the existing per-action progress controls so
 // checklist state survives replans and mine-site changes.
+function colonyWorkObjective(queue, plan) {
+  var work = window.CMG_COLONY_WORK;
+  if (!work || typeof work.currentColonyObjective !== 'function') return null;
+  var complete = {};
+  (queue || []).forEach(function (group) {
+    (group.actions || []).forEach(function (action) {
+      var done = false;
+      if (action.kind === 'mine') done = !!OBTAINED_DONE[action.item] || miningProgressFor(action.item, Math.max(0, Number(action.qty) || 0)) >= Math.max(0, Number(action.qty) || 0);
+      else if (action.kind === 'refine') done = !!PRODUCE_DONE[encodeURIComponent(action.item)];
+      else done = !!TRANSFERS_DONE[work.workActionId(action)];
+      if (done) complete[work.workActionId(action)] = true;
+    });
+  });
+  return work.currentColonyObjective(queue, (plan && plan.manufacture || []).map(function (action) {
+    var done = !!PRODUCE_DONE[encodeURIComponent(action.item)];
+    if (done) complete[work.workActionId({ ...action, kind: 'manufacture' })] = true;
+    return action;
+  }), complete);
+}
+
+function objectiveAttrs(isCurrent) {
+  return isCurrent
+    ? ' current-objective" data-current-objective="true" aria-current="step"'
+    : '" data-current-objective="false"';
+}
+
 function renderColonyWorkSection(plan) {
   var builder = window.CMG_COLONY_WORK && window.CMG_COLONY_WORK.buildColonyWorkQueue;
   if (typeof builder !== 'function') return '<div class="muted">Colony work queue unavailable.</div>';
   var queue = builder(plan, OBTAIN_SITE);
+  var objective = colonyWorkObjective(queue, plan);
   if (!queue.length) return '<div class="muted">No mining, owned-stock movement, or refinement work is required away from the final production step.</div>';
 
   var totalActions = queue.reduce(function (sum, group) { return sum + group.actions.length; }, 0);
@@ -1039,7 +1066,7 @@ function renderColonyWorkSection(plan) {
               '" data-qty="' + mineBatchQty + '" data-mine-total="' + mineTotal + '">Record ' +
               (mineBatchQty === mineRemaining ? 'final ' : 'next ') + fmt(mineBatchQty) + ' batch' + (mineBatchQty === 1 ? '' : 'es') + '</button>' : '')
           : '';
-        html += '<div class="flow-card get colony-work-action' + (done ? ' done' : '') + '">' +
+        html += '<div class="flow-card get colony-work-action' + (done ? ' done' : '') + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' +
           '<label class="transport-check"><input type="checkbox" class="obtain-cb" data-obtain-key="' + esc(action.item) + '"' + (done ? ' checked' : '') + ' /><span class="checkmark"></span></label>' +
           '<div class="flow-card-body"><div class="flow-chip">' + iconFor(action.item) + '<span class="flow-name">Mine ' + esc(displayName(action.item)) + '</span><span class="flow-qty need">' + fmt(action.qty) + '</span></div>' +
           '<div class="flow-need">mine at ' + esc(action.site) + '</div>' + pickHtml + batchHtml + '</div></div>';
@@ -1063,7 +1090,7 @@ function renderColonyWorkSection(plan) {
             esc(displayName(item.item)) + ' ×' + fmt(item.qty) + ' → ' + esc(item.to) + '</span>';
         }).join('');
         var moveButton = '<button type="button" class="move-all-cargo-btn' + (batchDone ? ' done' : '') + '" data-move-all-cargo data-move-label="' + esc('Move all cargo from ' + batchOrigin + ' →') + '" aria-label="' + (batchDone ? 'Cargo moved' : 'Move all cargo from ' + esc(batchOrigin)) + '"' + (batchDone ? ' disabled' : '') + '>' + (batchDone ? '✓ Cargo moved' : 'Move all cargo →') + '</button>';
-        html += '<div class="flow-card move move-batch-action colony-work-action' + (batchDone ? ' done' : '') + '">' +
+        html += '<div class="flow-card move move-batch-action colony-work-action' + (batchDone ? ' done' : '') + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' +
           '<label class="transport-check"><input type="checkbox" class="transfer-cb" aria-label="Move all cargo from ' + esc(batchOrigin) + '" data-transfer-key="' + esc(batchKey) + '"' + (batchDone ? ' checked' : '') + ' /><span class="checkmark"></span></label>' +
           '<div class="flow-card-body"><div class="flow-chip">📦<span class="flow-name">Move all cargo from ' + esc(batchOrigin) + '</span><span class="flow-qty owned">' + action.items.length + ' lot' + (action.items.length !== 1 ? 's' : '') + '</span></div>' +
           '<div class="colony-work-move-items">' + batchDetails + '</div>' + moveButton + '</div></div>';
@@ -1071,7 +1098,7 @@ function renderColonyWorkSection(plan) {
       }
 
       if (action.kind === 'refine') {
-        html += '<div class="colony-work-refine-card">' + stepCard(action.step || action) + '</div>';
+        html += '<div class="colony-work-refine-card' + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' + stepCard(action.step || action) + '</div>';
         return;
       }
 
@@ -1080,7 +1107,7 @@ function renderColonyWorkSection(plan) {
         : action.kind + '|' + action.item + '|' + action.from + '|' + action.to;
       var moveDone = !!TRANSFERS_DONE[moveKey];
       var moveLabel = action.kind === 'move-mined' ? 'After mining, move ' : action.kind === 'move-refined' ? 'Move refined ' : 'Move owned ';
-      html += '<div class="flow-card move colony-work-action' + (moveDone ? ' done' : '') + '">' +
+      html += '<div class="flow-card move colony-work-action' + (moveDone ? ' done' : '') + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' +
         '<label class="transport-check"><input type="checkbox" class="transfer-cb" data-transfer-key="' + esc(moveKey) + '"' + (moveDone ? ' checked' : '') + ' /><span class="checkmark"></span></label>' +
         '<div class="flow-card-body"><div class="flow-chip">' + iconFor(action.item) + '<span class="flow-name">' + moveLabel + esc(displayName(action.item)) + '</span><span class="flow-qty owned">' + fmt(action.qty) + '</span></div>' +
         '<div class="flow-need">' + esc(action.from) + ' → ' + esc(action.to) + '</div></div></div>';
@@ -1614,7 +1641,10 @@ function renderPlan(item, qty, targetEl) {
   const colonyWorkHtml = '<div class="colony-work-wrap">' + renderColonyWorkSection(plan) + '</div>';
 
   // ---- 3) PRODUCE ----
-  const manufactureHtml = plan.manufacture.map(s => stepCard(s, true)).join('');
+  const colonyObjective = colonyWorkObjective(
+    (window.CMG_COLONY_WORK && window.CMG_COLONY_WORK.buildColonyWorkQueue(plan, OBTAIN_SITE)) || [], plan);
+  const manufactureHtml = plan.manufacture.map(s => stepCard(s, true,
+    colonyObjective && colonyObjective.id === window.CMG_COLONY_WORK.workActionId({ ...s, kind: 'manufacture' }))).join('');
 
   // Stock of the requested item no longer cancels the request — the plan always
   // makes the amount asked for — so this is now purely informational.
@@ -1850,7 +1880,10 @@ function runMultiPlan(options) {
 
   // ---- Sections (combined) — one itinerary, then refinement and manufacture ----
   const mColonyWork = '<div class="colony-work-wrap">' + renderColonyWorkSection(plan) + '</div>';
-  const mManufacture = plan.manufacture.length ? plan.manufacture.map(s => stepCard(s, true)).join('') : '<div class="muted">No manufacturing step.</div>';
+  const mColonyObjective = colonyWorkObjective(
+    (window.CMG_COLONY_WORK && window.CMG_COLONY_WORK.buildColonyWorkQueue(plan, OBTAIN_SITE)) || [], plan);
+  const mManufacture = plan.manufacture.length ? plan.manufacture.map(s => stepCard(s, true,
+    mColonyObjective && mColonyObjective.id === window.CMG_COLONY_WORK.workActionId({ ...s, kind: 'manufacture' }))).join('') : '<div class="muted">No manufacturing step.</div>';
   html += planSection('colony-work', 1, 'Visit, mine, move & refine by colony', mColonyWork);
   html += planSection('manufacture', 2, 'Manufacture at ' + esc(DESTINATION), mManufacture);
   html += renderMiningPanel(plan);
