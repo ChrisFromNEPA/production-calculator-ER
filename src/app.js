@@ -1910,13 +1910,21 @@ function saveCurrentPlan() {
 function loadSavedPlan(id) {
   const p = SAVED_PLANS.find(x => x.id === id);
   if (!p) return;
+  // A saved plan may predate the final-production / refinement allowlists,
+  // so validate before assigning — an invalid value (e.g. a legacy
+  // "apartment" save) falls back to the current valid destination instead of
+  // being reintroduced. The repaired state is persisted below.
+  const validDest = validFinalProduction(p.dest) ? p.dest : DESTINATION;
+  const savedRefineDest = validRefinement(p.refineDest) ? p.refineDest
+    : validRefinement(p.dest) ? p.dest : validDest;
   const destSel = document.getElementById('calc-dest');
-  if (destSel && p.dest) { destSel.value = p.dest; DESTINATION = p.dest; window.ENGINE.DESTINATION = p.dest; }
+  if (destSel && validDest) destSel.value = validDest;
+  DESTINATION = validDest;
+  window.ENGINE.DESTINATION = validDest;
   const refineSel = document.getElementById('calc-refine-dest');
-  const savedRefineDest = p.refineDest || p.dest || DESTINATION;
   if (refineSel) refineSel.value = savedRefineDest;
   REFINE_DESTINATION = savedRefineDest;
-  REFINE_DESTINATION_EXPLICIT = !!p.refineDest;
+  REFINE_DESTINATION_EXPLICIT = validRefinement(p.refineDest);
   if (typeof syncCombinedSelector === 'function') syncCombinedSelector();
   saveDestination();
   if (p.kind === 'tray') {

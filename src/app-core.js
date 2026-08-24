@@ -154,6 +154,21 @@ function storageList() {
   return allKnownLocations().filter(c => !skip.has(c.toLowerCase()));
 }
 
+// One shared definition of which values each destination may hold. Every
+// entry point — selector population, saved-state load, saved-plan load and
+// the what-if handler — validates through these helpers, so a rejected
+// legacy location can never re-enter through a side door.
+function refinementLocationList() {
+  const skip = new Set(['nyc manhattan', 'xenomorph hunt (capped on kills)', 'apartment']);
+  return allKnownLocations().filter(c => !skip.has(c.toLowerCase()));
+}
+function validFinalProduction(loc) {
+  return !!loc && colonyList().includes(loc);
+}
+function validRefinement(loc) {
+  return !!loc && refinementLocationList().includes(loc);
+}
+
 function populateDestinations() {
   const sel = document.getElementById('calc-dest');
   let colonies = colonyList();
@@ -174,8 +189,7 @@ function populateDestinations() {
   // (the game's Manhattan spelling) and non-place activities like the
   // xenomorph hunt. Apartments are storage, never refinement colonies.
   const refineSel = document.getElementById('calc-refine-dest');
-  const skipRefine = new Set(['nyc manhattan', 'xenomorph hunt (capped on kills)', 'apartment']);
-  const refinementLocations = allKnownLocations().filter(c => !skipRefine.has(c.toLowerCase()));
+  const refinementLocations = refinementLocationList();
   if (refineSel) {
     refineSel.innerHTML = '';
     refinementLocations.forEach(c => {
@@ -262,37 +276,43 @@ function syncCombinedSelector() {
 }
 // Saved-state migration: legacy saves may contain destinations that are no
 // longer valid (e.g. apartment), and pre-refinement saves have no refine
-// value at all. Normalize both on load.
+// value at all. Normalize both on load, using the same shared allowlists as
+// the selectors, and persist whatever was repaired so the next load is clean.
 function normalizeSavedDestinations() {
-  const skip = new Set(['apartment', 'xenomorph hunt (capped on kills)']);
-  const colonies = colonyList();
-  if (DESTINATION && !colonies.includes(DESTINATION) && skip.has(DESTINATION.toLowerCase())) {
+  let repaired = false;
+  if (DESTINATION && !validFinalProduction(DESTINATION)) {
     DESTINATION = 'Berlin';
     window.ENGINE.DESTINATION = DESTINATION;
+    repaired = true;
   }
-  if (REFINE_DESTINATION && !allKnownLocations().includes(REFINE_DESTINATION)) {
+  if (REFINE_DESTINATION && !validRefinement(REFINE_DESTINATION)) {
     REFINE_DESTINATION = DESTINATION;
     REFINE_DESTINATION_EXPLICIT = false;
-  } else if (REFINE_DESTINATION && skip.has(REFINE_DESTINATION.toLowerCase())) {
-    REFINE_DESTINATION = DESTINATION;
-    REFINE_DESTINATION_EXPLICIT = false;
+    repaired = true;
   }
+  if (repaired) saveDestination();
 }
 function loadDestination() {
   const skip = new Set(['apartment', 'xenomorph hunt (capped on kills)']);
+  // A legacy stored value that is rejected must be rewritten in storage, not
+  // merely ignored in memory — otherwise every reload re-runs the repair.
+  let storedInvalid = false;
   try {
     const v = localStorage.getItem('cmg_destination');
     const r = localStorage.getItem('cmg_refine_destination');
     if (v && !skip.has(v.toLowerCase())) DESTINATION = v;
+    else if (v) storedInvalid = true;
     if (r && !skip.has(r.toLowerCase())) {
       REFINE_DESTINATION = r;
       REFINE_DESTINATION_EXPLICIT = true;
     } else {
+      if (r) storedInvalid = true;
       REFINE_DESTINATION = DESTINATION;
       REFINE_DESTINATION_EXPLICIT = false;
     }
   } catch(e) {}
   normalizeSavedDestinations();
+  if (storedInvalid) saveDestination();
   populateDestinations();
 }
 function saveDestination() {

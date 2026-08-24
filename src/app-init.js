@@ -538,6 +538,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const destSel = document.getElementById('calc-dest');
       if (destSel) destSel.value = colony;
       DESTINATION = colony;
+      // Keep the engine mirror and the combined "Same location" selector in
+      // step with the direct assignment above.
+      window.ENGINE.DESTINATION = colony;
+      if (typeof syncCombinedSelector === 'function') syncCombinedSelector();
       saveDestination();
       updateColonyTaxNote();
       if (CALC_TRAY.length) runMultiPlan();

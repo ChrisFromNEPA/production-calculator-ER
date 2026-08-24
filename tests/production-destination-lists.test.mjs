@@ -26,7 +26,7 @@ describe('production destination boundaries', () => {
   });
 
   it('keeps refinement destinations broader than final production', () => {
-    assert.match(core, /const refinementLocations = allKnownLocations\(\)/);
+    assert.match(core, /const refinementLocations = refinementLocationList\(\)/);
     assert.match(core, /refineSel[\s\S]*refinementLocations\.forEach/);
   });
 
@@ -53,9 +53,12 @@ describe('production destination boundaries', () => {
     assert.match(app, /FINAL_PRODUCTION_LOCATIONS\.filter\(c => c !== 'NYC Manhattan'\)/);
     assert.match(core, /Manhattan:\s*'NYC Manhattan'/);
     // Refinement excludes the NYC Manhattan alias and apartment storage via a
-    // lowercase skip set (t_4454bc38); Manhattan itself stays available.
-    assert.match(core, /const skipRefine = new Set\(\['nyc manhattan', 'xenomorph hunt \(capped on kills\)', 'apartment'\]\)/);
-    assert.match(core, /refinementLocations = allKnownLocations\(\)\.filter\(c => !skipRefine\.has\(c\.toLowerCase\(\)\)\)/);
+    // lowercase skip set (t_4454bc38); the set now lives in the shared
+    // refinementLocationList() allowlist helper (t_db1c1893) so saved-state
+    // and saved-plan loads validate against the identical list. Manhattan
+    // itself stays available.
+    assert.match(core, /const skip = new Set\(\['nyc manhattan', 'xenomorph hunt \(capped on kills\)', 'apartment'\]\);\n  return allKnownLocations\(\)\.filter/);
+    assert.match(core, /refinementLocations = refinementLocationList\(\)/);
   });
 
   it('renders audio only when a colony has a world asset', () => {

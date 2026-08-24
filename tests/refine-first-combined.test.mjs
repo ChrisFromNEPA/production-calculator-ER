@@ -93,8 +93,10 @@ describe('production-only options and Apartment exclusion', () => {
   });
 
   it('keeps Apartment available in storage/move-to selectors', () => {
-    assert.match(core, /function storageList\(\)/);
-    const storageBlock = core.slice(core.indexOf('function storageList('), core.indexOf('function populateDestinations('));
+    assert.match(core, /function storageList\(/);
+    // Slice only the storageList body — later helpers (refinement allowlists)
+    // legitimately mention apartment because they exclude it.
+    const storageBlock = core.slice(core.indexOf('function storageList('), core.indexOf('function refinementLocationList('));
     assert.doesNotMatch(storageBlock, /apartment/i);
   });
 });
