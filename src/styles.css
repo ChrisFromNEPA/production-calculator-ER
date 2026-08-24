@@ -1334,19 +1334,20 @@ tr td:first-child { white-space: nowrap; }
 .flow-card.move .transport-check { margin-top: 0.15rem; }
 
 /* The grouped cargo transfer is the next action players most often miss. Keep
-   an unfinished "Move all cargo" card visually louder than its completed state. */
-.flow-card.move-batch-action:not(.done) {
+   it visually louder only while it is the current objective; future cargo
+   moves should remain quiet until mining/refining work is complete. */
+.flow-card.move-batch-action.current-objective:not(.done) {
   border: 2px solid var(--cyan);
   background: color-mix(in srgb, var(--cyan) 10%, var(--panel2));
   box-shadow: 0 0 14px rgba(0,240,255,.2), inset 3px 0 8px -3px rgba(0,240,255,.28);
 }
-.flow-card.move-batch-action:not(.done) .flow-name {
+.flow-card.move-batch-action.current-objective:not(.done) .flow-name {
   color: var(--text);
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: .01em;
 }
-.flow-card.move-batch-action:not(.done) .colony-work-move-items {
+.flow-card.move-batch-action.current-objective:not(.done) .colony-work-move-items {
   font-size: .8rem;
   color: var(--text);
 }

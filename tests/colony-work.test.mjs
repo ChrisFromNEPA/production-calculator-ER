@@ -25,8 +25,9 @@ describe('combined per-colony work queue', () => {
   it('makes the remaining all-cargo move the dominant next action', () => {
     assert.match(appSource, /flow-card move move-batch-action colony-work-action/);
     assert.match(appSource, /Move all cargo from/);
-    assert.match(cssSource, /\.flow-card\.move-batch-action:not\(\.done\)[\s\S]*?font-size:\s*1rem/);
-    assert.match(cssSource, /\.flow-card\.move-batch-action:not\(\.done\)[\s\S]*?border:\s*2px/);
+    assert.match(cssSource, /\.flow-card\.move-batch-action\.current-objective:not\(\.done\)[\s\S]*?font-size:\s*1rem/);
+    assert.match(cssSource, /\.flow-card\.move-batch-action\.current-objective:not\(\.done\)[\s\S]*?border:\s*2px/);
+    assert.doesNotMatch(cssSource, /\.flow-card\.move-batch-action:not\(\.done\)\s*\{/);
   });
 
   it('provides a direct action button for the grouped cargo move', () => {
