@@ -180,6 +180,43 @@ describe('picker occupancy and other-slot exclusion contract', () => {
     ];
     assert.deepEqual(Array.from(sandbox.gearPickerNavigableOptions(options)), [options[0], options[2]]);
   });
+
+  it('keyboard navigation never focuses or activates a disabled option', () => {
+    const helper = gear.match(/function\s+gearPickerNavigableOptions\s*\([^)]*\)\s*\{[\s\S]*?\n\}/);
+    const mover = gear.match(/function\s+moveGearPickerActive\s*\([^)]*\)\s*\{[\s\S]*?\n\}/);
+    assert.ok(helper, 'gear.js must define gearPickerNavigableOptions()');
+    assert.ok(mover, 'gear.js must define moveGearPickerActive()');
+    const focused = [];
+    const option = (id, disabled = false) => ({
+      id,
+      tabIndex: -1,
+      getAttribute: name => name === 'aria-disabled' && disabled ? 'true' : null,
+      focus: () => focused.push(id),
+    });
+    const options = [option('first'), option('duplicate', true), option('last')];
+    const listbox = {
+      querySelectorAll: () => options,
+      setAttribute: (name, value) => { listbox[name] = value; },
+    };
+    const sandbox = {
+      gearPickerActiveIndex: 0,
+      document: { getElementById: () => listbox },
+    };
+    vm.createContext(sandbox);
+    vm.runInContext(`${helper[0]}\n${mover[0]}`, sandbox);
+
+    sandbox.moveGearPickerActive('ArrowDown');
+    assert.equal(sandbox.gearPickerActiveIndex, 2);
+    assert.equal(listbox['aria-activedescendant'], 'last');
+    assert.deepEqual(focused, ['last']);
+    assert.equal(options[1].tabIndex, -1);
+
+    sandbox.moveGearPickerActive('ArrowUp');
+    assert.equal(sandbox.gearPickerActiveIndex, 0);
+    assert.equal(listbox['aria-activedescendant'], 'first');
+    assert.deepEqual(focused, ['last', 'first']);
+    assert.equal(options[1].tabIndex, -1);
+  });
 });
 
 function indexHtml() {
