@@ -29,10 +29,12 @@ test('Colonies workspace layout contract', async (t) => {
     assert.match(app, /data-colony-edit/);
   });
 
-  await t.test('keeps filtering, persistence, and joint-owner behavior wired', () => {
+  await t.test('keeps filtering, persistence, and Global Dominion labeling wired', () => {
     assert.match(app, /col-filter/);
     assert.match(app, /colonyOwnerIds\(r\.colony\)/);
-    assert.match(app, /COLONY_OWNER\[c\] = owner/);
+    assert.match(app, /global-dominion|Global Dominion/);
+    assert.doesNotMatch(app, /value="joint"/);
+    assert.match(app, /COLONY_OWNER\[c\] = \[owner\]/);
     assert.match(app, /syncShared\('taxes'/);
     assert.match(app, /col-search/);
     assert.match(app, /mines\[r\.colony\]/);

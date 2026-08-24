@@ -22,7 +22,7 @@ describe('faction-aware missing-material colony defaults', () => {
   it('defaults each missing raw material to the cheapest eligible mine for the active faction', () => {
     installFactionWorld({
       faction: 'CMG',
-      owners: { Andromeda: ['CMG'], Paris: ['CMG'], Brooklyn: ['LED', 'FDC'] },
+      owners: { Andromeda: ['CMG'], Paris: ['CMG'], Brooklyn: ['FDC'] },
     });
     setPlayerInv([]);
     const result = compute('carbon', 1, {}, {}, {}, 'Paris', { prod: 0, mine: 0, trans: 0 });
@@ -32,7 +32,7 @@ describe('faction-aware missing-material colony defaults', () => {
   it('keeps an explicit obtain-site choice instead of replacing it with the default', () => {
     installFactionWorld({
       faction: 'CMG',
-      owners: { Andromeda: ['CMG'], Paris: ['CMG'], Brooklyn: ['LED', 'FDC'] },
+      owners: { Andromeda: ['CMG'], Paris: ['CMG'], Brooklyn: ['FDC'] },
     });
     window.OBTAIN_SITE = { coal: "DeMorgan's Castle" };
     setPlayerInv([]);

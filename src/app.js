@@ -655,7 +655,10 @@ function colNorm(s) { return String(s).replace(/[^a-zA-Z0-9]/g, '').toLowerCase(
 
 // Build the union: every colony the calculator knows, plus every world.
 function colonyRows() {
-  var colonies = colonyList();
+  var colonies = [...new Set([
+    ...FINAL_PRODUCTION_LOCATIONS.filter(c => c !== 'NYC Manhattan'),
+    ...Object.keys(DEFAULT_COLONY_OWNER).filter(c => c !== 'NYC Manhattan'),
+  ])];
   var used = {};
   var rows = [];
 
@@ -667,7 +670,7 @@ function colonyRows() {
       if (wn === n || wn.indexOf(n) === 0 || n.indexOf(wn) === 0) { world = WORLD_NAMES[i]; break; }
     }
     if (world) used[world] = true;
-    rows.push({ name: c, colony: c, world: world, priced: true });
+    rows.push({ name: c, colony: c, world: world, priced: FINAL_PRODUCTION_LOCATIONS.includes(c) });
   });
 
   WORLD_NAMES.forEach(function (w) {
@@ -684,19 +687,19 @@ function colonyRows() {
 function colonyOwnerLabel(ids) {
   if (!ids.length) return '<span class="owner-chip owner-chip-empty">Owner not set</span>';
   const names = ids.map(id => window.factionById?.(id)?.name || id);
-  const joint = ids.length > 1;
-  return ids.map((id, i) => `<span class="owner-chip owner-chip-${esc(id.toLowerCase())}">${esc(names[i])}</span>`).join('') +
-    (joint ? '<span class="owner-joint-label">Global Dominion · joint holding</span>' : '');
+  const alliance = ['LED', 'FDC'].includes(ids[0]);
+  return `<span class="owner-chip owner-chip-${esc(ids[0].toLowerCase())}">${esc(names[0])}</span>` +
+    (alliance ? '<span class="owner-alliance-label">Global Dominion alliance · actual owner shown</span>' : '');
 }
 
 function renderColonyOverview(productionRows) {
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
   const owned = productionRows.filter(r => r.colony && isOwnColony(r.colony)).length;
-  const joint = productionRows.filter(r => r.colony && colonyOwnerIds(r.colony).length > 1).length;
+  const dominion = productionRows.filter(r => r.colony && ['LED', 'FDC'].includes(colonyOwnerIds(r.colony)[0])).length;
   const taxed = productionRows.filter(r => r.colony && (COLONY_TAX[r.colony] || 0) > 0).length;
-  set('col-metric-production', productionRows.length);
+  set('col-metric-production', productionRows.filter(r => r.priced).length);
   set('col-metric-owned', owned);
-  set('col-metric-joint', joint);
+  set('col-metric-dominion', dominion);
   set('col-metric-taxed', taxed);
 }
 
@@ -707,7 +710,7 @@ function renderColonyCard(r, mines, q) {
   const enc = encodeURIComponent(r.colony);
   const yields = mines[r.colony] || [];
   const ownerOptions = (window.ER_FACTIONS?.selectable || []).map(f =>
-    `<label class="owner-check"><input type="checkbox" value="${esc(f.id)}" data-colony-owner="${enc}"${owners.includes(f.id) ? ' checked' : ''} /> <span>${esc(f.name)}</span></label>`
+    `<label class="owner-check"><input type="radio" name="colony-owner-${enc}" value="${esc(f.id)}" data-colony-owner="${enc}"${owners.includes(f.id) ? ' checked' : ''} /> <span>${esc(f.name)}</span></label>`
   ).join('');
   const resources = yields.length ? yields.map(m => {
     const have = (window.INV_TOTAL && INV_TOTAL[m]) || 0;
@@ -715,10 +718,10 @@ function renderColonyCard(r, mines, q) {
     return `<span class="resource-chip${hit ? ' resource-chip-hit' : ''}">${iconFor(m)}<span>${esc(displayName(m))}</span>${have ? `<b>${fmt(have)}</b>` : ''}</span>`;
   }).join('') : '<span class="muted">No mine data</span>';
   return `<article class="colonies-card${own ? ' colonies-card-owned' : ''}" data-colony-card="${enc}">
-    <div class="colonies-card-head"><div><span class="eyebrow">Production world</span><h5>${esc(r.name)}</h5></div><button class="icon-action faction-audio" type="button" aria-label="Play welcome audio for ${esc(r.name)}" onclick="playAudio('voice_extracted/${r.world}.ogg',0.5)">🔊</button></div>
-    <div class="colonies-card-status"><div class="owner-list" aria-label="Owners of ${esc(r.name)}">${colonyOwnerLabel(owners)}</div><span class="colony-tax-value">Tax <b>${rate}%</b></span></div>
+    <div class="colonies-card-head"><div><span class="eyebrow">${r.priced ? 'Production world' : 'Owned world'}</span><h5>${esc(r.name)}</h5></div>${r.world ? `<button class="icon-action faction-audio" type="button" aria-label="Play welcome audio for ${esc(r.name)}" onclick="playAudio('voice_extracted/${r.world}.ogg',0.5)">🔊</button>` : ''}</div>
+    <div class="colonies-card-status"><div class="owner-list" aria-label="Actual owner of ${esc(r.name)}">${colonyOwnerLabel(owners)}</div><span class="colony-tax-value">Tax <b>${rate}%</b></span></div>
     <div class="colonies-resources"><span class="colonies-label">Mines here</span><div class="resource-list">${resources}</div></div>
-    <details class="colony-editor"><summary data-colony-edit="${enc}">Edit world state</summary><div class="colony-editor-body"><fieldset><legend>Owners</legend><label class="owner-check owner-check-clear"><input type="checkbox" data-colony-clear="${enc}"${owners.length ? '' : ' checked'} /> Owner not set</label>${ownerOptions}</fieldset><label class="tax-editor">Colony tax <span><input type="number" min="0" max="500" step="5" value="${rate}" data-ct-tax="${enc}" aria-label="Tax percent at ${esc(r.name)}" /> %</span></label><p class="muted editor-hint">Ownership controls faction return calculations; tax changes production cost.</p></div></details>
+    <details class="colony-editor"><summary data-colony-edit="${enc}">Edit world state</summary><div class="colony-editor-body"><fieldset><legend>Actual owner</legend><label class="owner-check owner-check-clear"><input type="radio" name="colony-owner-${enc}" data-colony-clear="${enc}"${owners.length ? '' : ' checked'} /> Owner not set</label>${ownerOptions}</fieldset><p class="muted editor-hint">Global Dominion is the LED/FDC alliance; it is not a second owner. Only the actual owner receives the 85% return. Tax changes production cost.</p><label class="tax-editor">Colony tax <span><input type="number" min="0" max="500" step="5" value="${rate}" data-ct-tax="${enc}" aria-label="Tax percent at ${esc(r.name)}" /> %</span></label></div></details>
   </article>`;
 }
 
@@ -735,9 +738,9 @@ function renderColonies() {
   const mode = (document.getElementById('col-filter') || {}).value || 'all';
   const pricedOnly = !!(document.getElementById('col-priced-only') || {}).checked;
   const allRows = colonyRows();
-  const productionRows = allRows.filter(r => r.priced);
+  var productionRows = allRows.filter(r => r.priced || colonyOwnerIds(r.colony).length);
   const matches = r => !q || r.name.toLowerCase().includes(q) || ((r.colony && mines[r.colony]) || []).some(m => m.toLowerCase().includes(q)) || colonyOwnerIds(r.colony || '').some(id => id.toLowerCase().includes(q));
-  const filteredProduction = productionRows.filter(r => matches(r) && (!pricedOnly || r.priced) && (mode === 'all' || mode === 'mine' && isOwnColony(r.colony) || mode === 'joint' && colonyOwnerIds(r.colony).length > 1));
+  const filteredProduction = productionRows.filter(r => matches(r) && (!pricedOnly || r.priced) && (mode === 'all' || mode === 'mine' && isOwnColony(r.colony) || mode === 'global-dominion' && ['LED', 'FDC'].includes(colonyOwnerIds(r.colony)[0])));
   const referenceRows = allRows.filter(r => !r.priced && matches(r) && mode === 'reference');
   renderColonyOverview(productionRows);
   grid.innerHTML = filteredProduction.map(r => renderColonyCard(r, mines, q)).join('') || '<div class="colonies-empty">No production colonies match. Try another search or filter.</div>';
@@ -746,7 +749,7 @@ function renderColonies() {
   if (refGrid) refGrid.innerHTML = referenceRows.map(renderReferenceCard).join('') || '<div class="colonies-empty">Choose “Other known worlds” to browse reference worlds.</div>';
   if (refSection) refSection.hidden = mode !== 'reference';
   const count = document.getElementById('col-count');
-  if (count) count.textContent = `${filteredProduction.length} shown · ${productionRows.length} production worlds`;
+  if (count) count.textContent = `${filteredProduction.length} shown · ${productionRows.filter(r => r.priced).length} final-production worlds`;
   updateColonyTaxNote();
 }
 // adoptRemoteColonies() calls this by name when another member's change lands.
@@ -814,14 +817,14 @@ function onColonyTaxChange(el) {
   } else if (ownerFor) {
     const c = decodeURIComponent(ownerFor);
     const card = el.closest('[data-colony-card]');
-    const owner = Array.from(card?.querySelectorAll(`[data-colony-owner="${ownerFor}"]:checked`) || []).map(input => input.value).filter(Boolean);
+    const owner = card?.querySelector(`[data-colony-owner="${ownerFor}"]:checked`)?.value || '';
     const clear = card?.querySelector(`[data-colony-clear="${ownerFor}"]`);
     if (clear?.checked) {
       card.querySelectorAll(`[data-colony-owner="${ownerFor}"]`).forEach(input => { input.checked = false; });
       delete COLONY_OWNER[c];
     } else if (owner.length) {
       if (clear) clear.checked = false;
-      COLONY_OWNER[c] = owner;
+      COLONY_OWNER[c] = [owner];
     } else delete COLONY_OWNER[c];
     refreshEngineFactionContext();
   }

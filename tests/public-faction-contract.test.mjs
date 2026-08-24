@@ -54,8 +54,10 @@ describe('public player/faction contract', () => {
     assert.match(registry, /"id"\s*:\s*"UNAFFILIATED"/);
   });
 
-  it('does not invent CMG holdings for a fresh public profile', () => {
+  it('uses explicit canonical world ownership rather than legacy CMG holdings', () => {
     assert.doesNotMatch(appCore, /CMG_HOLDINGS/);
-    assert.doesNotMatch(appCore, /Paris.*Andromeda|Andromeda.*Paris/);
+    assert.match(appCore, /DEFAULT_COLONY_OWNER/);
+    assert.match(appCore, /'Paris': \['CMG'\]/);
+    assert.match(appCore, /'Andromeda City': \['CMG'\]/);
   });
 });

@@ -295,7 +295,7 @@ function renderGearDest() {
   const status = document.getElementById('gear-dest-status');
   if (!sel || !status) return;
   if (!sel.options.length) {
-    colonyList().forEach(c => {
+    FINAL_PRODUCTION_LOCATIONS.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
       sel.appendChild(o);

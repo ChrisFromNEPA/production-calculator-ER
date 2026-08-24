@@ -118,20 +118,30 @@ function getDiscounts() {
 // § DESTINATION — configurable production colony
 // ═══════════════════════════════════════════════════════════════════════════
 // Every place a name can come from, before any filtering.
+const OWNERSHIP_LOCATIONS = Object.freeze([
+  'Brooklyn', 'Ground Zero', 'Training Grounds', "DeMorgan's Castle", 'DSS Yukon',
+  'Pax Prime', 'Pegasi 51', "Kepler's Dome", 'Titan Station', 'NYC Manhattan',
+  'Aurelia', "Necar's Field", 'Berlin', 'Paris', 'Ceres Delta', 'Andromeda City', 'Tokyo',
+]);
 function allKnownLocations() {
   return [...new Set([
     'Berlin',  // always available — a production hub, not a mining site
     ...DATA.mining_sites.map(s => s.location),
     ...DATA.inventory.map(e => e.location),
-    ...getInv().map(e => e.location)
+    ...getInv().map(e => e.location),
+    ...OWNERSHIP_LOCATIONS
   ])].sort((a, b) => a.localeCompare(b));
 }
 
-// PRODUCTION destinations — where a plan can be crafted. Drops places you can't
-// manufacture at.
+// Final production destinations are intentionally narrower than mining and
+// refinement locations. Keep the game's Manhattan spelling here; ownership
+// data uses NYC Manhattan and colonyOwnerIds() resolves that alias.
+const FINAL_PRODUCTION_LOCATIONS = Object.freeze([
+  "Kepler's Dome", 'Brooklyn', 'Ground Zero', 'Manhattan', 'Paris', 'Berlin', 'Tokyo',
+]);
+
 function colonyList() {
-  const skip = new Set(['apartment', 'xenomorph hunt (capped on kills)']);
-  return allKnownLocations().filter(c => !skip.has(c.toLowerCase()));
+  return FINAL_PRODUCTION_LOCATIONS.slice();
 }
 
 // STORAGE locations — anywhere stock can sit, which is a wider set than the
@@ -161,19 +171,20 @@ function populateDestinations() {
   DESTINATION = target;
 
   const refineSel = document.getElementById('calc-refine-dest');
+  const refinementLocations = allKnownLocations().filter(c => c !== 'NYC Manhattan' && c.toLowerCase() !== 'xenomorph hunt (capped on kills)');
   if (refineSel) {
     refineSel.innerHTML = '';
-    colonies.forEach(c => {
+    refinementLocations.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
       refineSel.appendChild(o);
     });
-    const refineTarget = REFINE_DESTINATION && colonies.includes(REFINE_DESTINATION)
+    const refineTarget = REFINE_DESTINATION && refinementLocations.includes(REFINE_DESTINATION)
       ? REFINE_DESTINATION : target;
     refineSel.value = refineTarget;
     REFINE_DESTINATION = refineTarget;
   } else {
-    REFINE_DESTINATION = REFINE_DESTINATION && colonies.includes(REFINE_DESTINATION)
+    REFINE_DESTINATION = REFINE_DESTINATION && refinementLocations.includes(REFINE_DESTINATION)
       ? REFINE_DESTINATION : target;
   }
 }
@@ -396,14 +407,14 @@ function costFor(item, altIndex) {
 // inputs; a fresh browser does not invent ownership for any faction.
 const DEFAULT_RETURN_RATE = 0.85;
 const GLOBAL_DOMINION_RATE = 0.15;
-// Authoritative starting world state. GD is represented by both LED and FDC:
-// either faction qualifies for the owner return on a jointly held colony.
-// Values are arrays so joint ownership survives export/import and local edits.
+// Authoritative starting world state. Each colony has one actual owner.
+// LED and FDC cooperate as Global Dominion, but the alliance is not a second
+// owner and does not create a second owner return.
 const DEFAULT_COLONY_OWNER = Object.freeze({
-  'Brooklyn': ['LED', 'FDC'],
-  'Ground Zero': ['LED', 'FDC'],
-  'Training Grounds': ['LED', 'FDC'],
-  "DeMorgan's Castle": ['LED', 'FDC'],
+  'Brooklyn': ['FDC'],
+  'Ground Zero': ['LED'],
+  'Training Grounds': ['FDC'],
+  "DeMorgan's Castle": ['LED'],
   'DSS Yukon': ['FDC'],
   'Pax Prime': ['EC'],
   'Pegasi 51': ['EC'],
@@ -414,12 +425,12 @@ const DEFAULT_COLONY_OWNER = Object.freeze({
   "Necar's Field": ['BOS'],
   'Berlin': ['BOS'],
   'Paris': ['CMG'],
-  'Andromeda City': ['CMG'],
   'Ceres Delta': ['VI'],
+  'Andromeda City': ['CMG'],
   'Tokyo': ['VI'],
 });
 function cloneDefaultColonyOwners() {
-  return Object.fromEntries(Object.entries(DEFAULT_COLONY_OWNER).map(([c, owners]) => [c, [...owners]]));
+  return Object.fromEntries(Object.entries(DEFAULT_COLONY_OWNER).map(([c, owner]) => [c, [...owner]]));
 }
 let COLONY_OWNER = cloneDefaultColonyOwners();   // location → faction IDs
 let COLONY_TAX = {};     // location → tax percent charged there
@@ -429,7 +440,7 @@ let COLONY_TAX = {};     // location → tax percent charged there
     const raw = JSON.parse(localStorage.getItem('er_colony_world_v2') || localStorage.getItem('cmg_colony_tax_v1'));
     if (raw) {
       const storedOwners = Object.fromEntries(Object.entries(raw.owner || {}).flatMap(([colony, value]) => {
-        const owners = normalizeColonyWorldOwner(value);
+        const owners = normalizeColonyWorldOwner(value, colony);
         return owners.length ? [[colony, owners]] : [];
       }));
       COLONY_OWNER = raw.defaults_initialized
@@ -451,14 +462,28 @@ function activeFactionReturnRate() { return factionReturnRate(activeFactionId())
 function saveColonySettings() {
   try { localStorage.setItem('er_colony_world_v2', JSON.stringify({ schema_version: 2, defaults_initialized: true, owner: COLONY_OWNER, tax: COLONY_TAX })); } catch (e) {}
 }
-function normalizeColonyWorldOwner(value) {
+function normalizeColonyWorldOwner(value, colony) {
   const values = Array.isArray(value) ? value : [value];
-  return [...new Set(values.map(v => String(v || '').trim().toUpperCase())
-    .filter(id => window.factionById?.(id)))];
+  // v2 snapshots stored arrays while the editor allowed joint holdings. Keep
+  // one valid entry as the actual owner, preserving the canonical legacy map
+  // where known and otherwise retaining the first valid entry deterministically.
+  const valid = values.map(v => String(v || '').trim().toUpperCase())
+    .filter(id => window.factionById?.(id));
+  if (!valid.length) return [];
+  const legacyGlobalDominionOwner = {
+    Brooklyn: 'FDC',
+    'Ground Zero': 'LED',
+    'Training Grounds': 'FDC',
+    "DeMorgan's Castle": 'LED',
+  };
+  const owner = valid.length > 1 && legacyGlobalDominionOwner[colony]
+    ? legacyGlobalDominionOwner[colony]
+    : valid[0];
+  return [owner];
 }
 function colonyOwnerIds(colony) {
   const value = COLONY_OWNER[colony];
-  if (value) return Array.isArray(value) ? value : [value];
+  if (value) return Array.isArray(value) ? value.slice(0, 1) : [value];
   const aliases = {
     'Training Center': 'Training Grounds',
     Yukon: 'DSS Yukon',
@@ -466,7 +491,7 @@ function colonyOwnerIds(colony) {
     Andromeda: 'Andromeda City',
   };
   const aliasValue = COLONY_OWNER[aliases[colony]];
-  return Array.isArray(aliasValue) ? aliasValue : (aliasValue ? [aliasValue] : []);
+  return Array.isArray(aliasValue) ? aliasValue.slice(0, 1) : (aliasValue ? [aliasValue] : []);
 }
 function canonicalColonyName(colony) {
   const aliases = {
@@ -494,7 +519,7 @@ function importColonyWorld(payload) {
   const owner = {};
   const tax = {};
   Object.entries(payload.owner || {}).forEach(([colony, faction]) => {
-    const id = normalizeColonyWorldOwner(faction);
+    const id = normalizeColonyWorldOwner(faction, String(colony));
     if (id.length) owner[canonicalColonyName(String(colony))] = id;
   });
   Object.entries(payload.tax || {}).forEach(([colony, rate]) => {
@@ -553,7 +578,7 @@ function adoptRemoteColonies(remote) {
     const r = remote[c];
     if (!r || typeof r !== 'object') return;
     if (typeof r.rate === 'number' && COLONY_TAX[c] !== r.rate) { COLONY_TAX[c] = r.rate; changed = true; }
-    const owner = normalizeColonyWorldOwner(r.owner);
+    const owner = normalizeColonyWorldOwner(r.owner, c);
     const have = colonyOwnerIds(c);
     if (JSON.stringify(have) !== JSON.stringify(owner)) {
       if (owner.length) COLONY_OWNER[c] = owner; else delete COLONY_OWNER[c];

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 const require = createRequire(import.meta.url);
 const root = join(import.meta.dirname, '..');
 globalThis.window = {
-  ER_FACTIONS: { selectable: [{ id: 'UNAFFILIATED' }, { id: 'CMG' }, { id: 'EC' }] },
+  ER_FACTIONS: { selectable: ['UNAFFILIATED', 'CMG', 'EC', 'LED', 'FDC', 'BOS', 'GOM', 'VI'].map(id => ({ id, return_rate: id === 'UNAFFILIATED' ? null : 0.85 })) },
   factionById(id) { return this.ER_FACTIONS.selectable.find(f => f.id === id); },
   ENGINE: {},
 };
@@ -23,8 +23,13 @@ globalThis.window.ENGINE = {
   iconFor: () => '', RECIPES_BY_OUTPUT: {}, ALL_ITEMS: new Set(), CATEGORIES: {},
 };
 globalThis.DATA = window.GAME_DATA;
-globalThis.S = { getActiveFaction: () => 'UNAFFILIATED' };
 vm.runInThisContext(fs(join(root, 'src', 'app-core.js'), 'utf8'), { filename: 'app-core-world-test.js' });
+
+function setActiveFaction(faction) {
+  window.STORE.PLAYERS.players = { T: [] };
+  window.STORE.PLAYERS.profiles = { T: { faction } };
+  window.STORE.PLAYERS.active = 'T';
+}
 
 beforeEach(() => { localStorage.data = {}; resetColonyWorld(); });
 
@@ -45,6 +50,7 @@ describe('colony world snapshots', () => {
     const result = importColonyWorld({ schema_version: 2, type: 'empire-rising-colony-world', owner: { Paris: 'ec', Tokyo: 'invalid' }, tax: { Paris: 20, Tokyo: 35 } });
     assert.deepEqual(result.owner, { Paris: ['EC'] });
     assert.deepEqual(result.tax, { Paris: 20, Tokyo: 35 });
+    assert.deepEqual(normalizeColonyWorldOwner('invalid', 'Tokyo'), []);
   });
 
   it('rejects malformed snapshots before mutating current state', () => {
@@ -58,10 +64,10 @@ describe('colony world snapshots', () => {
     importColonyWorld({ schema_version: 2, type: 'empire-rising-colony-world', owner: { Paris: 'CMG' }, tax: { Paris: 25 } });
     resetColonyWorld();
     assert.deepEqual(exportColonyWorld().owner, {
-      Brooklyn: ['LED', 'FDC'],
-      'Ground Zero': ['LED', 'FDC'],
-      'Training Grounds': ['LED', 'FDC'],
-      "DeMorgan's Castle": ['LED', 'FDC'],
+      Brooklyn: ['FDC'],
+      'Ground Zero': ['LED'],
+      'Training Grounds': ['FDC'],
+      "DeMorgan's Castle": ['LED'],
       'DSS Yukon': ['FDC'],
       'Pax Prime': ['EC'],
       'Pegasi 51': ['EC'],
@@ -78,5 +84,34 @@ describe('colony world snapshots', () => {
     });
     assert.deepEqual(exportColonyWorld().tax, {});
     assert.deepEqual(JSON.parse(localStorage.getItem('er_colony_world_v2')).owner, exportColonyWorld().owner);
+  });
+
+  it('normalizes legacy Global Dominion pairs to their canonical actual owners', () => {
+    importColonyWorld({ schema_version: 2, type: 'empire-rising-colony-world', owner: {
+      Brooklyn: ['LED', 'FDC'], 'Ground Zero': ['FDC', 'LED'],
+      'Training Grounds': ['LED', 'FDC'], "DeMorgan's Castle": ['FDC', 'LED'],
+      Paris: ['CMG', 'EC'],
+    }, tax: {} });
+    assert.deepEqual(exportColonyWorld().owner, {
+      Brooklyn: ['FDC'], 'Ground Zero': ['LED'], 'Training Grounds': ['FDC'],
+      "DeMorgan's Castle": ['LED'], Paris: ['CMG'],
+    });
+  });
+
+  it('applies the 85% return only to the active faction actual owner and keeps tax separate', () => {
+    importColonyWorld({ schema_version: 2, type: 'empire-rising-colony-world', owner: {
+      Brooklyn: ['FDC'], 'Ground Zero': ['LED'],
+    }, tax: { Brooklyn: 20, 'Ground Zero': 35 } });
+    setActiveFaction('FDC');
+    refreshEngineFactionContext();
+    assert.equal(window.ENGINE_COLONY_OWNED('Brooklyn'), true);
+    assert.equal(window.ENGINE_COLONY_REBATE_FOR(), 0.85);
+    assert.equal(window.ENGINE_COLONY_OWNED('Ground Zero'), false);
+    assert.equal(window.ENGINE_COLONY_TAX_FOR('Brooklyn'), 0.2);
+    setActiveFaction('LED');
+    refreshEngineFactionContext();
+    assert.equal(window.ENGINE_COLONY_OWNED('Brooklyn'), false);
+    assert.equal(window.ENGINE_COLONY_OWNED('Ground Zero'), true);
+    assert.equal(window.ENGINE_COLONY_TAX_FOR('Ground Zero'), 0.35);
   });
 });

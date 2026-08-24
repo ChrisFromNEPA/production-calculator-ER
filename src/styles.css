@@ -2117,7 +2117,7 @@ tr td:first-child { white-space: nowrap; }
 .owner-list { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; margin-top: 0.65rem; }
 .owner-chip { display: inline-flex; padding: 0.25rem 0.45rem; border-radius: 999px; background: color-mix(in srgb, var(--accent) 18%, var(--panel2)); border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--line)); color: var(--text); font-size: 0.65rem; font-weight: 700; }
 .owner-chip-empty { color: var(--muted); background: var(--panel2); border-color: var(--line); }
-.owner-joint-label { flex-basis: 100%; color: var(--accent-bright); font-size: 0.62rem; }
+.owner-alliance-label { flex-basis: 100%; color: var(--accent-bright); font-size: 0.62rem; }
 .colony-tax-value { flex: 0 0 auto; margin-top: 0.75rem; color: var(--muted); font-size: 0.68rem; }
 .colony-tax-value b { color: var(--warn); font-size: 0.78rem; }
 .colonies-resources { margin-top: 0.8rem; padding-top: 0.65rem; border-top: 1px solid var(--line); }

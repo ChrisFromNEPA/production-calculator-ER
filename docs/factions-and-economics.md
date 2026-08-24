@@ -11,11 +11,11 @@ The owner return is faction-neutral. BOS, CMG, EC, FDC, GOM, LED, MOTB/MOB, and 
 
 ## Faction and colony selection
 
-The active player profile supplies the faction used by the calculation. The **Colonies** tab supplies the local owner for each colony. The calculator does not invent ownership: an unset or mismatched owner produces no return for the active faction.
+The active player profile supplies the faction used by the calculation. The **Colonies** tab supplies one local actual owner for each colony. The calculator does not invent ownership: an unset or mismatched owner produces no return for the active faction. LED and FDC cooperate as the **Global Dominion** alliance, but that alliance is not a second owner and does not create a second 85% return.
 
 For production, ownership is checked at the production colony selected in the calculator. For mined materials, ownership is checked at the chosen mining source for each material, or the material's first valid mining site when no source was pinned.
 
-Ownership and tax values are local user-maintained world context, not live synchronized game state. Owner changes do not silently alter tax values.
+Ownership and tax values are local user-maintained world context, not live synchronized game state. Owner changes do not silently alter tax values. Older v2 snapshots that contain multiple owners are normalized to one actual owner; the known LED/FDC pairs use the canonical owner map, while other multi-owner values retain their first valid owner deterministically.
 
 ## Before-tax rule
 

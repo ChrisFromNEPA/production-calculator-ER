@@ -13,7 +13,7 @@
   @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 700 900; font-display: swap; src: url('fonts/orbitron-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/jetbrains-mono-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 </style>
-<link rel="stylesheet" href="src/styles.css?v=57" />
+<link rel="stylesheet" href="src/styles.css?v=58" />
 <link rel="stylesheet" href="src/styles/ux-release.css?v=8" />
 <link rel="stylesheet" href="src/styles/surviving-reference.css?v=2" />
 </head>
@@ -694,10 +694,10 @@
         <div><span class="eyebrow">World operations</span><h3 class="view-title">🌍 Colonies</h3><p>See who controls each production world, what it mines, and how ownership changes your calculator costs.</p></div>
         <span class="colonies-local-badge">● Local world state</span>
       </div>
-      <div id="colonies-overview" class="colonies-overview" aria-label="Colony overview"><div class="col-metric"><b id="col-metric-production">—</b><span>production colonies</span></div><div class="col-metric"><b id="col-metric-owned">—</b><span>your faction</span></div><div class="col-metric"><b id="col-metric-joint">—</b><span>joint holdings</span></div><div class="col-metric"><b id="col-metric-taxed">—</b><span>taxed worlds</span></div></div>
+      <div id="colonies-overview" class="colonies-overview" aria-label="Colony overview"><div class="col-metric"><b id="col-metric-production">—</b><span>production colonies</span></div><div class="col-metric"><b id="col-metric-owned">—</b><span>your faction</span></div><div class="col-metric"><b id="col-metric-dominion">—</b><span>Global Dominion worlds</span></div><div class="col-metric"><b id="col-metric-taxed">—</b><span>taxed worlds</span></div></div>
       <div id="colonies-toolbar" class="col-toolbar colonies-toolbar">
         <label class="colonies-search"><span>Find a colony or resource</span><input id="col-search" placeholder="Search ore, world, or faction…" aria-label="Filter colonies and resources" /></label>
-        <label class="colonies-filter"><span>Show</span><select id="col-filter" aria-label="Filter colony cards"><option value="all">All production worlds</option><option value="mine">My faction's worlds</option><option value="joint">Joint ownership</option><option value="reference">Other known worlds</option></select></label>
+        <label class="colonies-filter"><span>Show</span><select id="col-filter" aria-label="Filter colony cards"><option value="all">Production and owned worlds</option><option value="mine">My faction's worlds</option><option value="global-dominion">Global Dominion worlds</option><option value="reference">Other known worlds</option></select></label>
         <label class="checkbox-label colonies-legacy-filter"><input type="checkbox" id="col-priced-only" /> production only</label>
         <details id="colonies-world-data" class="colonies-world-data"><summary>World data</summary><div><span id="colony-world-status" class="muted" aria-live="polite">Saved on this device</span><button id="colony-world-export" class="ghost" type="button">Export</button><button id="colony-world-import" class="ghost" type="button">Import</button><button id="colony-world-reset" class="ghost danger" type="button">Reset</button><input id="colony-world-import-file" type="file" accept="application/json,.json" hidden /></div></details>
       </div>
@@ -773,12 +773,12 @@
 <script src="src/store.js?v=5"></script>
 <script src="src/engine.js?v=21"></script>
 <script src="src/ui/motion.js?v=1"></script>
-<script src="src/app-core.js?v=52"></script>
+<script src="src/app-core.js?v=53"></script>
 <script src="src/ui/value-transition.js?v=1"></script>
 <script src="src/ui/r3f-loader.js?v=1"></script>
 <script src="src/ui/spatial-emphasis.js?v=1"></script>
 <script src="src/colony-work.js?v=1"></script>
-<script src="src/app.js?v=91"></script>
+<script src="src/app.js?v=92"></script>
 <script src="src/ui/legacy-3d-loader.js?v=1"></script>
 <script src="src/ui/chart-loader.js?v=1"></script>
 <script src="src/views/models.js?v=22"></script>

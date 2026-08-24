@@ -190,7 +190,7 @@ describe('decision summary (shipped app-core renderer)', () => {
 describe('colony what-if comparison (shipped app-core renderer)', () => {
   it('returns one row per production colony with figures from the engine planCost', () => {
     const rows = colonyCompareRows(PLAN_SPEC);
-    assert.ok(rows.length >= 10, `one row per production colony (got ${rows.length})`);
+    assert.equal(rows.length, 7, `one row per final-production colony (got ${rows.length})`);
     rows.forEach(r => {
       // Recomputed independently with the same inputs: every figure must be
       // exactly what the engine's planCost reports at that destination.

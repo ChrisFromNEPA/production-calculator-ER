@@ -5,7 +5,9 @@ This public release is intentionally local-first. The following limitations are 
 - There is no login, shared guild database, Cloudflare API, remote analytics endpoint, or real-time collaboration.
 - Player profiles, inventories, plans, requests, gear, preferences, analytics events, and world context live in the current browser unless exported.
 - Colony owners, taxes, transport assumptions, drift, and slot settings are user-maintained context; the app does not claim they are live game truth.
-- The 85% colony-owner / 15% Global Dominion split is modeled before tax for every faction. The displayed 50/50 allocation of Global Dominion income to FDC and LED is an explicit assumption, not a verified game formula.
+- Final production destinations are deliberately limited to Kepler's Dome, Brooklyn, Ground Zero, Manhattan, Paris, Berlin, and Tokyo. Mining/source and refinement locations remain broader; the Colonies tab can therefore show owned worlds such as Training Grounds and DSS Yukon with no mine data without treating them as production destinations.
+- Each world has one actual owner in the local model. LED and FDC membership in the Global Dominion alliance is represented separately from ownership; only the actual owner receives the modeled 85% pre-tax return. The remaining 15% Global Dominion allocation is displayed as an assumed 50/50 split between FDC and LED, not a verified game formula.
+- Legacy `er_colony_world_v2` snapshots and shared colony records that stored joint Global Dominion ownership are normalized to one actual owner using the canonical defaults (Brooklyn/FDC, Ground Zero/LED, Training Grounds/FDC, and DeMorgan's Castle/LED). An empty or invalid owner remains explicitly unowned.
 - Unaffiliated mode reports gross-cost behavior and does not invent ownership or rebates.
 - Production-time estimates and live market/ownership feeds are not provided.
 - The service worker can retain an older static asset until the browser completes an update cycle. Reload with network access after a release if behavior appears stale.
