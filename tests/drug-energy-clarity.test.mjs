@@ -79,11 +79,10 @@ describe('drug production-plan instruction', () => {
     vm.createContext(sandbox);
     vm.runInContext(`${match[0]}; globalThis.renderDrugInstruction = drugProductionInstruction;`, sandbox);
     const rendered = sandbox.renderDrugInstruction(drug);
-    const text = rendered.replace(/<[^>]+>/g, '');
-    assert.match(text, /Production code:\s*2936/);
-    assert.match(text, /Power:\s*Low/);
-    const leadingZeroText = sandbox.renderDrugInstruction(leadingZeroDrug).replace(/<[^>]+>/g, '');
-    assert.match(leadingZeroText, /Production code:\s*0578/);
+    assert.match(rendered, /Production code:<\/span>\s*<strong[^>]*>2936<\/strong>/);
+    assert.match(rendered, /Power:<\/span>\s*<span[^>]*>Low<\/span>/);
+    const leadingZeroRendered = sandbox.renderDrugInstruction(leadingZeroDrug);
+    assert.match(leadingZeroRendered, /Production code:<\/span>\s*<strong[^>]*>0578<\/strong>/);
     assert.match(rendered, /prod-code/);
   });
 });
