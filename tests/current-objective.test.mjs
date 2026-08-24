@@ -40,4 +40,12 @@ describe('current colony objective', () => {
     assert.match(cssSource, /\.current-objective/);
     assert.match(cssSource, /prefers-reduced-motion:\s*reduce[\s\S]*current-objective/);
   });
+
+  it('advances the rendered objective immediately after checklist completion', () => {
+    assert.match(appSource, /function advanceColonyObjective\(\)/);
+    for (const handler of ['toggleObtainCheck', 'toggleTransferCheck', 'toggleProduceCheck']) {
+      const body = appSource.match(new RegExp(`function ${handler}\\([\\s\\S]*?\\n\\}`))?.[0] || '';
+      assert.match(body, /advanceColonyObjective\(\)/, `${handler} should advance objective state`);
+    }
+  });
 });

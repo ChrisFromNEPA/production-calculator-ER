@@ -310,6 +310,13 @@ function toggleColonyWorkGroup(head) {
   head.setAttribute('aria-expanded', String(group.classList.contains('expanded')));
 }
 
+// Checklist completion changes which action is current. Re-render the active
+// plan immediately so the completed card recedes and the next action advances
+// without waiting for an unrelated plan refresh.
+function advanceColonyObjective() {
+  rerunActivePlan({ preserveChecklist: true, preserveViewport: true });
+}
+
 function toggleProduceCheck(cb) {
   var key = cb.dataset.produceKey;
   var card = cb.closest('.recipe-card');
@@ -343,6 +350,7 @@ function toggleProduceCheck(cb) {
   // Auto-collapse section if all items in it are checked
   var section = card.closest('.section');
   if (section) autoCollapseIfDone(section);
+  advanceColonyObjective();
   syncApplyPlanReadiness();
 }
 window.toggleProduceCheck = toggleProduceCheck; // exported for inline onclick
@@ -458,6 +466,7 @@ function toggleTransferCheck(cb) {
   var section = card && card.closest('.section');
   if (section) autoCollapseIfDone(section);
   syncColonyWorkGroupStates(card);
+  advanceColonyObjective();
   syncApplyPlanReadiness();
 }
 
@@ -858,6 +867,7 @@ function toggleObtainCheck(cb) {
   var section = card && card.closest('.section');
   if (section) autoCollapseIfDone(section);
   syncColonyWorkGroupStates(card);
+  advanceColonyObjective();
   syncApplyPlanReadiness();
 }
 
