@@ -185,8 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calc-run').addEventListener('click', runCalculator);
   document.getElementById('calc-qty').addEventListener('keydown', e => { if (e.key === 'Enter') runCalculator(); });
   document.getElementById('calc-qty').addEventListener('input', clearQuantityValidation);
-  document.getElementById('calc-dest').addEventListener('change', () => { getDestination(); if (CALC_TRAY.length) runMultiPlan(); });
-  document.getElementById('calc-refine-dest').addEventListener('change', () => { getRefineDestination(true); if (CALC_TRAY.length) runMultiPlan(); });
+  document.getElementById('calc-dest').addEventListener('change', () => { exitCombinedMode(); getDestination(); if (CALC_TRAY.length) runMultiPlan(); });
+  document.getElementById('calc-refine-dest').addEventListener('change', () => { exitCombinedMode(); getRefineDestination(true); if (CALC_TRAY.length) runMultiPlan(); });
+  const combinedSel = document.getElementById('calc-combined-dest');
+  if (combinedSel) combinedSel.addEventListener('change', () => { setCombinedDestination(); if (CALC_TRAY.length) runMultiPlan(); });
   // Re-plan immediately when "Plan from scratch" is toggled, if a plan is up.
   document.getElementById('calc-scratch')?.addEventListener('change', () => {
     const item = document.getElementById('calc-item').value.trim();

@@ -52,7 +52,10 @@ describe('production destination boundaries', () => {
   it('uses Manhattan as the display card while resolving ownership through NYC Manhattan', () => {
     assert.match(app, /FINAL_PRODUCTION_LOCATIONS\.filter\(c => c !== 'NYC Manhattan'\)/);
     assert.match(core, /Manhattan:\s*'NYC Manhattan'/);
-    assert.match(core, /refinementLocations = allKnownLocations\(\)\.filter\(c => c !== 'NYC Manhattan'/);
+    // Refinement excludes the NYC Manhattan alias and apartment storage via a
+    // lowercase skip set (t_4454bc38); Manhattan itself stays available.
+    assert.match(core, /const skipRefine = new Set\(\['nyc manhattan', 'xenomorph hunt \(capped on kills\)', 'apartment'\]\)/);
+    assert.match(core, /refinementLocations = allKnownLocations\(\)\.filter\(c => !skipRefine\.has\(c\.toLowerCase\(\)\)\)/);
   });
 
   it('renders audio only when a colony has a world asset', () => {

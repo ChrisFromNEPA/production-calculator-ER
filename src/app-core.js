@@ -170,8 +170,12 @@ function populateDestinations() {
   if (sel && colonies.includes(target)) sel.value = target;
   DESTINATION = target;
 
+  // Refinement may happen at any known colony except the NYC Manhattan alias
+  // (the game's Manhattan spelling) and non-place activities like the
+  // xenomorph hunt. Apartments are storage, never refinement colonies.
   const refineSel = document.getElementById('calc-refine-dest');
-  const refinementLocations = allKnownLocations().filter(c => c !== 'NYC Manhattan' && c.toLowerCase() !== 'xenomorph hunt (capped on kills)');
+  const skipRefine = new Set(['nyc manhattan', 'xenomorph hunt (capped on kills)', 'apartment']);
+  const refinementLocations = allKnownLocations().filter(c => !skipRefine.has(c.toLowerCase()));
   if (refineSel) {
     refineSel.innerHTML = '';
     refinementLocations.forEach(c => {
@@ -187,6 +191,23 @@ function populateDestinations() {
     REFINE_DESTINATION = REFINE_DESTINATION && refinementLocations.includes(REFINE_DESTINATION)
       ? REFINE_DESTINATION : target;
   }
+
+  // Combined convenience selector: same option list as production (FINAL_
+  // PRODUCTION_LOCATIONS), plus an empty placeholder meaning "split / not
+  // combined". Choosing a colony here sets both destinations together.
+  const combinedSel = document.getElementById('calc-combined-dest');
+  if (combinedSel) {
+    combinedSel.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = ''; placeholder.textContent = 'Different colonies…';
+    combinedSel.appendChild(placeholder);
+    colonyList().forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      combinedSel.appendChild(o);
+    });
+    combinedSel.value = (REFINE_DESTINATION && REFINE_DESTINATION === DESTINATION) ? DESTINATION : '';
+  }
 }
 function getDestination() {
   const el = document.getElementById('calc-dest');
@@ -195,6 +216,7 @@ function getDestination() {
     REFINE_DESTINATION = DESTINATION;
     const refineEl = document.getElementById('calc-refine-dest');
     if (refineEl) refineEl.value = REFINE_DESTINATION;
+    syncCombinedSelector();
   }
   saveDestination();
   // The tax summary quotes the destination's rate, so it has to follow it.
@@ -205,8 +227,56 @@ function getRefineDestination(explicit) {
   const el = document.getElementById('calc-refine-dest');
   if (el && el.value) REFINE_DESTINATION = el.value;
   if (explicit) REFINE_DESTINATION_EXPLICIT = true;
+  syncCombinedSelector();
   saveDestination();
   return REFINE_DESTINATION;
+}
+// Combined ("same location") mode: setting the convenience selector sets both
+// destinations together. Selecting an explicit colony below or above returns
+// to expert split mode; the split values stay exactly as last set.
+function setCombinedDestination() {
+  const el = document.getElementById('calc-combined-dest');
+  if (!el || !el.value) return;
+  DESTINATION = el.value;
+  REFINE_DESTINATION = el.value;
+  window.ENGINE.DESTINATION = DESTINATION;
+  const destSel = document.getElementById('calc-dest');
+  if (destSel) destSel.value = DESTINATION;
+  const refineSel = document.getElementById('calc-refine-dest');
+  if (refineSel) refineSel.value = REFINE_DESTINATION;
+  // The combined choice is an explicit refinement choice: keep it sticky so a
+  // later production change does not silently overwrite it.
+  REFINE_DESTINATION_EXPLICIT = true;
+  if (typeof updateColonyTaxNote === 'function') updateColonyTaxNote();
+  saveDestination();
+}
+function exitCombinedMode() {
+  // Leaving combined mode just re-enters expert split mode with the current
+  // values; nothing is overwritten. The convenience selector resets to the
+  // placeholder unless the two colonies happen to be equal.
+  syncCombinedSelector();
+}
+function syncCombinedSelector() {
+  const el = document.getElementById('calc-combined-dest');
+  if (el) el.value = (REFINE_DESTINATION && REFINE_DESTINATION === DESTINATION) ? DESTINATION : '';
+}
+// Saved-state migration: legacy saves may contain destinations that are no
+// longer valid (e.g. apartment), and pre-refinement saves have no refine
+// value at all. Normalize both on load.
+function normalizeSavedDestinations() {
+  const skip = new Set(['apartment', 'xenomorph hunt (capped on kills)']);
+  const colonies = colonyList();
+  if (DESTINATION && !colonies.includes(DESTINATION) && skip.has(DESTINATION.toLowerCase())) {
+    DESTINATION = 'Berlin';
+    window.ENGINE.DESTINATION = DESTINATION;
+  }
+  if (REFINE_DESTINATION && !allKnownLocations().includes(REFINE_DESTINATION)) {
+    REFINE_DESTINATION = DESTINATION;
+    REFINE_DESTINATION_EXPLICIT = false;
+  } else if (REFINE_DESTINATION && skip.has(REFINE_DESTINATION.toLowerCase())) {
+    REFINE_DESTINATION = DESTINATION;
+    REFINE_DESTINATION_EXPLICIT = false;
+  }
 }
 function loadDestination() {
   const skip = new Set(['apartment', 'xenomorph hunt (capped on kills)']);
@@ -222,6 +292,7 @@ function loadDestination() {
       REFINE_DESTINATION_EXPLICIT = false;
     }
   } catch(e) {}
+  normalizeSavedDestinations();
   populateDestinations();
 }
 function saveDestination() {

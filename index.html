@@ -202,11 +202,14 @@
         <input id="calc-qty" type="number" min="1" step="1" value="1" aria-label="Quantity" aria-describedby="calc-qty-error" />
         <span id="calc-qty-error" class="field-error" role="alert" hidden></span>
       </label>
-      <label>Production colony
-        <select id="calc-dest" aria-label="Production colony"></select>
-      </label>
       <label>Refinement colony
-        <select id="calc-refine-dest" aria-label="Refinement colony"></select>
+        <select id="calc-refine-dest" aria-label="Refinement colony" title="Colony where raw materials are refined"></select>
+      </label>
+      <label>Production colony
+        <select id="calc-dest" aria-label="Production colony" title="Colony where the final item is manufactured"></select>
+      </label>
+      <label>Same location
+        <select id="calc-combined-dest" aria-label="Refine and produce at the same location" title="Convenience: sets refinement and production to one colony. Choosing a colony here sets both; changing either colony above returns to separate selection."></select>
       </label>
       <label class="checkbox-label" title="Do not use inventory already recorded for this player"><input type="checkbox" id="calc-scratch" /> Ignore current inventory</label>
       <button id="calc-run">Calculate</button>
@@ -236,7 +239,7 @@
 
     <details class="calc-help">
       <summary>How planning works</summary>
-      <div class="hint muted">Browse or search final items by category above. Add several items to the plan tray for a combined production run — owned stock carries between items. Refinement and production paths can be switched inside each step. <strong>/</strong> jumps to search · <strong>Ctrl+Z</strong> undoes an applied plan.</div>
+      <div class="hint muted">Browse or search final items by category above. Add several items to the plan tray for a combined production run — owned stock carries between items. Pick a refinement colony first, then a production colony, or use “Same location” to set both at once. <strong>/</strong> jumps to search · <strong>Ctrl+Z</strong> undoes an applied plan.</div>
     </details>
       </div>
 

@@ -1917,6 +1917,7 @@ function loadSavedPlan(id) {
   if (refineSel) refineSel.value = savedRefineDest;
   REFINE_DESTINATION = savedRefineDest;
   REFINE_DESTINATION_EXPLICIT = !!p.refineDest;
+  if (typeof syncCombinedSelector === 'function') syncCombinedSelector();
   saveDestination();
   if (p.kind === 'tray') {
     CALC_TRAY = p.tray.map(t => ({ item: t.item, qty: t.qty }));
