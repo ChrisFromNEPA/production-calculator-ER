@@ -359,6 +359,16 @@ let gearPickerActiveIndex = 0;
 // equipped option aria-selected and seeds the roving tabindex from this, so
 // armor (GEAR[slotName]), medikit (MEDIKIT) and boosters (BOOSTERS[slot
 // index]) must all resolve to the real equipped piece.
+function boosterSlotOccupancy() {
+  return BOOSTERS.slice(0, 2).filter(item => typeof item === 'string' && item.trim()).length;
+}
+
+function boosterOtherSlotItem(slotName) {
+  if (!/^booster-[01]$/.test(slotName)) return '';
+  const otherIndex = parseInt(slotName.split('-')[1], 10) === 0 ? 1 : 0;
+  return typeof BOOSTERS[otherIndex] === 'string' ? BOOSTERS[otherIndex] : '';
+}
+
 function equippedNameForSlot(slotName, slotType) {
   if (slotType === 'medikit') return MEDIKIT;
   if (slotType === 'booster') return BOOSTERS[parseInt(slotName.split('-')[1])];
@@ -375,6 +385,17 @@ function gearToggleDescription(slotType) {
   if (slotType === 'booster') return 'Include this booster / food in loadout stats';
   if (slotType === 'medikit') return 'Include this medikit in loadout stats';
   return 'Include this gear in loadout stats';
+}
+
+function gearArmorGuidanceHtml(item, slotName, recipe) {
+  if (!recipe || recipe.output?.category !== 'Armor') return '';
+  const family = typeof armorClassOf === 'function' ? armorClassOf(item) : null;
+  const weight = family?.weight || 'not classified';
+  const faction = recipe._faction || family?.faction || 'not listed';
+  const set = family?.prefix || 'set family not listed';
+  return '<div class="tt-guidance"><b>Armor guidance</b>: ' +
+    esc(weight) + ' weight · ' + esc(faction) + ' faction · ' + esc(slotName) + ' slot · set ' + esc(set) +
+    '. Perk formula unsupported — only canonical recipe stats are compared.</div>';
 }
 
 // Close the picker and hand focus back to whatever slot opened it.
@@ -464,7 +485,10 @@ function showGearPicker(slotName, armorType) {
     items = DATA.recipes.filter(r => categories.includes(r.output.category) && ALL_ITEMS.has(r.output.item)).map(r => r.output.item);
   }
   if (!items.length) { items = []; } // guard
-  title.textContent = `Select ${slotName.replace(/-/g,' ').replace(/\w/g,c=>c.toUpperCase())}`;
+  const occupancy = slotType === 'booster' ? boosterSlotOccupancy() : 0;
+  title.textContent = slotType === 'booster'
+    ? `Select ${slotName.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())} · Shared slots: ${occupancy}/2`
+    : `Select ${slotName.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}`;
 
   const factionOf = name => {
     const recipe = DATA.recipes.find(r => r.output.item === name);
@@ -520,6 +544,8 @@ function showGearPicker(slotName, armorType) {
     } else if (sortBy === 'name') {
       filtered.sort((a,b) => a.localeCompare(b));
     }
+    const otherBoosterItem = boosterOtherSlotItem(slotName);
+    const equippedForList = equippedNameForSlot(slotName, slotType);
     body.innerHTML = filtered.map(name => {
       const c = costs[name];
       const w = armorWeightOf(name);
@@ -561,7 +587,9 @@ function showGearPicker(slotName, armorType) {
               : `, and none returns to ${window.factionById?.(activeFactionId())?.name || activeFactionId()} funds because ${esc(DESTINATION)} is not owned by the active faction`)
           + '.'
         : '';
-      return `<div class="gear-picker-item${best ? ' gpi-best' : ''}" data-item="${encodeURIComponent(name)}"${
+      const disabled = slotType === 'booster' && otherBoosterItem && name === otherBoosterItem && name !== equippedForList;
+      const disabledAttrs = disabled ? ' aria-disabled="true" data-slot-disabled="true"' : '';
+      return `<div class="gear-picker-item${best ? ' gpi-best' : ''}${disabled ? ' is-disabled' : ''}" data-item="${encodeURIComponent(name)}"${disabledAttrs}${
           costTip ? ` data-cost-tip="${esc(costTip)}"` : ''}>
         <div class="gpi-icon">${iconFor(name)}</div>
         <div class="gpi-main"><div class="gpi-name">${esc(displayName(name))}</div>
@@ -584,11 +612,13 @@ function showGearPicker(slotName, armorType) {
       el.setAttribute('role', 'option');
       el.setAttribute('id', 'gear-picker-opt-' + i);
       const selected = decodeURIComponent(el.dataset.item) === equippedName;
+      const disabled = el.getAttribute('aria-disabled') === 'true';
       el.setAttribute('aria-selected', selected ? 'true' : 'false');
       if (selected) { gearPickerActiveIndex = i; activeFound = true; }
+      el.tabIndex = disabled ? -1 : (i === gearPickerActiveIndex ? 0 : -1);
     });
     if (!activeFound || gearPickerActiveIndex >= optionEls.length) gearPickerActiveIndex = 0;
-    optionEls.forEach((el, i) => { el.tabIndex = i === gearPickerActiveIndex ? 0 : -1; });
+    optionEls.forEach((el, i) => { el.tabIndex = el.getAttribute('aria-disabled') === 'true' ? -1 : (i === gearPickerActiveIndex ? 0 : -1); });
     if (optionEls.length) {
       body.setAttribute('aria-activedescendant', optionEls[gearPickerActiveIndex].id);
       optionEls.forEach(el => {
@@ -603,6 +633,7 @@ function showGearPicker(slotName, armorType) {
   // Equip the picked item and close the modal. Keyboard users reach this via
   // Enter/Space on a focused option; mouse users via click.
   function selectItem(el) {
+    if (el.getAttribute('aria-disabled') === 'true') return;
     const item = decodeURIComponent(el.dataset.item);
     const slotEl = document.querySelector('[data-slot="' + slotName + '"]');
     const st = slotEl?.dataset?.slotType || 'armor';
@@ -636,7 +667,7 @@ function showGearPicker(slotName, armorType) {
     if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
     if (!newStats && !costTip) return;
     var oldStats = {};
-    var equipped = GEAR[slotName];
+    var equipped = equippedNameForSlot(slotName, slotType);
     if (equipped) {
       var eqRecipe = DATA.recipes.find(function(r){return r.output.item === equipped;});
       if (eqRecipe?.output?.stats) oldStats = eqRecipe.output.stats;
@@ -647,6 +678,7 @@ function showGearPicker(slotName, armorType) {
     var html = '<div class="tt-name">' + esc(item) + '</div>';
     if (equipped) {
       html += '<div class="tt-equipped">vs ' + esc(equipped) + '</div>';
+      html += '<div class="tt-summary">Before → After</div>';
     }
     allKeys.forEach(function(k) {
       var nv = newStats[k] != null ? newStats[k] : 0;
@@ -663,6 +695,7 @@ function showGearPicker(slotName, armorType) {
         html += '<div class="tt-stat"><span class="tt-label">' + label + '</span><span class="tt-new">' + nvStr + '</span></div>';
       }
     });
+    html += gearArmorGuidanceHtml(item, slotName, recipe);
     if (costTip) html += '<div class="tt-cost">' + costTip + '</div>';
     html += tooltipMaterialsHtml(item);
     tooltipEl.innerHTML = html;

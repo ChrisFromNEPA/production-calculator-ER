@@ -4288,6 +4288,13 @@ button.x:hover { color: #ff5577; }
 .gear-picker-item .gpi-name { font-size: 0.8125rem; color: var(--text); font-weight: 600; }
 .gear-picker-item .gpi-faction { font-size: 0.625rem; color: var(--muted); }
 
+.gear-picker-item.is-disabled {
+  cursor: not-allowed; opacity: .48; filter: saturate(.55);
+}
+.gear-picker-item.is-disabled:hover { background: transparent; border-color: transparent; }
+.item-tooltip .tt-summary { color: var(--accent); font-size: 0.625rem; font-weight: 700; margin: 2px 0 4px; }
+.item-tooltip .tt-guidance { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 5px; font-size: 0.625rem; color: var(--muted); line-height: 1.35; }
+
 /* quick-stats tooltip on item hover */
 .item-tooltip {
   position: absolute; z-index: 10001; /* above gear-picker overlay (10000); still above gear-picker (100) and item-popup (200) */

@@ -2079,8 +2079,39 @@ function refreshGear() {
 }
 
 
-function loadBoosters(){try{const r=localStorage.getItem('cmg_boosters_'+PLAYERS.active);return r?JSON.parse(r):['',''];}catch(e){return['',''];}}
-function saveBoosters(){localStorage.setItem('cmg_boosters_'+PLAYERS.active,JSON.stringify(BOOSTERS));}
+// Shared booster/food slots storage contract: every player's BOOSTERS is
+// exactly two string slots. The two slots are shared between drugs and food,
+// so storage can arrive from older builds, imports, or hand-edited exports as
+// null / objects / duplicates / wrong length. Normalization is the boundary:
+// order preserved, duplicates dropped keeping the first occurrence, junk
+// dropped, trimmed, capped at two.
+function normalizeBoosterSlots(raw) {
+  const out = [];
+  if (Array.isArray(raw)) {
+    for (let i = 0; i < raw.length && out.length < 2; i++) {
+      const v = raw[i];
+      if (typeof v !== 'string') continue; // null / number / object / etc. are junk
+      const name = v.trim();
+      if (!name || out.indexOf(name) !== -1) continue;
+      out.push(name);
+    }
+  }
+  while (out.length < 2) out.push('');
+  return out;
+}
+
+function loadBoosters() {
+  let slots = ['', ''];
+  try {
+    const r = localStorage.getItem('cmg_boosters_' + PLAYERS.active);
+    slots = r ? normalizeBoosterSlots(JSON.parse(r)) : ['', ''];
+  } catch (e) { slots = ['', '']; }
+  // Repair in place so a malformed value does not survive round-trips.
+  const canon = JSON.stringify(slots);
+  try { if (localStorage.getItem('cmg_boosters_' + PLAYERS.active) !== canon) localStorage.setItem('cmg_boosters_' + PLAYERS.active, canon); } catch (e) {}
+  return slots;
+}
+function saveBoosters(){BOOSTERS = normalizeBoosterSlots(BOOSTERS);localStorage.setItem('cmg_boosters_'+PLAYERS.active,JSON.stringify(BOOSTERS));}
 function loadMedikit(){MEDIKIT=localStorage.getItem('cmg_medikit_'+PLAYERS.active)||null;try{var r=localStorage.getItem('cmg_medikit_toggle_'+PLAYERS.active);MEDIKIT_ACTIVE=r!=='false';}catch(e){MEDIKIT_ACTIVE=true;}}
 function loadAllToggles(){try{var r=localStorage.getItem('cmg_toggles_'+PLAYERS.active);if(r){var d=JSON.parse(r);GEAR_ACTIVE=d.gear||{};BOOSTER_ACTIVE=d.boosters||[true,true];MEDIKIT_ACTIVE=d.medikit!==false;}}catch(e){}}
 function saveToggles(){localStorage.setItem('cmg_toggles_'+PLAYERS.active,JSON.stringify({gear:GEAR_ACTIVE,boosters:BOOSTER_ACTIVE,medikit:MEDIKIT_ACTIVE}));}
