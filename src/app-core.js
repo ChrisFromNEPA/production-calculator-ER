@@ -2007,6 +2007,11 @@ function setView(v) {
 setView._prev = null;
 setView._pendingProfileView = null;
 
+function clearPendingProfileView() {
+  setView._pendingProfileView = null;
+}
+window.clearPendingProfileView = clearPendingProfileView;
+
 // Hook registry — call registerViewHook({view, fn, once, enter, leave, views})
 var VIEW_HOOKS = [];
 function registerViewHook(opts) { VIEW_HOOKS.push(opts); }

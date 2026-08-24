@@ -17,7 +17,11 @@ function parsePublicHashRoute() {
 function applyPublicHashRoute() {
   const hash = String(location.hash || '').slice(1);
   const route = parsePublicHashRoute();
-  if (route) { setView(route); return true; }
+  if (route) {
+    if (route === 'calc') clearPendingProfileView();
+    setView(route);
+    return true;
+  }
   if (!hash || hash.includes('=') || hash.length > 12) return false;
   setView('calc');
   return true;
@@ -44,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab').forEach(t => {
     t.setAttribute('role', 'tab');
     t.addEventListener('click', () => {
+      if (t.dataset.view === 'calc') clearPendingProfileView();
       setView(t.dataset.view);
       document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', 'false'));
       t.setAttribute('aria-selected', 'true');
@@ -54,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('nav').addEventListener('click', e => {
     const tab = e.target.closest('.tab');
     if (!tab) return;
+    if (tab.dataset.view === 'calc') clearPendingProfileView();
     setView(tab.dataset.view);
     document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', 'false'));
     tab.setAttribute('aria-selected', 'true');
@@ -117,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const button = e.target.closest('[data-nav-view]');
       if (!button) return;
       document.querySelector('.settings-menu')?.removeAttribute('open');
+      if (button.dataset.navView === 'calc') clearPendingProfileView();
       setView(button.dataset.navView);
       closeNavV2Drawer();
     });

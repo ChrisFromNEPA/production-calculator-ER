@@ -22,9 +22,17 @@ test('profile gate requires a real name and faction before navigation', async (t
   await t.test('guards direct navigation and hash routes', () => {
     assert.match(core, /hasCompletePlayerProfile/);
     assert.match(core, /pendingProfileView/);
+    assert.match(core, /function clearPendingProfileView\(/);
     assert.match(core, /v !== ['"]calc['"]/);
     assert.match(init, /applyPublicHashRoute/);
     assert.match(init, /profile/i);
+  });
+
+  await t.test('clears stale pending routes only when Calculator is chosen explicitly', () => {
+    assert.match(init, /route === ['"]calc['"][\s\S]*clearPendingProfileView\(\)/);
+    assert.match(init, /t\.dataset\.view === ['"]calc['"][\s\S]*clearPendingProfileView\(\)/);
+    assert.match(init, /tab\.dataset\.view === ['"]calc['"][\s\S]*clearPendingProfileView\(\)/);
+    assert.match(init, /button\.dataset\.navView === ['"]calc['"][\s\S]*clearPendingProfileView\(\)/);
   });
 
   await t.test('leaves Settings available while the rest of the app is gated', () => {
