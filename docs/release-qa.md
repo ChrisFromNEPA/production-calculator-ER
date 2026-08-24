@@ -4,13 +4,24 @@
 
 - URL: <https://chrisfromnepa.github.io/production-calculator-ER/>
 - Source branch: `main`
-- Last verified public commit: `ca975209efeec755fc775307b1b65ec9e3a7739b` (`fix: improve inventory screenshot matching (#7)`)
+- Last verified public application commit: `3d87ece0032a1539b26337f41152fd4343b9bbfc` (`feat: add colony lore and enforce complete profiles (#9)`)
 - Deployment workflow: [GitHub Pages Actions](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
 - Local working-tree changes are not public until they pass CI, merge to `main`, and complete the Pages deployment.
 
 The public site is a static GitHub Pages application. A release is considered
 verified only after the exact commit passes CI and CodeQL, the Pages workflow
 builds and deploys that SHA, and the live site serves the expected artifact.
+
+## Verified 2026-08-24 application release
+
+- Pull request: [#9](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/9)
+- Squash-merge commit: `3d87ece0032a1539b26337f41152fd4343b9bbfc`
+- Required CI: [run 32735277555](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/32735277555) — passed, including 455 Node tests, production build, baseline, asset provenance, dependency audit, and secret scan.
+- CodeQL: [run 32735277559](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/32735277559) — passed after replacing the test-only incomplete HTML-tag stripping with structured markup assertions.
+- Pages: [run 32735595702](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/32735595702) — exact-SHA build and deployment passed; deployment status is `success` for `3d87ece0032a1539b26337f41152fd4343b9bbfc`.
+- Local focused gates: `npm run test:3d`, `npm run test:budgets`, and `npm run assets:check` passed; canonical colony data regenerated the runtime mirror byte-for-byte.
+- Live artifact checks: root, manifest, service worker, generated data, generated 3D bundle, CSS, favicon, font, and representative image all returned HTTP 200; `build-manifest.json` reports 5,094 files with base path `/production-calculator-ER/`.
+- Browser evidence: GitHub-hosted Chromium passed the clean-profile service-worker lifecycle; the local fixed-port Chromium smoke check covered the profile gate, Settings availability, onboarding unlock, Colonies lore disclosure, and Bookers Valley reference filter.
 
 ## Historical v1.0.0 release QA
 
