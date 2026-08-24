@@ -13,8 +13,8 @@
   @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 700 900; font-display: swap; src: url('fonts/orbitron-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/jetbrains-mono-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 </style>
-<link rel="stylesheet" href="src/styles.css?v=58" />
-<link rel="stylesheet" href="src/styles/ux-release.css?v=8" />
+<link rel="stylesheet" href="src/styles.css?v=59" />
+<link rel="stylesheet" href="src/styles/ux-release.css?v=9" />
 <link rel="stylesheet" href="src/styles/surviving-reference.css?v=2" />
 </head>
 <body>
@@ -156,8 +156,8 @@
   <section id="view-calc" class="view active" role="tabpanel" aria-label="Calculator">
     <div class="public-notice" role="note">Independent Empire Rising community project · local-first and offline-capable</div>
     <section id="first-run" class="first-run ui-panel" aria-labelledby="first-run-title">
-      <div class="first-run-copy"><span class="eyebrow">Start here</span><h2 id="first-run-title">Set up a local player profile</h2><p>Your profile stays in this browser. Faction changes economic estimates, not recipe access. After setup, choose an item and the calculator will show what to obtain, move, refine, manufacture, and spend.</p></div>
-      <div class="first-run-form"><label>Player name<input id="onboarding-name" autocomplete="nickname" placeholder="Your character name" /></label><label>Faction <select id="onboarding-faction" aria-label="Onboarding faction"></select><small>You can leave this as Unaffiliated. Faction changes economic estimates only; it does not lock recipes.</small></label><button id="onboarding-create" class="primary">Continue to calculator</button><button id="onboarding-import" class="ghost">Import existing workspace</button></div>
+      <div class="first-run-copy"><span class="eyebrow">Start here</span><h2 id="first-run-title">Set up a local player profile</h2><p id="profile-gate-notice" role="alert">Enter a player name and choose a faction before opening any tab or using the calculator. Settings stays available so you can change theme, text size, and other accessibility preferences first.</p><p>Your profile stays in this browser. Faction changes economic estimates, not recipe access. After setup, choose an item and the calculator will show what to obtain, move, refine, manufacture, and spend.</p></div>
+      <div class="first-run-form"><label>Player name<input id="onboarding-name" autocomplete="nickname" placeholder="Your character name" required /></label><label>Faction <select id="onboarding-faction" aria-label="Onboarding faction" required></select><small>Choose the faction this player belongs to. Faction changes economic estimates only; it does not lock recipes.</small></label><button id="onboarding-create" class="primary">Continue to calculator</button><button id="onboarding-import" class="ghost">Import existing workspace</button></div>
     </section>
     <section id="calc-guide" class="calc-guide ui-panel" aria-labelledby="calc-guide-title" hidden>
       <div class="calc-guide-copy">
@@ -768,7 +768,7 @@
   </div>
 </footer>
 
-<script src="src/game_data.js?v=28"></script>
+<script src="src/game_data.js?v=29"></script>
 <script src="src/balance_stats.js?v=1"></script>
 <script src="src/costs.js?v=13"></script>
 <script src="src/armor_classes.js?v=3"></script>
@@ -776,12 +776,12 @@
 <script src="src/store.js?v=5"></script>
 <script src="src/engine.js?v=21"></script>
 <script src="src/ui/motion.js?v=1"></script>
-<script src="src/app-core.js?v=53"></script>
+<script src="src/app-core.js?v=54"></script>
 <script src="src/ui/value-transition.js?v=1"></script>
 <script src="src/ui/r3f-loader.js?v=1"></script>
 <script src="src/ui/spatial-emphasis.js?v=1"></script>
 <script src="src/colony-work.js?v=1"></script>
-<script src="src/app.js?v=92"></script>
+<script src="src/app.js?v=93"></script>
 <script src="src/ui/legacy-3d-loader.js?v=1"></script>
 <script src="src/ui/chart-loader.js?v=1"></script>
 <script src="src/views/models.js?v=22"></script>
@@ -789,8 +789,8 @@
 <script src="src/views/reference.js?v=10"></script>
 <script src="src/views/gear.js?v=21"></script>
 <script src="src/views/inventory.js?v=38"></script>
-<script src="src/views/player.js?v=5"></script>
-<script src="src/app-init.js?v=51"></script>
+<script src="src/views/player.js?v=6"></script>
+<script src="src/app-init.js?v=52"></script>
 <script src="src/ui/trust-indicators.js?v=1"></script>
 
 </body>

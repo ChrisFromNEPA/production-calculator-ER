@@ -133,6 +133,15 @@ function setPlayerFaction(name, faction) {
   return true;
 }
 
+// A profile is ready for app navigation only after the player has supplied a
+// name and selected a real faction. Legacy/neutral profiles stay readable so
+// their inventory can be repaired through onboarding, but they do not unlock
+// the workbench or other tabs.
+function isProfileComplete(name, faction) {
+  const playerName = String(name == null ? '' : name).trim();
+  return !!playerName && normalizeFaction(faction) !== DEFAULT_FACTION;
+}
+
 function migrateLocationNames(store) {
   let changed = false;
   Object.keys(store.players || {}).forEach(function(name) {
@@ -417,6 +426,7 @@ const STORE = {
   ensureActivePlayer,
   getActiveFaction,
   setPlayerFaction,
+  isProfileComplete,
 
   // Aggregations (read by engine)
   get INV_TOTAL() { return INV_TOTAL; },

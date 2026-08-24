@@ -650,8 +650,9 @@ var LAST_PLANS = {};
 // The two name sets do NOT line up, which is why this is a union rather than a
 // join. The worlds list is CamelCase and 22 long ('AndromedaCity'), the
 // calculator's colonies come from mining sites and are spaced ('Andromeda').
-// Eight overlap, six colonies have no world entry (Paris and Tokyo among them)
-// and fourteen worlds are not places you can produce at.
+// Screenshot-derived lore adds a third name set with explicit app_location and
+// aliases, so the card can display the in-game title without changing the
+// calculator's internal location keys.
 var WORLD_NAMES = [
   'AndromedaCity','Aquatica','Arcturus','Aurelia','Berlin','BookersValley',
   'CeresDelta','Constantinople','DeMorgansCastle','DominionExodus','EpsilonEridani',
@@ -662,6 +663,21 @@ var WORLD_NAMES = [
 
 function colNorm(s) { return String(s).replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 
+function colonyLoreRecords() {
+  return Array.isArray(DATA.colony_lore) ? DATA.colony_lore : [];
+}
+
+function loreMatchesRow(lore, row) {
+  if (!lore || !row) return false;
+  const rowNames = [row.name, row.colony, row.world].filter(Boolean).map(colNorm);
+  const loreNames = [lore.name, lore.app_location, ...(lore.aliases || [])].filter(Boolean).map(colNorm);
+  return loreNames.some(name => rowNames.includes(name));
+}
+
+function loreForRow(row) {
+  return colonyLoreRecords().find(lore => loreMatchesRow(lore, row)) || null;
+}
+
 // Build the union: every colony the calculator knows, plus every world.
 function colonyRows() {
   var colonies = [...new Set([
@@ -669,6 +685,7 @@ function colonyRows() {
     ...Object.keys(DEFAULT_COLONY_OWNER).filter(c => c !== 'NYC Manhattan'),
   ])];
   var used = {};
+  var usedLore = {};
   var rows = [];
 
   colonies.forEach(function (c) {
@@ -679,12 +696,39 @@ function colonyRows() {
       if (wn === n || wn.indexOf(n) === 0 || n.indexOf(wn) === 0) { world = WORLD_NAMES[i]; break; }
     }
     if (world) used[world] = true;
-    rows.push({ name: c, colony: c, world: world, priced: FINAL_PRODUCTION_LOCATIONS.includes(c) });
+    const row = { name: c, colony: c, world: world, priced: FINAL_PRODUCTION_LOCATIONS.includes(c) };
+    row.lore = loreForRow(row);
+    if (row.lore) {
+      usedLore[row.lore.id] = true;
+      row.name = row.lore.name;
+    }
+    rows.push(row);
   });
 
   WORLD_NAMES.forEach(function (w) {
     if (used[w]) return;
-    rows.push({ name: w.replace(/([A-Z])/g, ' $1').trim(), colony: null, world: w, priced: false });
+    const row = { name: w.replace(/([A-Z])/g, ' $1').trim(), colony: null, world: w, priced: false };
+    const matchedLore = loreForRow(row);
+    if (matchedLore && !usedLore[matchedLore.id]) {
+      row.lore = matchedLore;
+      usedLore[row.lore.id] = true;
+      row.name = row.lore.name;
+      row.colony = row.lore.app_location || null;
+    }
+    rows.push(row);
+  });
+
+  // Keep a lore record visible even when the older world reference list and
+  // current calculator allowlists do not know its spelling yet.
+  colonyLoreRecords().forEach(function (lore) {
+    if (usedLore[lore.id]) return;
+    rows.push({
+      name: lore.name,
+      colony: lore.app_location || null,
+      world: null,
+      priced: false,
+      lore,
+    });
   });
 
   return rows.sort(function (a, b) {
@@ -712,12 +756,48 @@ function renderColonyOverview(productionRows) {
   set('col-metric-taxed', taxed);
 }
 
+function colonyYieldsFor(colony, mines) {
+  if (!colony) return [];
+  const aliases = {
+    'Andromeda City': 'Andromeda',
+    'NYC Manhattan': 'Manhattan',
+    'NYC - Manhattan': 'Manhattan',
+    'NYC - Brooklyn': 'Brooklyn',
+    'NYC - Ground Zero': 'Ground Zero',
+  };
+  return mines[colony] || mines[aliases[colony]] || [];
+}
+
+function renderColonyLore(lore, yields) {
+  if (!lore) return '';
+  const securityVisual = lore.security && lore.security.visual || 'Not recorded';
+  const knownResources = yields.length
+    ? `Canonical mining data: ${yields.map(y => esc(displayName(y))).join(', ')}.`
+    : 'No canonical mining yield is currently linked to this panel.';
+  const affiliation = lore.faction_context || 'No explicit faction or owner is stated in the panel.';
+  const landmarks = (lore.points_of_interest || []).map(point => `<li>${esc(point)}</li>`).join('');
+  return `<details class="colony-lore"><summary>In-game description &amp; intel</summary><div class="colony-lore-body">
+    <p class="colony-lore-description">${esc(lore.description)}</p>
+    <dl class="colony-lore-facts">
+      <div><dt>Location context</dt><dd>${esc(lore.location_context || 'Not stated')}</dd></div>
+      <div><dt>Faction context</dt><dd>${esc(affiliation)}</dd></div>
+      <div><dt>Security visual</dt><dd>${esc(securityVisual)}</dd></div>
+      <div><dt>Resource panel</dt><dd>${fmt(lore.resource_icon_count)} unlabeled icon${lore.resource_icon_count === 1 ? '' : 's'} shown. ${knownResources}</dd></div>
+    </dl>
+    ${landmarks ? `<div class="colony-lore-points"><b>Named places and notes</b><ul>${landmarks}</ul></div>` : ''}
+    <p class="muted colony-lore-source">Transcribed from the player-provided in-game colony panel; unlabeled icons and security meters are recorded as visual observations, not numeric game values.</p>
+  </div></details>`;
+}
+
 function renderColonyCard(r, mines, q) {
   const owners = colonyOwnerIds(r.colony);
   const own = isOwnColony(r.colony);
   const rate = typeof COLONY_TAX[r.colony] === 'number' ? COLONY_TAX[r.colony] : 0;
   const enc = encodeURIComponent(r.colony);
-  const yields = mines[r.colony] || [];
+  const lore = r.lore || loreForRow(r);
+  // Keep the direct mine lookup visible for the existing colony contract; the
+  // helper supplies aliases such as Andromeda City → Andromeda afterward.
+  const yields = mines[r.colony] || colonyYieldsFor(r.colony, mines);
   const ownerOptions = (window.ER_FACTIONS?.selectable || []).map(f =>
     `<label class="owner-check"><input type="radio" name="colony-owner-${enc}" value="${esc(f.id)}" data-colony-owner="${enc}"${owners.includes(f.id) ? ' checked' : ''} /> <span>${esc(f.name)}</span></label>`
   ).join('');
@@ -729,13 +809,15 @@ function renderColonyCard(r, mines, q) {
   return `<article class="colonies-card${own ? ' colonies-card-owned' : ''}" data-colony-card="${enc}">
     <div class="colonies-card-head"><div><span class="eyebrow">${r.priced ? 'Production world' : 'Owned world'}</span><h5>${esc(r.name)}</h5></div>${r.world ? `<button class="icon-action faction-audio" type="button" aria-label="Play welcome audio for ${esc(r.name)}" onclick="playAudio('voice_extracted/${r.world}.ogg',0.5)">🔊</button>` : ''}</div>
     <div class="colonies-card-status"><div class="owner-list" aria-label="Actual owner of ${esc(r.name)}">${colonyOwnerLabel(owners)}</div><span class="colony-tax-value">Tax <b>${rate}%</b></span></div>
+    ${lore ? `<div class="colony-lore-teaser">${esc(lore.location_context || 'Known world record')} · ${esc(lore.security?.visual || 'Security visual not recorded')}</div>` : ''}
     <div class="colonies-resources"><span class="colonies-label">Mines here</span><div class="resource-list">${resources}</div></div>
+    ${renderColonyLore(lore, yields)}
     <details class="colony-editor"><summary data-colony-edit="${enc}">Edit world state</summary><div class="colony-editor-body"><fieldset><legend>Actual owner</legend><label class="owner-check owner-check-clear"><input type="radio" name="colony-owner-${enc}" data-colony-clear="${enc}"${owners.length ? '' : ' checked'} /> Owner not set</label>${ownerOptions}</fieldset><p class="muted editor-hint">Global Dominion is the LED/FDC alliance; it is not a second owner. Only the actual owner receives the 85% return. Tax changes production cost.</p><label class="tax-editor">Colony tax <span><input type="number" min="0" max="500" step="5" value="${rate}" data-ct-tax="${enc}" aria-label="Tax percent at ${esc(r.name)}" /> %</span></label></div></details>
   </article>`;
 }
 
 function renderReferenceCard(r) {
-  return `<div class="reference-world-card"><span class="reference-world-name">${esc(r.name)}</span><span class="reference-world-label">Reference world</span>${r.world ? `<button class="icon-action faction-audio" type="button" aria-label="Play welcome audio for ${esc(r.name)}" onclick="playAudio('voice_extracted/${r.world}.ogg',0.5)">🔊</button>` : ''}</div>`;
+  return `<article class="reference-world-card"><div><span class="reference-world-name">${esc(r.name)}</span><span class="reference-world-label">Reference world</span></div>${r.world ? `<button class="icon-action faction-audio" type="button" aria-label="Play welcome audio for ${esc(r.name)}" onclick="playAudio('voice_extracted/${r.world}.ogg',0.5)">🔊</button>` : ''}${renderColonyLore(r.lore || loreForRow(r), [])}</article>`;
 }
 
 function renderColonies() {
@@ -748,7 +830,7 @@ function renderColonies() {
   const pricedOnly = !!(document.getElementById('col-priced-only') || {}).checked;
   const allRows = colonyRows();
   var productionRows = allRows.filter(r => r.priced || colonyOwnerIds(r.colony).length);
-  const matches = r => !q || r.name.toLowerCase().includes(q) || ((r.colony && mines[r.colony]) || []).some(m => m.toLowerCase().includes(q)) || colonyOwnerIds(r.colony || '').some(id => id.toLowerCase().includes(q));
+  const matches = r => !q || r.name.toLowerCase().includes(q) || ((r.colony && colonyYieldsFor(r.colony, mines)) || []).some(m => m.toLowerCase().includes(q)) || colonyOwnerIds(r.colony || '').some(id => id.toLowerCase().includes(q)) || (r.lore && [r.lore.description, r.lore.location_context, r.lore.faction_context, ...(r.lore.points_of_interest || [])].filter(Boolean).some(text => text.toLowerCase().includes(q)));
   const filteredProduction = productionRows.filter(r => matches(r) && (!pricedOnly || r.priced) && (mode === 'all' || mode === 'mine' && isOwnColony(r.colony) || mode === 'global-dominion' && ['LED', 'FDC'].includes(colonyOwnerIds(r.colony)[0])));
   const referenceRows = allRows.filter(r => !r.priced && matches(r) && mode === 'reference');
   renderColonyOverview(productionRows);

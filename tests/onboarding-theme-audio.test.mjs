@@ -22,9 +22,10 @@ describe('first-run calculator experience', () => {
     assert.match(html, /id="onboarding-create"/);
     assert.match(html, /class="calc-steps"/);
     assert.match(html, /Choose an item[\s\S]*Set quantity and colony[\s\S]*Calculate your plan/);
-    assert.match(player, /firstRun\) firstRun\.hidden\s*=\s*names\.length\s*!==\s*0/);
-    assert.match(player, /workbench\) workbench\.hidden\s*=\s*names\.length\s*===\s*0/);
-    assert.match(player, /playerbar\) playerbar\.hidden\s*=\s*names\.length\s*===\s*0/);
+    assert.match(player, /const profileReady = hasCompletePlayerProfile\(\)/);
+    assert.match(player, /firstRun\) firstRun\.hidden\s*=\s*profileReady/);
+    assert.match(player, /workbench\) workbench\.hidden\s*=\s*!profileReady/);
+    assert.match(player, /playerbar\) playerbar\.hidden\s*=\s*!profileReady/);
   });
 
   it('shows the rich single-plan stats and focuses successful results', () => {

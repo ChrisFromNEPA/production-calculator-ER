@@ -17,10 +17,11 @@ function renderPlayerBar() {
   const workbench = document.getElementById('calc-workbench');
   const guide = document.getElementById('calc-guide');
   const playerbar = document.querySelector('.playerbar');
-  if (firstRun) firstRun.hidden = names.length !== 0;
-  if (workbench) workbench.hidden = names.length === 0;
-  if (guide) guide.hidden = names.length === 0 || isCalcGuideDismissed() || RECENT.length > 0;
-  if (playerbar) playerbar.hidden = names.length === 0;
+  const profileReady = hasCompletePlayerProfile();
+  if (firstRun) firstRun.hidden = profileReady;
+  if (workbench) workbench.hidden = !profileReady;
+  if (guide) guide.hidden = !profileReady || isCalcGuideDismissed() || RECENT.length > 0;
+  if (playerbar) playerbar.hidden = !profileReady;
   if (names.length === 0) {
     sel.innerHTML = '<option value="" disabled selected>No players yet — create or import one</option>';
   }
@@ -36,10 +37,20 @@ function renderPlayerBar() {
     factionSel.value = names.length ? (S.getActiveFaction ? S.getActiveFaction() : 'UNAFFILIATED') : 'UNAFFILIATED';
   }
   document.getElementById('player-name').textContent = PLAYERS.active;
+  if (!profileReady) {
+    const onboardingName = document.getElementById('onboarding-name');
+    if (onboardingName && !onboardingName.value) onboardingName.value = PLAYERS.active || '';
+  }
+  syncProfileGateState();
 }
 
 function refreshAll() {
   renderPlayerBar();
+  const pendingView = setView._pendingProfileView;
+  if (pendingView && hasCompletePlayerProfile()) {
+    setView._pendingProfileView = null;
+    setView(pendingView);
+  }
   populateDestinations();
   // Whole inventory tab (zones, quick-picker, totals, dashboard, live charts) —
   // a player switch changes all of it, so go through the one refresh path.
@@ -212,6 +223,10 @@ function updateShareLink() {
   history.replaceState(null, '', '#' + hash);
 }
 function loadPlanFromHash() {
+  if (typeof hasCompletePlayerProfile === 'function' && !hasCompletePlayerProfile()) {
+    setView('calc');
+    return;
+  }
   if (!location.hash || location.hash === '#') return;
   const data = decodePlanHash(location.hash.slice(1));
   if (!data) return;

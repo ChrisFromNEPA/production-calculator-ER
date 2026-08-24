@@ -60,6 +60,13 @@ describe('faction-aware local player profiles', () => {
     assert.equal(STORE.getActiveFaction(), 'UNAFFILIATED');
   });
 
+  it('only treats a named player with an actual faction as complete', () => {
+    assert.equal(STORE.isProfileComplete('Miner', 'EC'), true);
+    assert.equal(STORE.isProfileComplete('Miner', 'UNAFFILIATED'), false);
+    assert.equal(STORE.isProfileComplete('', 'EC'), false);
+    assert.equal(STORE.isProfileComplete('Miner', 'not-a-faction'), false);
+  });
+
   it('exports faction metadata without changing inventory', () => {
     STORE.PLAYERS.players = { Miner: [{ item: 'coal', location: 'Andromeda', quantity: 4 }] };
     STORE.PLAYERS.profiles = { Miner: { faction: 'BOS' } };

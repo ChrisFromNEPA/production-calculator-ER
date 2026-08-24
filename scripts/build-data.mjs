@@ -35,6 +35,27 @@ data.mining_sites.forEach((s, i) => {
   if (!s.yields || !s.yields.length) errors.push(`mining_site[${i}] (${s.location}): no yields`);
 });
 
+// Validate screenshot-derived colony lore. The security value is intentionally
+// nullable: the supplied panels show qualitative meters, not numeric ratings.
+if (!Array.isArray(data.colony_lore)) {
+  errors.push('colony_lore: expected an array');
+} else {
+  const loreIds = new Set();
+  data.colony_lore.forEach((entry, i) => {
+    if (!entry.id || loreIds.has(entry.id)) errors.push(`colony_lore[${i}]: missing or duplicate id`);
+    loreIds.add(entry.id);
+    if (!entry.name) errors.push(`colony_lore[${i}]: missing name`);
+    if (!entry.description) errors.push(`colony_lore[${i}] (${entry.name}): missing description`);
+    if (!Number.isInteger(entry.resource_icon_count) || entry.resource_icon_count < 0) {
+      errors.push(`colony_lore[${i}] (${entry.name}): invalid resource_icon_count`);
+    }
+    if (entry.resources_labeled !== false) errors.push(`colony_lore[${i}] (${entry.name}): resources_labeled must stay false`);
+    if (!entry.security || entry.security.numeric !== null || !entry.security.visual) {
+      errors.push(`colony_lore[${i}] (${entry.name}): security must preserve a null numeric value and visual note`);
+    }
+  });
+}
+
 // Check icons exist for recipe outputs
 const iconDir = join(__dirname, '..', 'icons');
 data.recipes.forEach(r => {
@@ -59,4 +80,4 @@ window.GAME_DATA = ${JSON.stringify(data, null, 2)};
 
 writeFileSync(outPath, js);
 console.log(`[build-data] Generated ${outPath} (${js.length} bytes) from ${dataPath}`);
-console.log(`  ${data.recipes.length} recipes, ${data.mining_sites.length} mining sites`);
+console.log(`  ${data.recipes.length} recipes, ${data.mining_sites.length} mining sites, ${data.colony_lore.length} colony lore records`);

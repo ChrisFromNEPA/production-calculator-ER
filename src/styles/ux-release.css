@@ -1,5 +1,15 @@
 /* First-run, settings, semantic faction themes, and restrained Pride release. */
 .playerbar[hidden], .calc-workbench[hidden], .first-run[hidden], .calc-guide[hidden] { display: none !important; }
+/* A profile gate keeps the settings menu available for theme/text-size and
+   accessibility changes, while hiding every work surface until onboarding is
+   complete. The JS guard also protects direct calls and hash routes. */
+body.profile-gated main > .view:not(#view-calc),
+body.profile-gated #view-calc > :not(.public-notice):not(#first-run) { display: none !important; }
+body.profile-gated .nav-bar [data-view]:disabled,
+body.profile-gated .nav-bar [data-nav-view]:disabled,
+body.profile-gated .nav-bar [data-nav-toggle="drawer"]:disabled,
+body.profile-gated .nav-more-btn:disabled { opacity: .42; cursor: not-allowed; }
+body.profile-gated #profile-gate-notice { border-left: 3px solid var(--accent); padding-left: .65rem; }
 .settings-menu { position: relative; z-index: 140; margin-left: auto; }
 .settings-menu[open] { z-index: 260; }
 header:has(.settings-menu[open]) { position: relative; z-index: 300; }

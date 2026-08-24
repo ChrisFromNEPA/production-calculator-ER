@@ -2169,6 +2169,19 @@ tr td:first-child { white-space: nowrap; }
 .owner-alliance-label { flex-basis: 100%; color: var(--accent-bright); font-size: 0.62rem; }
 .colony-tax-value { flex: 0 0 auto; margin-top: 0.75rem; color: var(--muted); font-size: 0.68rem; }
 .colony-tax-value b { color: var(--warn); font-size: 0.78rem; }
+.colony-lore-teaser { margin-top: 0.55rem; color: var(--muted); font-size: 0.63rem; line-height: 1.4; }
+.colony-lore { margin-top: 0.65rem; border-top: 1px solid var(--line); padding-top: 0.5rem; }
+.colony-lore > summary { cursor: pointer; color: var(--accent-bright); font-size: 0.68rem; font-weight: 700; }
+.colony-lore-body { display: grid; gap: 0.55rem; margin-top: 0.55rem; }
+.colony-lore-description { margin: 0; color: var(--text); font-size: 0.68rem; line-height: 1.55; }
+.colony-lore-facts { display: grid; gap: 0.35rem; margin: 0; }
+.colony-lore-facts > div { display: grid; grid-template-columns: minmax(6.5rem, .35fr) minmax(0, 1fr); gap: 0.5rem; padding: 0.35rem 0.45rem; border-radius: 5px; background: var(--panel2); font-size: 0.63rem; line-height: 1.4; }
+.colony-lore-facts dt { color: var(--muted); font-weight: 700; }
+.colony-lore-facts dd { margin: 0; color: var(--text); }
+.colony-lore-points { color: var(--muted); font-size: 0.63rem; line-height: 1.4; }
+.colony-lore-points b { color: var(--text); }
+.colony-lore-points ul { margin: 0.25rem 0 0 1rem; padding: 0; }
+.colony-lore-source { margin: 0; font-size: 0.58rem; line-height: 1.45; }
 .colonies-resources { margin-top: 0.8rem; padding-top: 0.65rem; border-top: 1px solid var(--line); }
 .colonies-label { display: block; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .resource-list { display: flex; flex-wrap: wrap; gap: 0.3rem; }
@@ -2190,10 +2203,11 @@ tr td:first-child { white-space: nowrap; }
 .colonies-empty { padding: 1.2rem; border: 1px dashed var(--line-bright); border-radius: 10px; color: var(--muted); text-align: center; }
 .colonies-reference[hidden] { display: none; }
 .colonies-reference-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
-.reference-world-card { display: flex; align-items: center; gap: 0.45rem; min-width: 0; padding: 0.55rem 0.65rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+.reference-world-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.45rem; min-width: 0; padding: 0.55rem 0.65rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
 .reference-world-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 0.72rem; font-weight: 600; }
 .reference-world-label { margin-left: auto; color: var(--muted); font-size: 0.58rem; white-space: nowrap; }
 .reference-world-card .icon-action { min-width: 2rem; min-height: 2rem; padding: 0.2rem; }
+.reference-world-card .colony-lore { grid-column: 1 / -1; width: 100%; }
 .colonies-guide-copy { max-width: 850px; color: var(--muted); font-size: 0.75rem; line-height: 1.55; }
 .colonies-guide-copy h4 { color: var(--text); }
 @media (max-width: 1000px) { .colonies-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .colonies-reference-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

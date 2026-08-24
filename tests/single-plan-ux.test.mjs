@@ -50,6 +50,6 @@ describe('single production plan experience', () => {
   });
 
   it('cache-busts the changed player renderer', () => {
-    assert.match(html, /src\/views\/player\.js\?v=5/);
+    assert.match(html, /src\/views\/player\.js\?v=6/);
   });
 });

@@ -23,6 +23,12 @@ function applyPublicHashRoute() {
   return true;
 }
 
+function requiredFactionOptions() {
+  const factions = (window.ER_FACTIONS?.selectable || []).filter(f => f.id !== 'UNAFFILIATED');
+  return '<option value="" disabled selected>Choose a faction…</option>' + factions.map(f =>
+    `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderItemOptions();
   const edl = document.getElementById('inv-item-list');
@@ -586,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') {
         const n = inp.value.trim();
         if (!n) { row.remove(); return; }
+        if (!faction.value) { faction.focus(); toast('Choose a faction for the new player.'); return; }
         if (PLAYERS.players[n]) { toast('That player already exists.'); row.remove(); return; }
         PLAYERS.players[n] = [];
         PLAYERS.profiles = PLAYERS.profiles || {};
@@ -597,8 +604,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const faction = document.createElement('select');
     faction.setAttribute('aria-label', 'New player faction');
-    faction.innerHTML = (window.ER_FACTIONS?.selectable || []).map(f =>
-      `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
+    faction.required = true;
+    faction.innerHTML = requiredFactionOptions();
     const btn = document.createElement('button');
     btn.textContent = 'Create';
     btn.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer';
@@ -608,14 +615,16 @@ document.addEventListener('DOMContentLoaded', () => {
     inp.focus();
   });
   const onboardingFaction = document.getElementById('onboarding-faction');
-  if (onboardingFaction) onboardingFaction.innerHTML = (window.ER_FACTIONS?.selectable || []).map(f =>
-    `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
+  if (onboardingFaction) onboardingFaction.innerHTML = requiredFactionOptions();
   document.getElementById('onboarding-create')?.addEventListener('click', () => {
     const input = document.getElementById('onboarding-name');
     const name = input.value.trim();
     if (!name) { input.focus(); toast('Enter your player name to start.'); return; }
-    if (PLAYERS.players[name]) { toast('That player already exists.'); return; }
-    PLAYERS.players[name] = [];
+    if (!onboardingFaction?.value) { onboardingFaction?.focus(); toast('Choose your faction to continue.'); return; }
+    if (PLAYERS.players[name] && S.isProfileComplete?.(name, PLAYERS.profiles?.[name]?.faction)) {
+      toast('That player already exists.'); return;
+    }
+    if (!PLAYERS.players[name]) PLAYERS.players[name] = [];
     PLAYERS.profiles = PLAYERS.profiles || {};
     PLAYERS.profiles[name] = { faction: onboardingFaction?.value || 'UNAFFILIATED' };
     PLAYERS.active = name; savePlayers(PLAYERS); recomputeInv(); refreshAll();

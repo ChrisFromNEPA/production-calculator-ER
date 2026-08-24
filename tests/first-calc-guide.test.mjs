@@ -49,12 +49,13 @@ describe('guided first-calculation panel', () => {
     assert.match(guideBlock, /[Rr]esult/);
   });
 
-  it('stays hidden until a player exists and the user has not finished onboarding', () => {
-    // Same visibility discipline as first-run: hidden when no players, when the
-    // user dismissed it, or when the device already has calculations (RECENT).
+  it('stays hidden until a complete player profile exists and the user has not finished onboarding', () => {
+    // Same visibility discipline as first-run: hidden while the profile gate is
+    // active, when the user dismissed it, or when the device already has calculations (RECENT).
     assert.match(player, /getElementById\('calc-guide'\)/);
-    assert.match(player, /firstRun\) firstRun\.hidden\s*=\s*names\.length\s*!==\s*0/);
-    assert.match(player, /guide\) guide\.hidden\s*=\s*names\.length\s*===\s*0/);
+    assert.match(player, /const profileReady = hasCompletePlayerProfile\(\)/);
+    assert.match(player, /firstRun\) firstRun\.hidden\s*=\s*profileReady/);
+    assert.match(player, /guide\) guide\.hidden\s*=\s*!profileReady/);
     assert.match(player, /isCalcGuideDismissed\(\)/);
     assert.match(player, /RECENT\.length\s*>\s*0/);
   });

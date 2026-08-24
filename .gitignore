@@ -15,3 +15,4 @@ test-results/
 # Generated runtime artifacts are rebuilt in CI when their source is changed.
 # Keep committed generated files in the initial parity baseline only where the
 # existing offline shell requires them.
+.worktrees/

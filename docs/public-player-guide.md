@@ -3,7 +3,7 @@
 ## First calculation
 
 1. Open the public Pages site or run the static build locally.
-2. Create a player profile. Leave faction as `Unaffiliated` unless you have a verified reason to select one.
+2. Create a player profile with a name and faction. Settings remains available during setup for theme, text-size, and accessibility changes.
 3. Add inventory you actually own. The calculator does not infer holdings from faction membership.
 4. Choose an item, quantity, and production destination.
 5. Review the gross player spend and the separate faction-return/net-cost figures.
@@ -11,7 +11,7 @@
 
 ## Profiles and factions
 
-The faction selector is profile-specific. It is safe to switch profiles or factions: inventory remains attached to the player, and faction selection does not unlock or hide recipes. Fresh profiles have no automatic colony rebates.
+The faction selector is profile-specific. A name and non-neutral faction are required before the calculator or another tab can be opened; the Settings menu remains available during setup for theme and accessibility changes. It is safe to switch profiles or factions: inventory remains attached to the player, and faction selection does not unlock or hide recipes. Fresh profiles have no automatic colony rebates.
 
 ## Colonies and world context
 

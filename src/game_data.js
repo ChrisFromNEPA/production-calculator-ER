@@ -417,6 +417,398 @@ window.GAME_DATA = {
       ]
     }
   ],
+  "colony_lore": [
+    {
+      "id": "pax-prime",
+      "name": "Pax Prime",
+      "app_location": "Pax Prime",
+      "aliases": [
+        "Pax"
+      ],
+      "description": "Located deep in the furthest reaches of the Outer Rim territories colonized by Dominion forces is Pax, a moon orbiting the large planet 79 Ceti B, which is covered entirely with a sea of liquid oxygen, making it appear a deep, majestic blue. Pax Prime is the most distant colony from Earth to date, and is the apple of mankind's eye, being developed on massive precious mineral deposits.",
+      "location_context": "Moon orbiting 79 Ceti B in the Outer Rim",
+      "faction_context": "Dominion forces colonized the surrounding territories.",
+      "points_of_interest": [
+        "79 Ceti B",
+        "Outer Rim",
+        "massive precious mineral deposits"
+      ],
+      "resource_icon_count": 6,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Empty or dark meter; no numeric value shown."
+      }
+    },
+    {
+      "id": "necars-field",
+      "name": "Necars Field",
+      "app_location": "Necar's Field",
+      "aliases": [
+        "Necar's Field",
+        "Necar Field"
+      ],
+      "description": "A planet with vast expanses of lush greenery and incredible landscape. Discovered by the DSS Indomitable in 2413 on the furthest reaches of the Edge of the Milky Way galaxy. Because the atmosphere is perfect for human inhabitation, there was no need for terraforming.",
+      "location_context": "Planet on the furthest reaches of the Edge of the Milky Way",
+      "faction_context": null,
+      "points_of_interest": [
+        "DSS Indomitable",
+        "2413",
+        "Edge of the Milky Way"
+      ],
+      "resource_icon_count": 6,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Mostly empty dark meter with a short red segment at the left; no numeric value shown."
+      }
+    },
+    {
+      "id": "ceres-delta",
+      "name": "Ceres Delta",
+      "app_location": "Ceres Delta",
+      "aliases": [],
+      "description": "Built on a watery planet. On the outside, this colony looks desolate and rundown. However, appearances can be deceiving. The interior of this colony is very modern and well-maintained, with the sound of heavy boots echoing loudly through the narrow and winding corridors as Dominion soldiers patrol the outpost.",
+      "location_context": "Outpost on a watery planet",
+      "faction_context": "Dominion soldiers patrol the outpost.",
+      "points_of_interest": [
+        "narrow and winding corridors"
+      ],
+      "resource_icon_count": 5,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Dark meter with a short red segment at the left; no numeric value shown."
+      }
+    },
+    {
+      "id": "pegasi-51",
+      "name": "Pegasi 51",
+      "app_location": "Pegasi 51",
+      "aliases": [
+        "51 Pegasi b"
+      ],
+      "description": "51 Pegasi b is a massive planet orbiting at a distance of only 0.05 AUs from its sun. Although it is very tectonically active, the CMG established a colony here on a rock plateau where it is safe from the volcanic oceans.",
+      "location_context": "Rock plateau on 51 Pegasi b, 0.05 AUs from its sun",
+      "faction_context": "CMG established the colony.",
+      "points_of_interest": [
+        "51 Pegasi b",
+        "0.05 AUs",
+        "volcanic oceans",
+        "rock plateau"
+      ],
+      "resource_icon_count": 6,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Mostly empty dark meter with a short red segment at the left; no numeric value shown."
+      }
+    },
+    {
+      "id": "keplers-dome",
+      "name": "Keplers Dome",
+      "app_location": "Kepler's Dome",
+      "aliases": [
+        "Kepler's Dome",
+        "Antares"
+      ],
+      "description": "Keplers Dome is located on the moon Antares orbiting around planet Gliese 229 B. The CMG established a colony here due to the massive mineral and ore deposits present on this colony.",
+      "location_context": "Moon Antares orbiting planet Gliese 229 B",
+      "faction_context": "CMG established the colony.",
+      "points_of_interest": [
+        "Antares",
+        "Gliese 229 B",
+        "massive mineral and ore deposits"
+      ],
+      "resource_icon_count": 7,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Cyan fill on the left with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "andromeda-city",
+      "name": "Andromeda City",
+      "app_location": "Andromeda City",
+      "aliases": [
+        "Andromeda"
+      ],
+      "description": "Named after the Andromeda Galaxy, located on the very Mars-like moon, Omega 15. To maintain an inhabitable atmosphere for man while the rest of the moon undergoes terraforming, it has an invisible force-shield surrounding it. Due to the size limitations of this shield, the city colony has been constructed to be more compact than usual.",
+      "location_context": "Compact city colony on the Mars-like moon Omega 15",
+      "faction_context": null,
+      "points_of_interest": [
+        "Andromeda Galaxy",
+        "Omega 15",
+        "terraforming",
+        "invisible force-shield"
+      ],
+      "resource_icon_count": 6,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Cyan fill to roughly 40% with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "demorgans-castle",
+      "name": "Demorgan's Castle",
+      "app_location": "DeMorgan's Castle",
+      "aliases": [
+        "DeMorgan's Castle",
+        "Constantinople"
+      ],
+      "description": "Demorgan's Castle is a prison colony and mining resort. It became necessary to build a new prison colony as the far smaller prisons on its neighbor colony Constantinople were filled past capacity over the years.",
+      "location_context": "Prison colony and mining resort",
+      "faction_context": null,
+      "points_of_interest": [
+        "Constantinople"
+      ],
+      "resource_icon_count": 7,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green fill across most of the meter with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "dss-yukon",
+      "name": "DSS Yukon",
+      "app_location": "DSS Yukon",
+      "aliases": [
+        "Yukon"
+      ],
+      "description": "DSS is an abbreviation for Dominion Spaceship. The DSS Yukon is on a constant military operation through our universe and helps to protect our species. This world is accessible for the Freedom Defense Corps only.",
+      "location_context": "Dominion Spaceship on a constant military operation",
+      "faction_context": "Accessible for the Freedom Defense Corps only.",
+      "points_of_interest": [
+        "Dominion Spaceship",
+        "constant military operation"
+      ],
+      "resource_icon_count": 0,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green horizontal bar; no numeric value shown."
+      }
+    },
+    {
+      "id": "training-grounds",
+      "name": "Training Grounds",
+      "app_location": "Training Grounds",
+      "aliases": [
+        "Training Center",
+        "New York City"
+      ],
+      "description": "Rehabilitation grounds for newly cloned Dominion citizens located on New York City. These sky plateaus will always be safe, regardless of the security situation in the rest of New York City. Use of weaponry is forbidden here.",
+      "location_context": "Safe sky plateaus on New York City",
+      "faction_context": "Rehabilitation grounds for newly cloned Dominion citizens.",
+      "points_of_interest": [
+        "New York City",
+        "sky plateaus",
+        "weaponry forbidden"
+      ],
+      "resource_icon_count": 4,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Large green horizontal bar; no numeric value shown."
+      }
+    },
+    {
+      "id": "paris",
+      "name": "Paris",
+      "app_location": "Paris",
+      "aliases": [],
+      "description": "This quaint and beautiful city displays the rustic fusion of ancient 19th century buildings such as the Eiffel Tower and the Arc de Triomphe with modern 25th century architecture and technology. An ever-popular destination for aficionados of ancient European architecture and young lovebirds alike, it has recently been favored for the headquarters of corporations since the recent refurbishment of the business district.",
+      "location_context": "City combining ancient European landmarks with 25th century architecture",
+      "faction_context": null,
+      "points_of_interest": [
+        "Eiffel Tower",
+        "Arc de Triomphe",
+        "refurbished business district"
+      ],
+      "resource_icon_count": 4,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green fill to roughly four-fifths with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "berlin",
+      "name": "Berlin",
+      "app_location": "Berlin",
+      "aliases": [],
+      "description": "After decades of violent uprising and unlawfulness, this city was transformed into a desolate wasteland characterized by anarchy. Although the Dominion tried desperately to seal off access, insurgents eventually overwhelmed these efforts, forcibly reconnecting the vortex link to the outside world. The observation probes that automatically detect murders and assign penalty points were also discovered and destroyed, making it a degenerate abyss of crime.",
+      "location_context": "Desolate city wasteland characterized by anarchy",
+      "faction_context": "The Dominion attempted to seal off access; the current owner is not explicitly stated.",
+      "points_of_interest": [
+        "vortex link",
+        "observation probes",
+        "penalty points"
+      ],
+      "resource_icon_count": 0,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Partially filled cyan bar; no numeric value shown."
+      }
+    },
+    {
+      "id": "bookers-valley",
+      "name": "Bookers Valley",
+      "app_location": null,
+      "aliases": [
+        "Booker's Valley",
+        "Mars"
+      ],
+      "description": "The colony on Mars was named after Terrence M. Booker. Booker's Valley is located within the Tharsis area, not far from Labyrinthus Noctis and the legendary Olympus Mons.",
+      "location_context": "Colony on Mars in the Tharsis area",
+      "faction_context": null,
+      "points_of_interest": [
+        "Terrence M. Booker",
+        "Tharsis",
+        "Labyrinthus Noctis",
+        "Olympus Mons"
+      ],
+      "resource_icon_count": 0,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green horizontal bar; no numeric value shown."
+      }
+    },
+    {
+      "id": "titan-station",
+      "name": "Titan Station",
+      "app_location": "Titan Station",
+      "aliases": [],
+      "description": "Eons of volcanic activity have given this planet its unique terrain. However, with the establishment of a colony, a new dominant force has arrived to make its mark – Man. The large underground caverns are rich with many precious minerals and this outpost is remote enough for anyone looking to evade the Dominion authorities until the heat is off.",
+      "location_context": "Remote outpost with mineral-rich underground caverns",
+      "faction_context": "Man is described as the new dominant force; Dominion authorities are mentioned.",
+      "points_of_interest": [
+        "underground caverns",
+        "precious minerals",
+        "Dominion authorities"
+      ],
+      "resource_icon_count": 5,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green fill to roughly three-quarters with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "aurelia",
+      "name": "Aurelia",
+      "app_location": "Aurelia",
+      "aliases": [],
+      "description": "The moon Aurelia is the outermost moon in orbit around a planet orbiting Sirius A. A world with a warm climate, but with little vegetation. It is only a matter of time before life finds its own way here.",
+      "location_context": "Outermost moon of a planet orbiting Sirius A",
+      "faction_context": null,
+      "points_of_interest": [
+        "Sirius A",
+        "warm climate",
+        "little vegetation"
+      ],
+      "resource_icon_count": 7,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Cyan fill to roughly 60% with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "nyc-brooklyn",
+      "name": "NYC - Brooklyn",
+      "app_location": "Brooklyn",
+      "aliases": [
+        "NY Brooklyn"
+      ],
+      "description": "The eastern part of NYC, with its famous botanical garden and big Brooklyn space harbor. Natural influences and modern architecture signify this area.",
+      "location_context": "Eastern part of New York City",
+      "faction_context": null,
+      "points_of_interest": [
+        "botanical garden",
+        "Brooklyn space harbor"
+      ],
+      "resource_icon_count": 4,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green bar appears fully filled; no numeric value shown."
+      }
+    },
+    {
+      "id": "nyc-ground-zero",
+      "name": "NYC - Ground Zero",
+      "app_location": "Ground Zero",
+      "aliases": [
+        "NY Ground Zero"
+      ],
+      "description": "Standing as a beacon of hope for the future and in memory of all that has been lost in history, this city has been called the soul of the Dominion. Home to the L.E.D. headquarters, Chinatown, Statue of Liberty, Ground Zero Memorial, and more, the sprawling streets of this great city have a universal appeal.",
+      "location_context": "New York City district known as the soul of the Dominion",
+      "faction_context": "The city is called the soul of the Dominion; L.E.D. headquarters is located here.",
+      "points_of_interest": [
+        "L.E.D. headquarters",
+        "Chinatown",
+        "Statue of Liberty",
+        "Ground Zero Memorial"
+      ],
+      "resource_icon_count": 0,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green bar appears fully filled; no numeric value shown."
+      }
+    },
+    {
+      "id": "nyc-manhattan",
+      "name": "NYC - Manhattan",
+      "app_location": "Manhattan",
+      "aliases": [
+        "NY Manhattan"
+      ],
+      "description": "The most expensive and popular area of New York City. This is the location of the Dominion Trade Centre, which is popular with traders and merchants, as well as the capital city of the Dominion. This is the location of the Dominion Headquarters, as well as the Dominion Senate’s Chambers.",
+      "location_context": "Capital city and most expensive area of New York City",
+      "faction_context": "Capital city of the Dominion.",
+      "points_of_interest": [
+        "Dominion Trade Centre",
+        "Dominion Headquarters",
+        "Dominion Senate’s Chambers"
+      ],
+      "resource_icon_count": 5,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green fill to roughly 85% with a dark remainder; no numeric value shown."
+      }
+    },
+    {
+      "id": "tokyo",
+      "name": "Tokyo",
+      "app_location": "Tokyo",
+      "aliases": [],
+      "description": "The city-habitat of Tokyo encompasses a vast myriad of styles and architecture, and the same can be said of its inhabitants. From the high tech district of Otaku with Club 69 and the FDC Headquarters, to the old fishing port of Shibuya, and the scenic parks of Kamitakada, Tokyo has it all. Watch out for the Brotherhood!",
+      "location_context": "City-habitat with districts, a fishing port, and scenic parks",
+      "faction_context": "FDC Headquarters and the Brotherhood are mentioned; current ownership is not explicitly stated.",
+      "points_of_interest": [
+        "Otaku",
+        "Club 69",
+        "FDC Headquarters",
+        "Shibuya",
+        "Kamitakada",
+        "the Brotherhood"
+      ],
+      "resource_icon_count": 5,
+      "resources_labeled": false,
+      "security": {
+        "numeric": null,
+        "visual": "Green fill to roughly three-quarters with a dark remainder; no numeric value shown."
+      }
+    }
+  ],
   "recipes": [
     {
       "output": {

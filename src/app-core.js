@@ -82,6 +82,38 @@ const undoInv = undoInvWrapper;
 let PLAYERS = S.PLAYERS;
 const savePlayers = S.savePlayers;
 
+// ---- Required first-run profile gate --------------------------------------
+// Keep the settings menu usable for theme, text-size, and other accessibility
+// adjustments, but do not let an unprofiled visitor browse or mutate the
+// calculator. The guard lives here so clicks, grouped navigation, and direct
+// hash routes all share the same policy.
+function hasCompletePlayerProfile() {
+  const name = String(PLAYERS?.active || '').trim();
+  const faction = S.getActiveFaction ? S.getActiveFaction() : '';
+  return !!(S.isProfileComplete && S.isProfileComplete(name, faction));
+}
+
+function syncProfileGateState() {
+  const locked = !hasCompletePlayerProfile();
+  const root = document.documentElement;
+  root.dataset.profileGate = locked ? 'required' : 'ready';
+  document.body?.classList.toggle('profile-gated', locked);
+  document.querySelectorAll('[data-view], [data-nav-view], [data-nav-toggle="drawer"], .nav-more-btn').forEach(button => {
+    const route = button.dataset.view || button.dataset.navView;
+    const navigationButton = route || button.classList.contains('nav-more-btn') || button.dataset.navToggle === 'drawer';
+    if (!navigationButton) return;
+    const allowed = !locked || route === 'calc';
+    button.disabled = !allowed;
+    button.setAttribute('aria-disabled', String(!allowed));
+  });
+  const notice = document.getElementById('profile-gate-notice');
+  if (notice) notice.hidden = !locked;
+  return !locked;
+}
+
+window.hasCompletePlayerProfile = hasCompletePlayerProfile;
+window.syncProfileGateState = syncProfileGateState;
+
 /**
  * Live inventory aggregations — Proxy delegates every property access
  * to STORE's current object. Since recomputeInv() replaces the STORE
@@ -1937,6 +1969,12 @@ window.CMG_NAV_GROUPS = CMG_NAV_GROUPS;
 
 // ---- Tabs ----
 function setView(v) {
+  if (!hasCompletePlayerProfile() && v !== 'calc') {
+    setView._pendingProfileView = v;
+    v = 'calc';
+    syncProfileGateState();
+    if (typeof toast === 'function') toast('Finish your player name and faction before opening another tab.', 3500);
+  }
   const prev = setView._prev;
   const applyView = () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
@@ -1967,6 +2005,7 @@ function setView(v) {
   else applyView();
 }
 setView._prev = null;
+setView._pendingProfileView = null;
 
 // Hook registry — call registerViewHook({view, fn, once, enter, leave, views})
 var VIEW_HOOKS = [];
