@@ -796,9 +796,8 @@ function renderSlotLevels() {
   var e = document.getElementById('slot-energy'), c = document.getElementById('slot-cooling');
   if (e) { e.value = ENERGY_LEVEL; }
   if (c) { c.value = COOLING_LEVEL; }
-  // Shown as the LEVEL, not a percentage. The panel is marked 0–100%, but
-  // players talk in levels — "5 energy, 0 cooling" — so the number here should
-  // be the one that gets said out loud.
+  // Show the one-based level directly; that is the number players use when
+  // describing the shared mining, refinement, and production setting.
   var eo = document.getElementById('slot-energy-out'), co = document.getElementById('slot-cooling-out');
   if (eo) eo.textContent = ENERGY_LEVEL;
   if (co) co.textContent = COOLING_LEVEL;
@@ -1615,6 +1614,11 @@ function showQuantityValidation(message) {
   }
 }
 
+function drugProductionInstruction(drug) {
+  const tier = String(drug.tier || '—');
+  return `<div class="prod-code" aria-label="Drug production instruction"><span class="prod-code-entry"><span class="prod-code-label">Production code:</span> <strong class="prod-code-val">${esc(String(drug.code ?? '—'))}</strong></span><span class="prod-code-entry"><span class="prod-code-label">Power:</span> <span class="tag tier-${esc(tier.toLowerCase())}">${esc(tier)}</span></span></div>`;
+}
+
 function renderPlan(item, qty, targetEl) {
   if (!FINAL_ITEMS.includes(item)) {
     targetEl.innerHTML = '<div class="card"><span class="shortfall">That is not a final item. The calculator is for end products (medkits, ammo, foams, etc.). It is produced as an intermediate of another recipe — compute that final item instead.</span></div>';
@@ -1692,7 +1696,7 @@ function renderPlan(item, qty, targetEl) {
 
       ${planSection('colony-work', 1, 'Visit, mine, move & refine by colony', colonyWorkHtml)}
       ${planSection('manufacture', 2, 'Manufacture at ' + esc(DESTINATION),
-        (drugRef ? `<div class="prod-code"><span class="prod-code-label">Production Code</span><span class="prod-code-val">${esc(String(drugRef.code))}</span><span class="prod-code-power"><span class="prod-code-label">Power</span><span class="tag tier-${esc(String(drugRef.tier || '').toLowerCase())}">${esc(drugRef.tier)}</span></span></div>` : '') + manufactureHtml)}
+        (drugRef ? drugProductionInstruction(drugRef) : '') + manufactureHtml)}
       ${renderMiningPanel(plan)}
       <div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>
       ${planApplied

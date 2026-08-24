@@ -704,18 +704,16 @@ function seedRemoteColonies() {
 // the notch index: full energy adds 30 UC and full cooling 20, for 50 UC a batch
 // at max. A flat amount either way, so it dominates a cheap material and barely
 // registers on a gun.
-// 22 bar positions counting zero, so 21 STEPS to full — bar 11 bills 52 UC on a
-// chem sub, which only works if a bar is 1/21 (52.38%). Treating it as 1/22
-// would put bar 11 at exactly 50% and bill 51.
-const MAX_LEVEL = 21;
-// A slot cannot be run at zero energy — 1 is the floor. Cooling can genuinely
-// be left off, so its floor is 0.
-const MIN_ENERGY = 1, MIN_COOLING = 0;
+// Both in-game dials have twenty one-based levels. A slot cannot be run at
+// zero energy, and cooling uses the same level scale rather than an on/off
+// exception.
+const MAX_LEVEL = 20;
+const MIN_ENERGY = 1, MIN_COOLING = 1;
 const ENERGY_UC_AT_FULL = 30;
 const COOLING_UC_AT_FULL = 20;
-// Defaults are what most players actually run: 5 energy, no cooling.
-// Only a starting point — whatever is saved locally wins.
-const DEFAULT_ENERGY = 5, DEFAULT_COOLING = 0;
+// The recommended starting point is five clicks below maximum. Explicit saved
+// values still win; missing or malformed fields fall back to these defaults.
+const DEFAULT_ENERGY = 15, DEFAULT_COOLING = 15;
 let ENERGY_LEVEL = DEFAULT_ENERGY, COOLING_LEVEL = DEFAULT_COOLING;  // notch index; percent is derived
 
 function levelPercent(level) { return level * 100 / MAX_LEVEL; }
@@ -734,15 +732,12 @@ function slotUpkeep() {
     }
   } catch (e) {}
 })();
-function clampLevel(v, lo) {
+function clampLevel(v, lo, fallback) {
   const n = parseInt(v, 10);
-  return Math.max(lo, Math.min(MAX_LEVEL, isNaN(n) ? lo : n));
+  return Math.max(lo, Math.min(MAX_LEVEL, isNaN(n) ? fallback : n));
 }
-// Anyone whose saved setting predates this had energy 0, which the game cannot
-// actually do — lift it to the real floor rather than keep costing an
-// impossible slot.
-function clampEnergy(v)  { return clampLevel(v, MIN_ENERGY); }
-function clampCooling(v) { return clampLevel(v, MIN_COOLING); }
+function clampEnergy(v)  { return clampLevel(v, MIN_ENERGY, DEFAULT_ENERGY); }
+function clampCooling(v) { return clampLevel(v, MIN_COOLING, DEFAULT_COOLING); }
 function saveSlotLevels() {
   try {
     localStorage.setItem('cmg_slot_levels_v1',

@@ -1695,6 +1695,16 @@ tr td:first-child { white-space: nowrap; }
   .single-head-route { justify-content: flex-start; }
 }
 
+.prod-code {
+  display: flex; flex-wrap: wrap; gap: .55rem 1rem; align-items: center;
+  margin: .7rem 0; padding: .65rem .8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: 6px; background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+}
+.prod-code-entry { display: inline-flex; align-items: center; gap: .25rem; }
+.prod-code-label { color: var(--muted); font-weight: 700; }
+.prod-code-val { letter-spacing: .08em; }
+
 .plan-summary {
   position: sticky; top: 0; z-index: 10;
   background: rgba(13,13,26,.92);

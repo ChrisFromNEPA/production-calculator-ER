@@ -224,16 +224,16 @@
 
       <div class="ct-slots">
         <label class="ct-slot">⚡ Energy
-          <input id="slot-energy" type="range" min="1" max="21" step="1" value="5" aria-label="Energy level" />
-          <output id="slot-energy-out">5</output>
+          <input id="slot-energy" type="range" min="1" max="20" step="1" value="15" aria-label="Energy level" />
+          <output id="slot-energy-out">15</output>
         </label>
         <label class="ct-slot">❄️ Cooling
-          <input id="slot-cooling" type="range" min="0" max="21" step="1" value="0" aria-label="Cooling level" />
-          <output id="slot-cooling-out">0</output>
+          <input id="slot-cooling" type="range" min="1" max="20" step="1" value="15" aria-label="Cooling level" />
+          <output id="slot-cooling-out">15</output>
         </label>
         <span id="slot-note" class="ct-note"></span>
       </div>
-      <div class="ct-hint muted">Set in <strong>levels</strong>, the way they actually get talked about — most production runs at <strong>5 energy, 0 cooling</strong>. Energy can't go below 1; cooling can be left off entirely. Each energy level adds about <strong>1.43 UC per run</strong> and each cooling level <strong>0.95</strong>, flat regardless of what you're making — so at the top it adds 50 UC whether the run costs 69 or 4997, dominating a cheap material and barely registering on a gun. Cooling isn't dead weight though: it keeps heat down, and heat is what drags effectiveness and speed with it. These totals are the price of a <strong>cold start</strong>; a long run drifts cheaper per unit. See <em>How a slot actually works</em> on the Colonies tab.</div>
+      <div class="ct-hint muted">Set energy and cooling in <strong>levels 1–20</strong>. The recommended default is <strong>15 and 15</strong>, five clicks below max. These shared settings apply to mining, refinement, and production slot-batch costs. Each energy level adds <strong>1.5 UC</strong> and each cooling level <strong>1 UC</strong> per run. Cooling keeps heat down, and heat drags effectiveness and speed with it. These totals are the price of a <strong>cold start</strong>; a long run drifts cheaper per unit. See <em>How a slot actually works</em> on the Colonies tab.</div>
       <div class="ct-hint muted">Colony tax rates and ownership are stored locally per device. Use the export/import controls when you want to share a snapshot.</div>
     </details>
 
