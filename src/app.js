@@ -1795,6 +1795,7 @@ function renderPlan(item, qty, targetEl) {
       <span class="legend-chip legend-produce"></span> Produce (refine/manufacture) &nbsp;
       <span class="legend-chip legend-surplus"></span> Batch surplus
     </div>`;
+  syncCalcExecutionSummary(plan, [{ item: item, qty: qty }], targetEl);
   return true;
 }
 
@@ -1811,12 +1812,14 @@ function runCalculator() {
   getRefineDestination(); // sync from input
   if (!item || !ALL_ITEMS.has(item)) {
     clearQuantityValidation();
+    syncCalcExecutionSummary(null);
     out.innerHTML = '<div class="card"><span class="shortfall">Select a valid item from the list.</span></div>';
     window.CMG_VALUE_TRANSITION?.announce({ item: 'Production plan', quantity: 1, result: out });
     return;
   }
   if (!Number.isInteger(parsedQty) || parsedQty < 1) {
     showQuantityValidation('Quantity must be a whole number of at least 1. Your previous plan was not updated.');
+    syncCalcExecutionSummary(null);
     out.innerHTML = '<div class="card calculation-error" role="alert"><span class="shortfall">Enter a whole-number quantity of 1 or more, then calculate again.</span></div>';
     LAST_PLANS['calc-result'] = null;
     return;
@@ -1955,6 +1958,7 @@ function runMultiPlan(options) {
     // There is no id="plan" element — this used to throw a TypeError inside the
     // catch, masking the real compute error and leaving the user with a blank
     // pane. The combined plan renders into `out` (#calc-multi).
+    syncCalcExecutionSummary(null);
     out.innerHTML = '<div class="card"><span class="shortfall">Couldn\'t plan these items — one may have a recipe cycle or missing data. Check the console for details.</span></div>';
     return;
   }
@@ -1981,6 +1985,7 @@ function runMultiPlan(options) {
   html += renderMiningPanel(plan);
 
   out.innerHTML = html;
+  syncCalcExecutionSummary(plan, CALC_TRAY, out);
   if (CALC_TRAY.length) {
     out.innerHTML += `<div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>${planApplied
       ? `<button class="apply-plan applied" disabled title="Applied. Press Build combined plan again to plan another run.">✓ Applied to inventory</button>`

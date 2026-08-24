@@ -879,6 +879,44 @@ tr td:first-child { white-space: nowrap; }
    ===================================================================== */
 .plan-top { margin-bottom: 0.75rem; }
 
+/* Compact task rail that stays visible while the detailed itinerary scrolls. */
+.calc-execution-summary {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 4;
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0.75rem;
+  padding: 0.7rem 0.8rem;
+  background: color-mix(in srgb, var(--cyan) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--cyan) 58%, var(--line));
+  border-left: 3px solid var(--cyan);
+  border-radius: 6px;
+  box-shadow: 0 0.35rem 1rem color-mix(in srgb, #000 30%, transparent);
+}
+.calc-execution-kicker {
+  color: var(--cyan);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.calc-execution-main,
+.calc-execution-route {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.calc-execution-main strong { color: var(--text); font-size: 0.88rem; }
+.calc-execution-route { color: var(--text); font-size: 0.66rem; }
+.calc-execution-label { color: var(--muted); font-size: 0.59rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.calc-execution-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; }
+.calc-execution-metrics span { display: flex; flex-direction: column; gap: 0.08rem; min-width: 0; }
+.calc-execution-metrics b { color: var(--cyan); font: 700 1rem "Orbitron", "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+.calc-execution-metrics small { color: var(--muted); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.calc-execution-note { color: var(--muted); font-size: 0.59rem; }
+
 /* compact KPI tiles — one per headline count, equal height, neon top edge */
 .kpi-strip {
   display: grid;
@@ -917,6 +955,7 @@ tr td:first-child { white-space: nowrap; }
   font-size: 0.6875rem; color: var(--muted);
   text-transform: uppercase; letter-spacing: 1px;
 }
+.kpi-detail { color: var(--text); font-size: 0.58rem; font-variant-numeric: tabular-nums; }
 .kpi-acq { --kpi: var(--warn); }
 .kpi-mat { --kpi: var(--cyan); }
 .kpi-stp { --kpi: var(--purple); }
@@ -2945,6 +2984,18 @@ button.x:hover { color: #ff5577; }
   border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
   border-radius: 7px;
 }
+.inventory-rapid-entry {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 3;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.55rem;
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel2));
+  border: 1px solid color-mix(in srgb, var(--accent) 65%, var(--line));
+  border-radius: 5px;
+  box-shadow: 0 0.3rem 0.8rem color-mix(in srgb, #000 26%, transparent);
+}
 .inventory-add-head {
   display: flex;
   align-items: baseline;
@@ -3985,6 +4036,7 @@ button.x:hover { color: #ff5577; }
 .gear-layout { display: flex; gap: 1.5rem; flex-wrap: wrap; }
 .gear-main { flex: 0 0 auto; min-width: 320px; }
 .gear-title { font-family: "Orbitron", monospace; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 0.75rem; }
+.gear-loadout-hint { margin: -0.35rem 0 0.75rem; color: var(--muted); font-size: 0.65rem; line-height: 1.4; }
 
 /* armor grid — animated neon */
 .gear-paperdoll {
@@ -4538,6 +4590,7 @@ button.x:hover { color: #ff5577; }
   padding: 0.4rem; cursor: pointer; text-align: center; transition: border-color .15s;
 }
 .icon-card:hover { border-color: var(--accent); }
+.icon-card:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-color: var(--cyan); }
 .icon-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .icon-card img {
   width: 48px; height: 48px; object-fit: contain; image-rendering: pixelated;

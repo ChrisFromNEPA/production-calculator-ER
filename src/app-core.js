@@ -1475,7 +1475,7 @@ function renderPlanStats(plan) {
   const tiles = [
     { cls: 'acq', icon: '⛏', val: fmt(totalAcquire), label: 'units to acquire' },
     { cls: 'mat', icon: '⚗', val: fmt(rawCount), label: 'raw materials' },
-    { cls: 'stp', icon: '⚙', val: fmt(refineCount + mfgCount), label: 'production steps' }
+    { cls: 'stp', icon: '⚙', val: fmt(refineCount + mfgCount), label: 'production actions', detail: `${fmt(refineCount)} refine · ${fmt(mfgCount)} manufacture` }
   ];
   if (surplusTotal > 0) tiles.push({ cls: 'spl', icon: '＋', val: '+' + fmt(surplusTotal), label: 'batch surplus' });
 
@@ -1484,6 +1484,7 @@ function renderPlanStats(plan) {
       <span class="kpi-icon">${t.icon}</span>
       <span class="kpi-value">${t.val}</span>
       <span class="kpi-label">${t.label}</span>
+      ${t.detail ? `<span class="kpi-detail">${t.detail}</span>` : ''}
     </div>`).join('')}</div>`;
 
   // Only claim a complete figure when nothing is missing — a partial sum reads
@@ -1523,6 +1524,42 @@ function renderPlanStats(plan) {
     </div>`;
 
   return `<div class="plan-top">${kpiHtml}${costPanel}${renderPerUnitPricing(plan)}</div>`;
+}
+
+// Compact task summary for the long execution checklist. It is derived from
+// the rendered plan and never changes calculation semantics or checklist state.
+function syncCalcExecutionSummary(plan, requestedItems, targetEl) {
+  const root = document.getElementById('calc-execution-summary');
+  if (!root) return;
+  if (!plan) {
+    root.hidden = true;
+    return;
+  }
+  const requests = Array.isArray(requestedItems) ? requestedItems : [];
+  const requested = requests.reduce((sum, entry) => sum + (Number(entry.qty) || 0), 0);
+  const produced = (plan.manufacture || []).reduce((sum, step) => sum + (Number(step.produced) || 0), 0);
+  const surplus = Math.max(0, produced - requested);
+  const refineCount = (plan.refine || []).length;
+  const manufactureCount = (plan.manufacture || []).length;
+  const current = targetEl?.querySelector('[data-current-objective="true"] .flow-name, [data-current-objective="true"] .recipe-name');
+  const fallback = Object.keys(plan.acquire || {}).length
+    ? 'Obtain required materials'
+    : refineCount
+      ? `Refine at ${REFINE_DESTINATION}`
+      : `Manufacture at ${DESTINATION}`;
+  const next = current?.textContent?.trim() || fallback;
+  const route = REFINE_DESTINATION !== DESTINATION
+    ? `Refine at ${REFINE_DESTINATION} → move intermediates → manufacture at ${DESTINATION}`
+    : `Refine and manufacture at ${DESTINATION}`;
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+  set('calc-execution-next', next);
+  set('calc-execution-route', route);
+  set('calc-execution-requested', fmt(requested));
+  set('calc-execution-produced', fmt(produced));
+  set('calc-execution-surplus', surplus ? '+' + fmt(surplus) : '0');
+  set('calc-execution-actions', fmt(refineCount + manufactureCount));
+  set('calc-execution-note', `${fmt(refineCount)} refine · ${fmt(manufactureCount)} manufacture · detailed checklist continues below.`);
+  root.hidden = false;
 }
 
 // ── Show the math: player-readable walkthrough of the plan's arithmetic ──

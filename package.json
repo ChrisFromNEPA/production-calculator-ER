@@ -10,6 +10,7 @@
     "test": "node --test 'tests/*.test.mjs'",
     "test:baseline": "node scripts/check-baseline.mjs",
     "test:sw-update": "npm run build && node --test tests/browser/service-worker-update.spec.mjs",
+    "test:browser-ux": "npm run build && node --test tests/browser/calculator-ux.spec.mjs",
     "stats:update": "python3 scripts/update_balance_stats.py && node scripts/build-balance.mjs && node scripts/build-data.mjs",
     "local:host": "vite --host 0.0.0.0 --port 4173 --strictPort",
     "build:3d": "vite build --config vite.config.mjs",

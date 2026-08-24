@@ -576,7 +576,8 @@
       var badge = '';
       if (e.recipe_count > 0) badge = '<div class="icon-card-badge">📦 craftable</div>';
       var imgSrc = e.icon || e.png;
-      return '<div class="' + cls + '" data-icon-id="' + e.id + '" data-icon-file="' + (e.file || e.id) + '">' +
+      var pressed = iconCurrent && iconCurrent.id === e.id && iconCurrent.file === e.file ? 'true' : 'false';
+      return '<div class="' + cls + '" data-icon-id="' + e.id + '" data-icon-file="' + (e.file || e.id) + '" role="button" tabindex="0" aria-pressed="' + pressed + '">' +
         '<img src="icons/' + imgSrc + '" alt="' + (e.name || e.id) + '" loading="lazy" />' +
         '<div class="icon-card-name">' + (e.name || e.id) + '</div>' +
         '<div class="icon-card-group">' + (e.item_category || e.group || '') + '</div>' +
@@ -843,13 +844,19 @@
     // icon catalog events
     document.getElementById('icons-search')?.addEventListener('input', renderIconGrid);
     document.getElementById('icons-group')?.addEventListener('change', renderIconGrid);
-    document.getElementById('icons-grid')?.addEventListener('click', function (e) {
+    var activateIconCard = function (e) {
       var card = e.target.closest('.icon-card');
       if (!card || !iconCatalog) return;
       var id = card.dataset.iconId;
       var file = card.dataset.iconFile;
       var entry = iconCatalog.find(function (x) { return x.id === id && (x.file === file || (!x.file && file === id)); });
       if (entry) renderIconDetail(entry);
+    };
+    document.getElementById('icons-grid')?.addEventListener('click', activateIconCard);
+    document.getElementById('icons-grid')?.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      activateIconCard(e);
     });
     document.getElementById('icons-detail-links')?.addEventListener('click', function (e) {
       var btn = e.target.closest('[data-icon-model]');

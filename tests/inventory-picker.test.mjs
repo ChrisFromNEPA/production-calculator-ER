@@ -35,4 +35,11 @@ describe('inventory add-stock picker', () => {
     assert.match(init, /restoreInventoryViewport\(viewport\)/);
     assert.match(css, /\.qp-grid\s*\{[\s\S]*overflow-anchor:\s*none/s);
   });
+
+  it('keeps rapid stock entry together and visible above the catalog', () => {
+    assert.match(html, /class="inventory-rapid-entry"[^>]*aria-label="Rapid stock entry"/);
+    assert.match(html, /inventory-rapid-entry[\s\S]*inventory-add-fields[\s\S]*inventory-picker/s);
+    assert.match(html, /Enter a quantity and press Add to keep stocking this zone/i);
+    assert.match(css, /\.inventory-rapid-entry\s*\{[\s\S]*position:\s*sticky/s);
+  });
 });

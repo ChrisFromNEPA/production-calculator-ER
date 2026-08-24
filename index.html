@@ -245,6 +245,21 @@
 
       <aside class="calc-outcome ui-panel" aria-label="Calculation outcome">
         <div class="calc-outcome-head"><span class="eyebrow">Live outcome</span><span class="muted">Updates as you edit</span></div>
+        <section id="calc-execution-summary" class="calc-execution-summary" aria-label="Current execution summary" hidden>
+          <div class="calc-execution-kicker">Current execution</div>
+          <div class="calc-execution-main">
+            <span class="calc-execution-label">Next action</span>
+            <strong id="calc-execution-next">Choose an item</strong>
+          </div>
+          <div class="calc-execution-route"><span class="calc-execution-label">Route</span><span id="calc-execution-route">—</span></div>
+          <div class="calc-execution-metrics" aria-live="polite">
+            <span><b id="calc-execution-requested">—</b><small>requested</small></span>
+            <span><b id="calc-execution-produced">—</b><small>planned output</small></span>
+            <span><b id="calc-execution-surplus">—</b><small>batch surplus</small></span>
+            <span><b id="calc-execution-actions">—</b><small>production actions</small></span>
+          </div>
+          <div id="calc-execution-note" class="calc-execution-note">Detailed checklist continues below.</div>
+        </section>
         <div id="calc-live-summary" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
     <!-- recent calculations -->
@@ -331,13 +346,26 @@
         <div class="muted">Pick a zone above to view and edit its stock. Use <b>Add item</b> to log new material gathered at that zone.</div>
       </div>
       <div class="zone-addrow inventory-add-flow">
-        <div class="inventory-add-head">
-          <div>
-            <span class="inventory-step">2</span>
-            <strong>Add stock to <span id="inv-addzone-name">this zone</span></strong>
+        <section class="inventory-rapid-entry" aria-label="Rapid stock entry">
+          <div class="inventory-add-head">
+            <div>
+              <span class="inventory-step">2</span>
+              <strong>Add stock to <span id="inv-addzone-name">this zone</span></strong>
+            </div>
+            <span class="inventory-add-hint">Enter a quantity and press Add to keep stocking this zone.</span>
           </div>
-          <span class="inventory-add-hint">Pick an item, enter the amount, and add it to the existing stack.</span>
-        </div>
+          <div class="inventory-add-fields">
+            <div class="inventory-item-field">
+              <span class="inventory-field-label">Selected item</span>
+              <div id="inv-selected-item" class="inventory-selected-item" aria-live="polite">Choose an item icon below</div>
+              <input id="inv-item" type="hidden" value="" aria-label="Selected item to add" />
+            </div>
+            <label class="inventory-qty-field" for="inv-qty">Quantity
+              <input id="inv-qty" type="number" min="0" value="1" aria-label="Quantity to add" />
+            </label>
+            <button id="inv-addzone" type="button">+ Add to <span id="inv-addzone-button-zone">zone</span></button>
+          </div>
+        </section>
         <div class="inventory-picker">
           <div class="inventory-picker-head">
             <div>
@@ -349,17 +377,6 @@
           <input id="qp-search" class="qp-search" type="text" placeholder="🔍 Search mined + refined materials…" autocomplete="off" aria-label="Search mined and refined items" />
           <div class="qp-cats" id="qp-cats" role="tablist" aria-label="Item categories to add to stock"></div>
           <div class="qp-grid" id="qp-grid"></div>
-        </div>
-        <div class="inventory-add-fields">
-          <div class="inventory-item-field">
-            <span class="inventory-field-label">Selected item</span>
-            <div id="inv-selected-item" class="inventory-selected-item" aria-live="polite">Choose an item icon above</div>
-            <input id="inv-item" type="hidden" value="" aria-label="Selected item to add" />
-          </div>
-          <label class="inventory-qty-field" for="inv-qty">Quantity
-            <input id="inv-qty" type="number" min="0" value="1" aria-label="Quantity to add" />
-          </label>
-          <button id="inv-addzone" type="button">+ Add to <span id="inv-addzone-button-zone">zone</span></button>
         </div>
       </div>
       </div>
@@ -389,6 +406,7 @@
     <div class="gear-layout">
       <div class="gear-main gear-loadout-panel gear-stat-panel">
         <h4 class="gear-title">Armor Loadout</h4>
+        <p class="gear-loadout-hint">Click a loadout slot to choose compatible gear from the compatible gear picker.</p>
         <div class="gear-paperdoll">
           <!-- Armor row 1 -->
           <div class="gear-slot" tabindex="0" role="button" data-slot="Helmet" data-category="Armor" data-armor-type="Helmet">
@@ -483,10 +501,10 @@
     </div>
 
 
-    <!-- COMBAT STATS BROWSER — ER Balance Sheet (window.BALANCE_STATS) -->
+    <!-- COMBAT STATS REFERENCE — ER Balance Sheet (window.BALANCE_STATS) -->
     <div class="gear-balance-browser" id="gear-balance-browser">
       <div class="gear-balance-head">
-        <div><h4>⚔️ Combat Stats — ER Balance Sheet</h4><p>Search and compare the authoritative combat-stat snapshot. Craftable items link back to calculator data; reference items come from the sheet only. <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&amp;single=true" target="_blank" rel="noopener noreferrer">Open the published source sheet</a>.</p></div>
+        <div><h4>⚔️ Combat Stats Reference</h4><p>The reference list below is for comparison. To equip an item, click a compatible loadout slot above; craftable items link back to calculator data. <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&amp;single=true" target="_blank" rel="noopener noreferrer">Open the published source sheet</a>.</p></div>
         <div class="gear-balance-status"><strong id="gear-balance-count" aria-live="polite">Loading…</strong><span class="gear-balance-meta muted" id="gear-balance-meta"></span></div>
       </div>
       <div class="gear-balance-controls">

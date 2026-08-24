@@ -89,6 +89,7 @@ function refreshAll() {
   const cm = document.getElementById('calc-multi');
   cm.innerHTML = '';
   cr.innerHTML = '';
+  if (typeof syncCalcExecutionSummary === 'function') syncCalcExecutionSummary(null);
 }
 
 function downloadJSON(obj, filename) {
