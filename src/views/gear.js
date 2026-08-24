@@ -624,12 +624,15 @@ function showGearPicker(slotName, armorType) {
       el.tabIndex = disabled ? -1 : (i === gearPickerActiveIndex ? 0 : -1);
     });
     const navigableOptions = gearPickerNavigableOptions(optionEls);
-    if (!activeFound || gearPickerActiveIndex >= optionEls.length || optionEls[gearPickerActiveIndex]?.getAttribute('aria-disabled') === 'true') {
+    if (!navigableOptions.length) {
+      gearPickerActiveIndex = -1;
+    } else if (!activeFound || gearPickerActiveIndex >= optionEls.length || optionEls[gearPickerActiveIndex]?.getAttribute('aria-disabled') === 'true') {
       gearPickerActiveIndex = optionEls.indexOf(navigableOptions[0]);
     }
     optionEls.forEach((el, i) => { el.tabIndex = el.getAttribute('aria-disabled') === 'true' ? -1 : (i === gearPickerActiveIndex ? 0 : -1); });
     if (optionEls.length) {
-      body.setAttribute('aria-activedescendant', optionEls[gearPickerActiveIndex].id);
+      if (gearPickerActiveIndex >= 0) body.setAttribute('aria-activedescendant', optionEls[gearPickerActiveIndex].id);
+      else body.removeAttribute('aria-activedescendant');
       optionEls.forEach(el => {
         el.addEventListener('click', () => selectItem(el));
         el.addEventListener('keydown', e => {
