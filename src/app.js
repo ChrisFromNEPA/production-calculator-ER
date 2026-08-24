@@ -1938,15 +1938,33 @@ function loadSavedPlan(id) {
   toast(`Loaded plan "${p.name}".`);
 }
 
+function normalizeSavedPlans() {
+  let repaired = false;
+  const fallbackDest = validFinalProduction(DESTINATION) ? DESTINATION : 'Berlin';
+  SAVED_PLANS = (Array.isArray(SAVED_PLANS) ? SAVED_PLANS : []).filter(p => p && typeof p === 'object').map(p => {
+    const dest = validFinalProduction(p.dest) ? p.dest : fallbackDest;
+    const refineDest = validRefinement(p.refineDest)
+      ? p.refineDest
+      : validRefinement(dest) ? dest : fallbackDest;
+    if (p.dest !== dest || p.refineDest !== refineDest) {
+      repaired = true;
+      return { ...p, dest, refineDest };
+    }
+    return p;
+  });
+  if (repaired) saveSavedPlans();
+}
+
 function renderSavedPlans() {
+  normalizeSavedPlans();
   const panel = document.getElementById('calc-saved');
   const list = document.getElementById('calc-saved-list');
   if (!panel || !list) return;
   panel.hidden = SAVED_PLANS.length === 0;
   list.innerHTML = SAVED_PLANS.map(p => {
     const meta = p.kind === 'tray'
-      ? `${p.tray.length} items → ${esc(p.dest || '')}`
-      : `${fmt(p.qty)} × ${esc(displayName(p.item))} → ${esc(p.dest || '')}`;
+      ? `${p.tray.length} items → ${esc(p.dest)}`
+      : `${fmt(p.qty)} × ${esc(displayName(p.item))} → ${esc(p.dest)}`;
     return `<div class="saved-plan">
       <div class="sp-info"><span class="sp-name">${esc(p.name)}</span>
         <span class="sp-meta">${meta}</span></div>

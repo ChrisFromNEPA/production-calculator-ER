@@ -165,3 +165,22 @@ describe('R3: what-if Plan here keeps selectors and engine in sync (review findi
     assert.match(handler, /syncCombinedSelector/);
   });
 });
+
+describe('R4: saved-plan rendering normalizes and persists every record', () => {
+  it('requires normalization before rendering and persistence', () => {
+    assert.match(app, /function normalizeSavedPlans\(\)/);
+    assert.match(app, /normalizeSavedPlans\(\);\n  const panel/);
+    assert.match(app, /saveSavedPlans\(\);/);
+    assert.match(app, /validFinalProduction\(p\.dest\)/);
+    assert.match(app, /validRefinement\(p\.refineDest\)/);
+    assert.doesNotMatch(app.match(/function renderSavedPlans\(\) \{[\s\S]*?\n\}/)[0], /p\.dest \|\| ''/);
+  });
+});
+
+describe('R5: malformed what-if colonies are rejected before mutation', () => {
+  it('validates the decoded colony before changing destination state', () => {
+    const handler = init.slice(init.indexOf('let colony'), init.indexOf('let colony') + 800);
+    assert.match(handler, /validFinalProduction\(colony\)/);
+    assert.match(handler, /return/);
+  });
+});

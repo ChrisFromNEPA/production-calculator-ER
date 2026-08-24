@@ -534,7 +534,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id).addEventListener('click', e => {
       const btn = e.target.closest('[data-whatif-plan]');
       if (!btn) return;
-      const colony = decodeURIComponent(btn.dataset.whatifPlan);
+      let colony;
+      try { colony = decodeURIComponent(btn.dataset.whatifPlan); } catch (e) {
+        toast('That production colony is no longer available.');
+        return;
+      }
+      if (!validFinalProduction(colony)) {
+        toast('That production colony is no longer available.');
+        return;
+      }
       const destSel = document.getElementById('calc-dest');
       if (destSel) destSel.value = colony;
       DESTINATION = colony;
