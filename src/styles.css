@@ -4251,7 +4251,7 @@ button.x:hover { color: #ff5577; }
 
 /* quick-stats tooltip on item hover */
 .item-tooltip {
-  position: absolute; z-index: 300; /* above gear-picker (100) and item-popup (200) overlays */
+  position: absolute; z-index: 10001; /* above gear-picker overlay (10000); still above gear-picker (100) and item-popup (200) */
   background: var(--bg2); border: 1px solid var(--line-bright);
   border-radius: 6px; padding: 0.5rem 0.625rem;
   font-size: 0.6875rem; pointer-events: none;
