@@ -123,17 +123,33 @@ describe('refinement-path cost estimates (shipped app.js code)', () => {
 
   it('gives the refinement picker a clearer selected-path summary', () => {
     assert.match(appSrc, /Choose refinement paths/);
-    assert.match(appSrc, /calc-path-control/);
-    assert.match(appSrc, /calc-path-meta/);
+    assert.match(appSrc, /type="radio"/);
+    assert.match(appSrc, /data-alt="/);
+    assert.match(appSrc, /aria-checked/);
+    assert.match(appSrc, /calc-path-option/);
     assert.match(appSrc, /Estimated path cost/);
     assert.match(stylesSrc, /\.calc-path-row\s*\{[\s\S]*?display:\s*grid/);
-    assert.match(stylesSrc, /\.calc-path-meta\s*\{/);
+    assert.match(stylesSrc, /\.calc-path-option\s*\{/);
+  });
+
+  it('keeps path selection on one delegated radio listener with keyboard semantics', () => {
+    const handler = initSrc.slice(initSrc.indexOf('input[data-alt]'), initSrc.indexOf('renderCalcPaths();', initSrc.indexOf('input[data-alt]')));
+    assert.match(handler, /input\[data-alt\]/);
+    assert.match(handler, /runMultiPlan\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
+    assert.match(handler, /runCalculator\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
+    assert.equal((initSrc.match(/input\[data-alt\]/g) || []).length, 1, 'refinement paths must have one delegated change listener');
+  });
+
+  it('explains recommendation and leaves unpriced paths explicitly unavailable', () => {
+    assert.match(appSrc, /Recommended because this is the lowest estimated cost/);
+    assert.match(appSrc, /Cost unavailable: this path is not priced yet/);
+    assert.doesNotMatch(appSrc, /costs\[i\] == null && anyPriced/);
   });
 
   it('preserves the viewport when a refinement path changes', () => {
-    const handler = initSrc.slice(initSrc.indexOf('select[data-alt]'), initSrc.indexOf('renderCalcPaths();', initSrc.indexOf('select[data-alt]')));
+    const handler = initSrc.slice(initSrc.indexOf('input[data-alt]'), initSrc.indexOf('renderCalcPaths();', initSrc.indexOf('input[data-alt]')));
     assert.match(handler, /runMultiPlan\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
     assert.match(handler, /runCalculator\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
-    assert.equal((initSrc.match(/select\[data-alt\]/g) || []).length, 1, 'refinement paths must have one delegated change listener');
+    assert.equal((initSrc.match(/input\[data-alt\]/g) || []).length, 1, 'refinement paths must have one delegated change listener');
   });
 });

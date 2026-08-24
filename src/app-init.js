@@ -202,9 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Delegated on #calc-result (calc-paths is recreated on every renderPlan).
   document.getElementById('calc-result').addEventListener('change', e => {
     if (!e.target.closest('#calc-paths')) return;
-    const sel = e.target.closest('select[data-alt]');
-    if (!sel) return;
-    ALTERNATIVE_CHOICES[decodeURIComponent(sel.dataset.alt)] = parseInt(sel.value, 10);
+    const radio = e.target.closest('input[data-alt]');
+    if (!radio) return;
+    ALTERNATIVE_CHOICES[decodeURIComponent(radio.dataset.alt)] = parseInt(radio.value, 10);
     savePaths();
     // Re-plan in place: changing a path should keep the player at the selector
     // instead of jumping back to the top of the workbench.

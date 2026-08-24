@@ -1269,36 +1269,32 @@ function renderCalcPaths() {
       var costs = itemCosts[pi];
       var best = -1;
       costs.forEach(function (c, i) { if (c != null && (best < 0 || c < costs[best])) best = i; });
-      var opts = p.recipe.inputs_alternatives.map(function (a, i) {
-        var label = a.map(function (x) { return fmt(x.quantity) + ' ' + esc(x.item); }).join(' + ');
-        if (costs[i] == null && anyPriced) label += ' · cost n/a';
-        return '<option value="' + i + '"' + (i === chosen ? ' selected' : '') + '>' + label + '</option>';
-      }).join('');
-      var selectedPath = p.recipe.inputs_alternatives[chosen] || p.recipe.inputs_alternatives[0] || [];
-      var selectedDesc = selectedPath.map(function (x) { return fmt(x.quantity) + ' ' + esc(x.item); }).join(' + ');
-      var selectedCost = costs[chosen];
-      var selectedCostHtml = selectedCost != null
-        ? '<span class="calc-path-cost"><b>Estimated path cost</b> ≈ ' + fmtUC(selectedCost) + ' UC/unit</span>'
-        : '<span class="calc-path-cost unavailable"><b>Estimated path cost</b> unavailable</span>';
-      var recommendedHtml = best >= 0 && chosen === best
-        ? '<span class="calc-path-recommended">★ Recommended</span>' : '';
-      var compareHtml = anyPriced
-        ? '<span class="calc-path-compare" aria-label="Estimated costs for all refinement paths"><b>Options:</b> ' +
-          costs.map(function (c, i) {
-            return 'Path ' + (i + 1) + ' ' + (c != null ? '≈ ' + fmtUC(c) + ' UC' + (i === best ? ' ★' : '') : 'n/a');
-          }).join(' · ') + '</span>'
-        : '';
-      return '<label class="calc-path-row">' +
+      return '<div class="calc-path-row">' +
         '<span class="calc-path-item">' + iconFor(p.item) + '<span>' + esc(displayName(p.item)) + '</span></span>' +
-        '<span class="calc-path-control">' +
-          '<span class="calc-path-control-label">Choose input materials</span>' +
-          '<select data-alt="' + encodeURIComponent(p.item) + '" aria-label="Refinement path for ' + esc(p.item) + '">' + opts + '</select>' +
-          '<span class="calc-path-meta">' +
-            '<span class="calc-path-selected"><b>Selected:</b> ' + selectedDesc + '</span>' +
-            selectedCostHtml + recommendedHtml + compareHtml +
-          '</span>' +
+        '<span class="calc-path-options" role="radiogroup" aria-label="Refinement path for ' + esc(p.item) + '">' +
+          p.recipe.inputs_alternatives.map(function (a, i) {
+            var desc = a.map(function (x) { return fmt(x.quantity) + ' ' + esc(x.item); }).join(' + ');
+            var cost = costs[i];
+            var isSelected = i === chosen;
+            var isRecommended = i === best;
+            var costHtml = cost != null
+              ? '<span class="calc-path-cost">Estimated path cost ≈ ' + fmtUC(cost) + ' UC/unit</span>'
+              : '<span class="calc-path-cost unavailable">Cost unavailable: this path is not priced yet</span>';
+            var reasonHtml = isRecommended
+              ? '<span class="calc-path-reason">Recommended because this is the lowest estimated cost</span>'
+              : '<span class="calc-path-reason">Alternative material path</span>';
+            return '<label class="calc-path-option' + (isSelected ? ' selected' : '') + (isRecommended ? ' recommended' : '') + '">' +
+              '<input type="radio" name="refinement-' + encodeURIComponent(p.item) + '" data-alt="' + encodeURIComponent(p.item) + '" value="' + i + '"' +
+                (isSelected ? ' checked aria-checked="true"' : ' aria-checked="false"') +
+                ' aria-label="Path ' + (i + 1) + ' for ' + esc(p.item) + ': ' + desc + '">' +
+              '<span class="calc-path-option-body"><span class="calc-path-option-head"><b>Path ' + (i + 1) + '</b>' +
+                (isSelected ? '<span class="calc-path-selected">Selected</span>' : '<span class="calc-path-not-selected">Not selected</span>') +
+                (isRecommended ? '<span class="calc-path-recommended">★ Recommended</span>' : '') +
+              '</span><span class="calc-path-materials">' + desc + '</span>' + costHtml + reasonHtml + '</span>' +
+            '</label>';
+          }).join('') +
         '</span>' +
-      '</label>';
+      '</div>';
     }).join('') + '</div>' +
     (anyPriced ? '<details class="calc-paths-help"><summary>How are estimates calculated?</summary><span>Estimated UC per unit combines processing fees and materials. It includes the configured 85% owner return where your selected faction owns the colony; tax is separate. Prices are a snapshot—verify live in-game.</span></details>' : '');
 }
