@@ -13,6 +13,7 @@ const authors = read('AUTHORS.md');
 const license = read('LICENSE');
 const pkg = JSON.parse(read('package.json'));
 const sw = read('sw.js');
+const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const REPOSITORY_URL = 'https://github.com/ChrisFromNEPA/production-calculator-ER';
 const PAGES_URL = 'https://chrisfromnepa.github.io/production-calculator-ER/';
@@ -22,7 +23,7 @@ describe('employer-facing public presentation', () => {
   it('introduces the calculator and links back to its source', () => {
     assert.match(html, /<section id="project-intro" class="public-notice project-intro" aria-labelledby="project-intro-title">/);
     assert.match(html, /<h2 id="project-intro-title">Turn a target item into a practical production plan\.<\/h2>/);
-    assert.match(html, new RegExp(`<a class="project-intro-link"[^>]*href="${REPOSITORY_URL}"`));
+    assert.match(html, new RegExp(`<a class="project-intro-link"[^>]*href="${escapeRegExp(REPOSITORY_URL)}"`));
     assert.match(html, /View source on GitHub/);
   });
 
@@ -30,11 +31,11 @@ describe('employer-facing public presentation', () => {
     assert.match(html, /<meta name="description" content="Plan materials, refining steps, colonies, and local cost assumptions for Empire Rising production in a browser-local workspace\." \/>/);
     assert.match(html, /<meta property="og:type" content="website" \/>/);
     assert.match(html, /<meta property="og:title" content="Empire Rising Production Calculator" \/>/);
-    assert.match(html, new RegExp(`<meta property="og:url" content="${PAGES_URL}" \/>`));
-    assert.match(html, new RegExp(`<meta property="og:image" content="${SCREENSHOT_URL}" \/>`));
+    assert.match(html, new RegExp(`<meta property="og:url" content="${escapeRegExp(PAGES_URL)}" \/>`));
+    assert.match(html, new RegExp(`<meta property="og:image" content="${escapeRegExp(SCREENSHOT_URL)}" \/>`));
     assert.match(html, /<meta property="og:image:alt" content="Fictional sample production plan for an Emergency Medikit" \/>/);
     assert.match(html, /<meta name="twitter:card" content="summary_large_image" \/>/);
-    assert.match(html, new RegExp(`<meta name="twitter:image" content="${SCREENSHOT_URL}" \/>`));
+    assert.match(html, new RegExp(`<meta name="twitter:image" content="${escapeRegExp(SCREENSHOT_URL)}" \/>`));
     assert.match(html, /<link rel="icon" type="image\/svg\+xml" sizes="any" href="favicon\.svg" \/>/);
   });
 
