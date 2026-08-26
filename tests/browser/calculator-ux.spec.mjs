@@ -298,40 +298,80 @@ describe('real-browser calculator UX smoke', () => {
 
   after(cleanupBrowser);
 
-  smokeIt('keeps the calculator summary sticky and makes action counts explicit', async () => {
+  smokeIt('keeps the duplicate current-execution section removed', async () => {
     await evalJs(state.page, `document.getElementById('calc-guide-sample')?.click()`);
-    await waitFor(state.page, `!document.getElementById('calc-execution-summary').hidden`, 'calculator execution summary');
+    await waitFor(state.page, `!!document.querySelector('#calc-result .plan-summary')`, 'calculator result');
     const snapshot = await evalJs(state.page, `(() => {
-      const summary = document.getElementById('calc-execution-summary');
       return {
-        next: document.getElementById('calc-execution-next').textContent,
-        route: document.getElementById('calc-execution-route').textContent,
-        requested: document.getElementById('calc-execution-requested').textContent,
-        produced: document.getElementById('calc-execution-produced').textContent,
-        actions: document.getElementById('calc-execution-actions').textContent,
-        position: getComputedStyle(summary).position,
+        executionPresent: !!document.getElementById('calc-execution-summary'),
+        planVisible: !!document.querySelector('#calc-result .plan-summary'),
       };
     })()`);
-    assert.match(snapshot.next, /obtain|mine|refine|manufacture/i);
-    assert.match(snapshot.route, /refine|manufacture/i);
-    assert.equal(snapshot.requested, '10');
-    assert.ok(Number(snapshot.produced) >= 10);
-    assert.equal(snapshot.position, 'sticky');
+    assert.equal(snapshot.executionPresent, false);
+    assert.equal(snapshot.planVisible, true);
     assert.equal(await evalJs(state.page, 'document.title'), 'Empire Rising Production Calculator');
   });
 
-  smokeIt('keeps invalid quantity from leaving a visible execution summary', async () => {
+  smokeIt('keeps invalid quantity from leaving stale execution markup', async () => {
     const stateAfter = await evalJs(state.page, `(() => {
       const qty = document.getElementById('calc-qty');
       qty.value = '0';
       document.getElementById('calc-run').click();
       return {
-        summaryHidden: document.getElementById('calc-execution-summary').hidden,
+        executionPresent: !!document.getElementById('calc-execution-summary'),
         error: document.getElementById('calc-qty-error').textContent,
       };
     })()`);
-    assert.equal(stateAfter.summaryHidden, true);
+    assert.equal(stateAfter.executionPresent, false);
     assert.match(stateAfter.error, /at least 1/i);
+  });
+
+  smokeIt('keeps a single-result batch click isolated from a pending tray', async () => {
+    const stateAfter = await evalJs(state.page, `(() => {
+      resetCalculatorForNewPlan();
+      const scratch = document.getElementById('calc-scratch');
+      if (scratch) scratch.checked = false;
+      document.getElementById('calc-item').value = 'Emergency MediKit';
+      document.getElementById('calc-qty').value = '10';
+      runCalculator();
+      addToTray('Linner PP7', 1);
+      const mine = document.querySelector('#calc-result .obtain-batch.progress-run');
+      mine?.click();
+      return {
+        mineFound: !!mine,
+        singleVisible: !!document.querySelector('#calc-result .plan-summary'),
+        combinedVisible: !!document.querySelector('#calc-multi .multi-head'),
+      };
+    })()`);
+    assert.equal(stateAfter.mineFound, true);
+    assert.equal(stateAfter.singleVisible, true);
+    assert.equal(stateAfter.combinedVisible, false);
+  });
+
+  smokeIt('supports Ignore current inventory for combined plans', async () => {
+    const stateAfter = await evalJs(state.page, `(() => {
+      resetCalculatorForNewPlan();
+      const scratch = document.getElementById('calc-scratch');
+      if (scratch) scratch.checked = false;
+      addToTray('Emergency MediKit', 2);
+      addToTray('Linner PP7', 1);
+      document.getElementById('calc-runmulti').click();
+      const beforeInventory = JSON.stringify(STORE.INV_TOTAL);
+      if (scratch) {
+        scratch.checked = true;
+        scratch.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return {
+        combinedVisible: !!document.querySelector('#calc-multi .multi-head'),
+        singleVisible: !!document.querySelector('#calc-result .plan-summary'),
+        scratchHeader: document.querySelector('#calc-multi .multi-head')?.textContent.includes('ignoring current inventory'),
+        inventoryUnchanged: beforeInventory === JSON.stringify(STORE.INV_TOTAL),
+      };
+    })()`);
+    assert.equal(stateAfter.combinedVisible, true);
+    assert.equal(stateAfter.singleVisible, false);
+    assert.equal(stateAfter.scratchHeader, true);
+    assert.equal(stateAfter.inventoryUnchanged, true);
   });
 
   smokeIt('supports rapid inventory entry without losing focus', async () => {
@@ -394,7 +434,7 @@ describe('real-browser calculator UX smoke', () => {
     assert.match(gearText, /reference list below is for comparison/i);
   });
 
-  smokeIt('keeps the calculator summary and inventory rapid panel inside a mobile viewport', async () => {
+  smokeIt('keeps calculator cards and the inventory rapid panel inside a mobile viewport', async () => {
     await setViewport(390, 844);
     await activateTab('calc');
     await evalJs(state.page, `(() => {
@@ -403,13 +443,19 @@ describe('real-browser calculator UX smoke', () => {
       document.getElementById('calc-run').click();
       return true;
     })()`);
-    await waitFor(state.page, `!document.getElementById('calc-execution-summary').hidden`, 'mobile calculator summary');
+    await waitFor(state.page, `!!document.querySelector('#calc-result .plan-summary')`, 'mobile calculator result');
     const bounds = await evalJs(state.page, `(() => {
-      const el = document.getElementById('calc-execution-summary').getBoundingClientRect();
-      return { right: el.right, viewport: innerWidth, width: el.width };
+      const selectors = ['#calc-result', '#calc-result .plan-top', '#calc-result .flow-card', '#calc-result .recipe-card', '#calc-result .batch-progress'];
+      return selectors.flatMap(selector => Array.from(document.querySelectorAll(selector)).map(el => {
+        const rect = el.getBoundingClientRect();
+        return { selector, right: rect.right, left: rect.left, width: rect.width };
+      }));
     })()`);
-    assert.ok(bounds.right <= bounds.viewport + 1, `calculator summary overflows viewport: ${JSON.stringify(bounds)}`);
-    assert.ok(bounds.width <= bounds.viewport, `calculator summary is wider than viewport: ${JSON.stringify(bounds)}`);
+    for (const rect of bounds) {
+      assert.ok(rect.left >= -1, `${rect.selector} starts outside viewport: ${JSON.stringify(rect)}`);
+      assert.ok(rect.right <= 391, `${rect.selector} overflows viewport: ${JSON.stringify(rect)}`);
+      assert.ok(rect.width <= 391, `${rect.selector} is wider than viewport: ${JSON.stringify(rect)}`);
+    }
   });
 
   smokeIt('finishes without page exceptions', () => {

@@ -2,7 +2,7 @@
 
 ## Creator
 
-- **John Snow** — original calculator creator and maintainer.
+- **ChrisFromNEPA** — original calculator creator and maintainer.
 
 ## Contributors
 

@@ -1,18 +1,48 @@
 # Empire Rising Production Calculator
 
-A free, offline-capable production planner for **Empire Rising**. Use it to turn a target item into a practical production plan: what materials to obtain, which intermediate steps to run, what the estimated investment is, and how local faction and colony assumptions affect the economics.
+> A browser-local, offline-capable planner that turns an Empire Rising target item into a practical production route.
 
-[**Open the live calculator**](https://chrisfromnepa.github.io/production-calculator-ER/)
+[**Open the live calculator →**](https://chrisfromnepa.github.io/production-calculator-ER/)
 
 [![CI](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml)
 [![GitHub Pages](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
 
-> **Independent community project.** This project is not affiliated with or endorsed by the Empire Rising development team.
+![Fictional sample production plan for an Emergency Medikit](docs/assets/calculator-sample.png)
 
-Created by **John Snow** with members of the **Colonization & Mining Guild (CMG)** and community contributors.
+> **Independent community project.** This project is not officially affiliated with, sponsored by, or endorsed by the Empire Rising development team or publisher.
 
-## What the calculator does
+Maintained under the public handle **ChrisFromNEPA** with community contributors.
+
+## Why it exists
+
+Production planning is a chain of decisions: which materials are needed, where they can be refined, what stock is already available, which colony should manufacture the final item, and how local assumptions affect the estimate. This project makes that chain visible instead of reducing it to a single unexplained number.
+
+## Engineering highlights
+
+- **Static client-side application:** the public shell is served as static files; Vite builds the optional React Three Fiber workbench used by the 3D surfaces.
+- **Offline-first delivery:** `sw.js` precaches the application shell, uses network-first updates with cached fallback, and keeps large 3D/chart payloads lazy until the user requests them.
+- **Browser-local data:** profiles, inventories, saved plans, preferences, and colony-world settings stay in browser storage unless the user explicitly exports them.
+- **Portable workspace state:** versioned player/workspace exports are validated before import, with legacy inventory-only JSON support retained.
+- **Responsive and accessible UI:** responsive layouts, mobile table containment, keyboard-operable controls, semantic regions, focus handling, and reduced-motion behavior are covered by source contracts and browser smoke tests.
+- **Automated quality gates:** Node tests, production builds, asset-provenance checks, dependency auditing, Gitleaks, a clean-profile Chromium service-worker test, GitHub Actions, and CodeQL are part of the repository workflow.
+
+## Architecture and data flow
+
+```mermaid
+flowchart LR
+  data[Canonical data and docs] --> generators[Build and validation scripts]
+  generators --> runtime[Runtime data and client UI]
+  runtime --> engine[Calculator engine]
+  engine --> plan[Plan and checklist renderer]
+  runtime <--> storage[(Browser storage)]
+  runtime --> artifact[dist/ Pages artifact]
+  worker[Service worker] --> shell[Cached app shell]
+```
+
+The calculator reads reviewable source data from `data/`, uses the build scripts to generate runtime consumers, and renders plans in the browser. GitHub Pages receives only the staged `dist/` artifact. There is no production API or server-side workspace database. Optional models and charts are fetched only after an explicit interaction.
+
+## Key features
 
 - Builds single-item and multi-item production plans.
 - Expands recipes into raw materials and intermediate production steps.
@@ -75,7 +105,7 @@ and supports filtering, materials-only mode, and screenshot scanning.
 Important values are dated snapshots and local assumptions, not live market or
 ownership feeds.
 
-## Start here: your first production plan
+## Usage
 
 1. Open the [live calculator](https://chrisfromnepa.github.io/production-calculator-ER/).
 2. Enter your character name and choose a faction, or leave the profile **Unaffiliated**.
@@ -192,7 +222,7 @@ If the site appears stuck on an old release:
 
 See [Known limitations](docs/known-limitations.md) for the complete boundary list.
 
-## Privacy and network behavior
+## Privacy and data storage
 
 The public application has no login, shared guild database, remote analytics endpoint, Cloudflare Worker dependency, or GitHub-token requirement.
 
@@ -200,9 +230,15 @@ Profiles, inventory, saved plans, preferences, and world-state settings remain i
 
 Never put passwords, tokens, private URLs, connection strings, or private player information in an issue or committed workspace fixture.
 
-## Data quality and limitations
+## Known limitations and roadmap
 
 The project contains community-maintained game data and assumptions. Values can become incomplete or outdated as Empire Rising changes.
+
+### Roadmap
+
+- Keep canonical balance snapshots, provenance, and generated runtime consumers synchronized as source data changes.
+- Extend clean-profile browser coverage for deeper interactive flows and assistive-technology traversal when the required harness is available.
+- Continue the opt-in 3D workbench migration without making optional model payloads part of the default offline shell.
 
 ### Authoritative combat-stat source
 
@@ -236,7 +272,7 @@ Useful references:
 - [Release QA](docs/release-qa.md)
 - [Contributing](CONTRIBUTING.md)
 
-## Local development
+## Install and run
 
 ### Requirements
 
@@ -267,7 +303,7 @@ npm run local:host
 
 It serves the working tree on port `4173` on all local interfaces. From a Windows machine on the same LAN, open `http://<linux-lan-ip>:4173/`; use `hostname -I` on Linux to find the address. The restartable user-service setup and LAN safety boundary are documented in [Local hosting](docs/local-hosting.md). Do **not** expose this unauthenticated development server to the public internet.
 
-### Test and build
+## Verification
 
 Run the normal release gate:
 
@@ -282,6 +318,7 @@ Additional focused gates:
 ```bash
 npm run test:3d        # build and verify the optional React Three Fiber bundle
 npm run test:budgets   # verify 3D size and performance contracts
+npm run test:browser-ux # real Chromium smoke coverage at desktop and mobile widths
 npm run test:sw-update # clean-profile browser test of the service-worker update lifecycle
 npm run assets:check   # enforce recorded provenance for shipped binary assets
 npm run assets:report  # inspect the asset inventory without enforcing the gate
@@ -305,6 +342,8 @@ The main scripts are:
 | `npm run build` | Alias for the Pages build. |
 | `npm run check` | Runs tests and the complete production build. |
 | `npm run local:host` | Serves the editable working tree on LAN port 4173 for live local development. |
+
+There is currently no standalone `lint` script in `package.json`; `npm run check` is the repository's combined test, production-build, and served-shell quality gate.
 
 ## Project structure
 
@@ -345,7 +384,11 @@ GitHub Actions builds the public artifact from a clean checkout and deploys only
 
 A release is not considered verified merely because a push succeeded. The exact commit must pass CI and CodeQL, complete the Pages deployment, and be checked on the live site. Deployment evidence is maintained in [docs/release-qa.md](docs/release-qa.md).
 
-## License and asset notice
+## Contributing, license, and disclaimer
+
+Contributions should preserve the local-first boundary and include reproducible verification. See [CONTRIBUTING.md](CONTRIBUTING.md) for the focused-change, data-provenance, privacy, and testing expectations.
+
+This is an independent community project and is not officially affiliated with, sponsored by, or endorsed by the Empire Rising development team or publisher.
 
 Original calculator code is released under the [MIT License](LICENSE).
 

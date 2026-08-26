@@ -4,17 +4,27 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#36d1dc" />
-<meta name="description" content="Offline-first Empire Rising production, inventory, gear, and economy planner for every player" />
+<meta name="description" content="Plan materials, refining steps, colonies, and local cost assumptions for Empire Rising production in a browser-local workspace." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Empire Rising Production Calculator" />
+<meta property="og:description" content="Plan materials, refining steps, colonies, and local cost assumptions for Empire Rising production in a browser-local workspace." />
+<meta property="og:url" content="https://chrisfromnepa.github.io/production-calculator-ER/" />
+<meta property="og:image" content="https://chrisfromnepa.github.io/production-calculator-ER/docs/assets/calculator-sample.png" />
+<meta property="og:image:alt" content="Fictional sample production plan for an Emergency Medikit" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Empire Rising Production Calculator" />
+<meta name="twitter:description" content="Plan materials, refining steps, colonies, and local cost assumptions for Empire Rising production in a browser-local workspace." />
+<meta name="twitter:image" content="https://chrisfromnepa.github.io/production-calculator-ER/docs/assets/calculator-sample.png" />
 <title>Empire Rising Production Calculator</title>
 <link rel="manifest" href="manifest.webmanifest" />
-<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg" />
 <!-- self-hosted fonts -->
 <style>
   @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 700 900; font-display: swap; src: url('fonts/orbitron-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/jetbrains-mono-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 </style>
 <link rel="stylesheet" href="src/styles.css?v=59" />
-<link rel="stylesheet" href="src/styles/ux-release.css?v=9" />
+<link rel="stylesheet" href="src/styles/ux-release.css?v=10" />
 <link rel="stylesheet" href="src/styles/surviving-reference.css?v=2" />
 </head>
 <body>
@@ -154,7 +164,10 @@
 <main>
   <!-- CALCULATOR -->
   <section id="view-calc" class="view active" role="tabpanel" aria-label="Calculator">
-    <div class="public-notice" role="note">Independent Empire Rising community project · local-first and offline-capable</div>
+    <section id="project-intro" class="public-notice project-intro" aria-labelledby="project-intro-title">
+      <div class="project-intro-copy"><span class="eyebrow">Open-source application · browser-local data</span><h2 id="project-intro-title">Turn a target item into a practical production plan.</h2><p>Trace materials, refining steps, colonies, and local cost assumptions in one workspace.</p></div>
+      <a class="project-intro-link" href="https://github.com/ChrisFromNEPA/production-calculator-ER" target="_blank" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a>
+    </section>
     <section id="first-run" class="first-run ui-panel" aria-labelledby="first-run-title">
       <div class="first-run-copy"><span class="eyebrow">Start here</span><h2 id="first-run-title">Set up a local player profile</h2><p id="profile-gate-notice" role="alert">Enter a player name and choose a faction before opening any tab or using the calculator. Settings stays available so you can change theme, text size, and other accessibility preferences first.</p><p>Your profile stays in this browser. Faction changes economic estimates, not recipe access. After setup, choose an item and the calculator will show what to obtain, move, refine, manufacture, and spend.</p></div>
       <div class="first-run-form"><label>Player name<input id="onboarding-name" autocomplete="nickname" placeholder="Your character name" required /></label><label>Faction <select id="onboarding-faction" aria-label="Onboarding faction" required></select><small>Choose the faction this player belongs to. Faction changes economic estimates only; it does not lock recipes.</small></label><button id="onboarding-create" class="primary">Continue to calculator</button><button id="onboarding-import" class="ghost">Import existing workspace</button></div>
@@ -208,10 +221,8 @@
       <label>Production colony
         <select id="calc-dest" aria-label="Production colony" title="Colony where the final item is manufactured"></select>
       </label>
-      <label>Same location
-        <select id="calc-combined-dest" aria-label="Refine and produce at the same location" title="Convenience: sets refinement and production to one colony. Choosing a colony here sets both; changing either colony above returns to separate selection."></select>
-      </label>
-      <label class="checkbox-label" title="Do not use inventory already recorded for this player"><input type="checkbox" id="calc-scratch" /> Ignore current inventory</label>
+      <button type="button" id="calc-combined-dest" class="toggle-button" aria-label="Refine and produce at the same location" aria-pressed="false" title="Link refinement and production to the same colony.">Same location: Off</button>
+      <label class="checkbox-label" title="Do not use inventory already recorded for this player in either single-item or combined plans"><input type="checkbox" id="calc-scratch" /> Ignore current inventory</label>
       <button id="calc-run">Calculate</button>
       <button id="calc-add" class="ghost" title="Add this item and quantity to the combined production plan">+ Add another item</button>
       <button id="calc-save" class="ghost" title="Save the current plan (item or tray) under a name">💾 Save plan</button>
@@ -245,21 +256,6 @@
 
       <aside class="calc-outcome ui-panel" aria-label="Calculation outcome">
         <div class="calc-outcome-head"><span class="eyebrow">Live outcome</span><span class="muted">Updates as you edit</span></div>
-        <section id="calc-execution-summary" class="calc-execution-summary" aria-label="Current execution summary" hidden>
-          <div class="calc-execution-kicker">Current execution</div>
-          <div class="calc-execution-main">
-            <span class="calc-execution-label">Next action</span>
-            <strong id="calc-execution-next">Choose an item</strong>
-          </div>
-          <div class="calc-execution-route"><span class="calc-execution-label">Route</span><span id="calc-execution-route">—</span></div>
-          <div class="calc-execution-metrics" aria-live="polite">
-            <span><b id="calc-execution-requested">—</b><small>requested</small></span>
-            <span><b id="calc-execution-produced">—</b><small>planned output</small></span>
-            <span><b id="calc-execution-surplus">—</b><small>batch surplus</small></span>
-            <span><b id="calc-execution-actions">—</b><small>production actions</small></span>
-          </div>
-          <div id="calc-execution-note" class="calc-execution-note">Detailed checklist continues below.</div>
-        </section>
         <div id="calc-live-summary" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
     <!-- recent calculations -->

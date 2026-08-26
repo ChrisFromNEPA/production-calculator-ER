@@ -21,7 +21,7 @@ describe('single production plan experience', () => {
     assert.match(fn, /updateProductionProgressCard\(card/);
     const handler = init.slice(init.indexOf('// Player-facing production progress'), init.indexOf('// Path-choice dropdowns'));
     assert.match(handler, /stopPropagation\(\)/);
-    assert.match(handler, /recordProductionProgress\(run\)/);
+    assert.match(handler, /recordProductionProgress\(run, e\.currentTarget\)/);
   });
 
   it('gives single plans the same visual hierarchy as combined plans', () => {

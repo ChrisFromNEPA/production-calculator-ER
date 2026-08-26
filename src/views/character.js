@@ -4,7 +4,7 @@
  * Loads a client-derived "Average Studio" body (f_Average_Studio.glb /
  * m_Average_Studio.glb) and switches matching Torso1–4 / Legs1–4 geometry
  * and AVG clothing skins across every faction, plus gear visibility. Skins
- * live in models/skins/ as WebP (converted by scripts/build_character_studio.py)
+ * live in models/skins/ as WebP (converted during private asset preparation)
  * with the variant index in models/character_skins.json. Declarations only —
  * DOM wiring happens in app-init.js hooks (wireCharacterStudioEvents).
  */

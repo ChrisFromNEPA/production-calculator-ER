@@ -49,18 +49,13 @@ describe('calculator UX improvements', () => {
     assert.match(css, /\.calculation-error/);
   });
 
-  it('provides a sticky execution summary with explicit action counts', () => {
-    assert.match(html, /id="calc-execution-summary"[^>]*aria-label="Current execution summary"/);
-    assert.match(html, /id="calc-execution-next"/);
-    assert.match(html, /id="calc-execution-route"/);
+  it('keeps plan statistics in the result without a separate execution summary', () => {
+    assert.doesNotMatch(html, /calc-execution-summary|Current execution summary|calc-execution-next/);
+    assert.doesNotMatch(app, /syncCalcExecutionSummary|calc-execution/);
+    assert.doesNotMatch(core, /syncCalcExecutionSummary|calc-execution/);
+    assert.doesNotMatch(css, /calc-execution-summary/);
     assert.match(core, /production actions/);
     assert.match(core, /refine.*manufacture/s);
-    assert.match(css, /\.calc-execution-summary\s*\{[\s\S]*position:\s*sticky/s);
-  });
-
-  it('keeps the execution summary focused on the current action and final-output surplus', () => {
-    assert.doesNotMatch(core, /\[data-current-objective="true"\] \.flow-chip/);
-    assert.match(core, /Math\.max\(0, produced - requested\)/);
   });
 
   it('keeps stale summary panels out of the rendered production result', () => {

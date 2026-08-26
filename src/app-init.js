@@ -198,32 +198,48 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calc-run').addEventListener('click', runCalculator);
   document.getElementById('calc-qty').addEventListener('keydown', e => { if (e.key === 'Enter') runCalculator(); });
   document.getElementById('calc-qty').addEventListener('input', clearQuantityValidation);
-  document.getElementById('calc-dest').addEventListener('change', () => { exitCombinedMode(); getDestination(); if (CALC_TRAY.length) runMultiPlan(); });
-  document.getElementById('calc-refine-dest').addEventListener('change', () => { exitCombinedMode(); getRefineDestination(true); if (CALC_TRAY.length) runMultiPlan(); });
-  const combinedSel = document.getElementById('calc-combined-dest');
-  if (combinedSel) combinedSel.addEventListener('change', () => { setCombinedDestination(); if (CALC_TRAY.length) runMultiPlan(); });
+  document.getElementById('calc-dest').addEventListener('change', () => {
+    exitCombinedMode(); getDestination();
+    const active = activePlanContainer();
+    if (active?.id === 'calc-multi') runMultiPlan();
+    else if (active?.id === 'calc-result') runCalculator();
+  });
+  document.getElementById('calc-refine-dest').addEventListener('change', () => {
+    exitCombinedMode(); getRefineDestination(true);
+    const active = activePlanContainer();
+    if (active?.id === 'calc-multi') runMultiPlan();
+    else if (active?.id === 'calc-result') runCalculator();
+  });
+  const combinedToggle = document.getElementById('calc-combined-dest');
+  if (combinedToggle) combinedToggle.addEventListener('click', () => {
+    setCombinedDestination();
+    const active = activePlanContainer();
+    if (active?.id === 'calc-multi') runMultiPlan();
+    else if (active?.id === 'calc-result') runCalculator();
+  });
   // Re-plan immediately when "Plan from scratch" is toggled, if a plan is up.
   document.getElementById('calc-scratch')?.addEventListener('change', () => {
     const item = document.getElementById('calc-item').value.trim();
-    if (item && ALL_ITEMS.has(item)) runCalculator();
+    const active = activePlanContainer();
+    if (active?.id === 'calc-multi') runMultiPlan();
+    else if (item && ALL_ITEMS.has(item)) runCalculator();
   });
   document.getElementById('calc-add').addEventListener('click', () => addToTray());
   document.getElementById('calc-save')?.addEventListener('click', saveCurrentPlan);
   document.getElementById('calc-runmulti').addEventListener('click', runMultiPlan);
   // Refinement-path pickers live in the controls (above results).
   // calc-item is now readonly — paths refresh at end of runCalculator().
-  // Delegated on #calc-result (calc-paths is recreated on every renderPlan).
-  document.getElementById('calc-result').addEventListener('change', e => {
+  // Delegated on both result containers (calc-paths is recreated on every
+  // render). The owning container, rather than tray presence, selects the
+  // calculation to refresh.
+  ['calc-result', 'calc-multi'].forEach(id => document.getElementById(id).addEventListener('change', e => {
     if (!e.target.closest('#calc-paths')) return;
     const radio = e.target.closest('input[data-alt]');
     if (!radio) return;
     ALTERNATIVE_CHOICES[decodeURIComponent(radio.dataset.alt)] = parseInt(radio.value, 10);
     savePaths();
-    // Re-plan in place: changing a path should keep the player at the selector
-    // instead of jumping back to the top of the workbench.
-    if (CALC_TRAY.length) runMultiPlan({ preserveChecklist: true, preserveViewport: true });
-    else if (document.querySelector('#calc-result .plan-summary')) runCalculator({ preserveChecklist: true, preserveViewport: true });
-  });
+    rerunPlanForContainer(e.currentTarget, { preserveChecklist: true, preserveViewport: true });
+  }));
   renderCalcPaths();
   // Colonies tab: tax/owner edits, plus its filters.
   document.getElementById('col-grid')?.addEventListener('change', e => {
@@ -326,9 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const moveBatch = e.target.closest('.move-all-cargo-btn');
     if (moveBatch) { markMoveBatchComplete(moveBatch); return; }
     const cb = e.target.closest('.transfer-cb');
-    if (cb) { toggleTransferCheck(cb); return; }
+    if (cb) { toggleTransferCheck(cb, e.currentTarget); return; }
     const ob = e.target.closest('.obtain-cb');
-    if (ob) { toggleObtainCheck(ob); return; }
+    if (ob) { toggleObtainCheck(ob, e.currentTarget); return; }
     const pick = e.target.closest('.mine-pick');
     if (pick) { pickObtainSite(pick); return; }
     const src = e.target.closest('.src-pick');
@@ -336,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mineReset = e.target.closest('.mine-progress-reset');
     if (mineReset) { resetMiningProgress(mineReset); return; }
     const mine = e.target.closest('.mine-log');
-    if (mine) { logMined(decodeURIComponent(mine.dataset.mine), mine.dataset.qty, mine.dataset.mineTotal); return; }
+    if (mine) { e.preventDefault(); e.stopImmediatePropagation(); logMined(decodeURIComponent(mine.dataset.mine), mine.dataset.qty, mine.dataset.mineTotal, e.currentTarget); return; }
     const title = e.target.closest('.section-title');
     if (title) { toggleSection(title); return; }
   });
@@ -346,9 +362,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const moveBatch = e.target.closest('.move-all-cargo-btn');
     if (moveBatch) { markMoveBatchComplete(moveBatch); return; }
     const cb = e.target.closest('.transfer-cb');
-    if (cb) { toggleTransferCheck(cb); return; }
+    if (cb) { toggleTransferCheck(cb, e.currentTarget); return; }
     const ob = e.target.closest('.obtain-cb');
-    if (ob) { toggleObtainCheck(ob); return; }
+    if (ob) { toggleObtainCheck(ob, e.currentTarget); return; }
     const pick = e.target.closest('.mine-pick');
     if (pick) { pickObtainSite(pick); return; }
     const src = e.target.closest('.src-pick');
@@ -356,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mineReset = e.target.closest('.mine-progress-reset');
     if (mineReset) { resetMiningProgress(mineReset); return; }
     const mine = e.target.closest('.mine-log');
-    if (mine) { logMined(decodeURIComponent(mine.dataset.mine), mine.dataset.qty, mine.dataset.mineTotal); return; }
+    if (mine) { e.preventDefault(); e.stopImmediatePropagation(); logMined(decodeURIComponent(mine.dataset.mine), mine.dataset.qty, mine.dataset.mineTotal, e.currentTarget); return; }
     const title = e.target.closest('.section-title');
     if (title) { toggleSection(title); return; }
   });
@@ -366,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const q = e.target.closest('.mine-qty');
       if (!q || e.key !== 'Enter') return;
       e.preventDefault();
-      logMined(decodeURIComponent(q.dataset.mineQty), q.value, q.dataset.mineTotal);
+      logMined(decodeURIComponent(q.dataset.mineQty), q.value, q.dataset.mineTotal, e.currentTarget);
     });
   });
   // Keyboard support for the collapsible section headers (role=button).
@@ -565,8 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof syncCombinedSelector === 'function') syncCombinedSelector();
       saveDestination();
       updateColonyTaxNote();
-      if (CALC_TRAY.length) runMultiPlan();
-      else if (document.querySelector('#calc-result .plan-summary')) runCalculator();
+      if (e.currentTarget.id === 'calc-multi') runMultiPlan();
+      else if (e.currentTarget.id === 'calc-result') runCalculator();
       else toast('Production colony set to ' + colony + '.');
     });
   });
@@ -927,10 +943,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // not alter inventory or the calculated plan totals.
   ['calc-result', 'calc-multi'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
-      const run = e.target.closest('.progress-run');
-      if (run && !run.disabled) { e.preventDefault(); e.stopPropagation(); recordProductionProgress(run); return; }
+      const run = e.target.closest('.progress-run:not(.mine-log)');
+      if (run && !run.disabled) { e.preventDefault(); e.stopPropagation(); recordProductionProgress(run, e.currentTarget); return; }
       const reset = e.target.closest('.progress-reset');
-      if (reset) { e.preventDefault(); e.stopPropagation(); resetProductionProgress(reset); }
+      if (reset) { e.preventDefault(); e.stopPropagation(); resetProductionProgress(reset, e.currentTarget); }
     });
   });
 

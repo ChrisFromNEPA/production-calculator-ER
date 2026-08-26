@@ -15,7 +15,7 @@ describe('long-running local hosting', () => {
 
   it('documents the restartable user service and Windows URL workflow', () => {
     assert.match(docs, /systemctl --user (enable|start|restart)/);
-    assert.match(docs, /192\.168\.1\.124:4173|hostname -I/);
+    assert.match(docs, /<host-address>:4173|trusted LAN/);
     assert.match(docs, /do not expose|not expose|LAN only/i);
   });
 });

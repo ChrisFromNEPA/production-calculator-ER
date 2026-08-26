@@ -12,7 +12,6 @@
   "validation": {
     "texture_master": "1024x1024",
     "game_texture": "256x256 DXT1",
-    "uv_constrained": true,
-    "turntable_review": "/tmp/erx_ppg/review/erx_ppg_rear_core_cradle_v4.png"
+    "uv_constrained": true
   }
 }

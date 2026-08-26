@@ -57,6 +57,7 @@ const DATA = window.GAME_DATA;
 let DESTINATION = window.ENGINE.DESTINATION;
 let REFINE_DESTINATION = DESTINATION;
 let REFINE_DESTINATION_EXPLICIT = false;
+let COMBINED_PREVIOUS = null;
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -238,22 +239,9 @@ function populateDestinations() {
       ? REFINE_DESTINATION : target;
   }
 
-  // Combined convenience selector: same option list as production (FINAL_
-  // PRODUCTION_LOCATIONS), plus an empty placeholder meaning "split / not
-  // combined". Choosing a colony here sets both destinations together.
-  const combinedSel = document.getElementById('calc-combined-dest');
-  if (combinedSel) {
-    combinedSel.innerHTML = '';
-    const placeholder = document.createElement('option');
-    placeholder.value = ''; placeholder.textContent = 'Different colonies…';
-    combinedSel.appendChild(placeholder);
-    colonyList().forEach(c => {
-      const o = document.createElement('option');
-      o.value = c; o.textContent = c;
-      combinedSel.appendChild(o);
-    });
-    combinedSel.value = (REFINE_DESTINATION && REFINE_DESTINATION === DESTINATION) ? DESTINATION : '';
-  }
+  // Same-location mode is a reversible toggle, not a second destination
+  // selector. The production/refinement selectors remain the expert controls.
+  syncCombinedSelector();
 }
 function getDestination() {
   const el = document.getElementById('calc-dest');
@@ -277,34 +265,58 @@ function getRefineDestination(explicit) {
   saveDestination();
   return REFINE_DESTINATION;
 }
-// Combined ("same location") mode: setting the convenience selector sets both
-// destinations together. Selecting an explicit colony below or above returns
-// to expert split mode; the split values stay exactly as last set.
+// Combined ("same location") mode: the toggle links both destinations to the
+// current production colony. Turning it off restores the last expert split when
+// one exists; changing either expert selector exits the link instead.
 function setCombinedDestination() {
   const el = document.getElementById('calc-combined-dest');
-  if (!el || !el.value) return;
-  DESTINATION = el.value;
-  REFINE_DESTINATION = el.value;
+  if (!el) return;
+  const enable = el.getAttribute('aria-pressed') !== 'true';
+  if (enable) {
+    COMBINED_PREVIOUS = {
+      destination: DESTINATION,
+      refineDestination: REFINE_DESTINATION,
+      refineExplicit: REFINE_DESTINATION_EXPLICIT,
+    };
+    DESTINATION = document.getElementById('calc-dest')?.value || DESTINATION;
+    REFINE_DESTINATION = DESTINATION;
+    REFINE_DESTINATION_EXPLICIT = true;
+  } else {
+    const previous = COMBINED_PREVIOUS;
+    if (previous) {
+      DESTINATION = previous.destination;
+      REFINE_DESTINATION = previous.refineDestination;
+      REFINE_DESTINATION_EXPLICIT = previous.refineExplicit;
+    } else {
+      REFINE_DESTINATION_EXPLICIT = false;
+    }
+    COMBINED_PREVIOUS = null;
+  }
   window.ENGINE.DESTINATION = DESTINATION;
   const destSel = document.getElementById('calc-dest');
   if (destSel) destSel.value = DESTINATION;
   const refineSel = document.getElementById('calc-refine-dest');
   if (refineSel) refineSel.value = REFINE_DESTINATION;
-  // The combined choice is an explicit refinement choice: keep it sticky so a
-  // later production change does not silently overwrite it.
-  REFINE_DESTINATION_EXPLICIT = true;
   if (typeof updateColonyTaxNote === 'function') updateColonyTaxNote();
+  syncCombinedSelector();
   saveDestination();
 }
 function exitCombinedMode() {
-  // Leaving combined mode just re-enters expert split mode with the current
-  // values; nothing is overwritten. The convenience selector resets to the
-  // placeholder unless the two colonies happen to be equal.
+  // Selecting either expert destination exits the toggle without restoring a
+  // stale pair, because the newly selected value is the user's explicit choice.
+  COMBINED_PREVIOUS = null;
   syncCombinedSelector();
 }
 function syncCombinedSelector() {
   const el = document.getElementById('calc-combined-dest');
-  if (el) el.value = (REFINE_DESTINATION && REFINE_DESTINATION === DESTINATION) ? DESTINATION : '';
+  if (!el) return;
+  const active = !!REFINE_DESTINATION_EXPLICIT && REFINE_DESTINATION === DESTINATION;
+  el.setAttribute('aria-pressed', String(active));
+  el.classList.toggle('active', active);
+  el.textContent = active ? 'Same location: On' : 'Same location: Off';
+  el.title = active
+    ? 'Refinement and production are linked to the same colony. Turn off to restore separate destinations.'
+    : 'Link refinement and production to the same colony.';
 }
 // Saved-state migration: legacy saves may contain destinations that are no
 // longer valid (e.g. apartment), and pre-refinement saves have no refine
@@ -1100,7 +1112,7 @@ function stepCard(s, isFinal) {
       : (ALTERNATIVE_CHOICES[s.item] != null ? ALTERNATIVE_CHOICES[s.item] : 0);
     const chosenDesc = (r.inputs_alternatives[chosen] || r.inputs_alternatives[0])
       .map(x => fmt(x.quantity) + ' ' + esc(x.item)).join(' + ');
-    pathNote = `<div class="pathpick pathpick-static">Path: ${chosenDesc} <span class="pathpick-hint">— change at top</span></div>`;
+    pathNote = `<div class="pathpick pathpick-static"><span class="pathpick-label">Path</span><span class="pathpick-materials">${chosenDesc}</span><span class="pathpick-hint">— change at top</span></div>`;
   }
   const inputChips = s.inputs.map(i => {
     const cls = 'need'; // simplified: all inputs are needed (owned already consumed)
@@ -1126,14 +1138,14 @@ function stepCard(s, isFinal) {
     ? 'All batches recorded'
     : 'Record ' + (progressNext === progressRemaining ? 'final ' : 'next ') +
       fmt(progressNext) + ' batch' + (progressNext === 1 ? '' : 'es');
-  const progressHtml = `<div class="production-progress${progressComplete ? ' complete' : ''}">
-        <div class="production-progress-head"><span class="production-progress-title">Batch progress</span><span class="production-progress-count" data-progress-count>${fmt(progressDone)} / ${fmt(progressTotal)} batches complete</span><span class="production-progress-remaining" data-progress-remaining>${fmt(progressRemaining)} remaining</span></div>
-        <div class="production-progress-track" role="progressbar" aria-label="${esc(displayName(s.item))} batch progress" aria-valuemin="0" aria-valuemax="${progressTotal}" aria-valuenow="${progressDone}"><span class="production-progress-fill" data-progress-fill style="width:${progressTotal ? Math.round(progressDone / progressTotal * 100) : 0}%"></span></div>
-        <div class="production-progress-actions">
-          <button type="button" class="progress-run" data-progress-run data-progress-item="${encodeURIComponent(s.item)}" data-progress-total="${progressTotal}" data-progress-chunk="${progressChunk}"${progressRemaining === 0 ? ' disabled' : ''}>${progressLabel}</button>
-          <button type="button" class="ghost progress-reset" data-progress-reset="${encodeURIComponent(s.item)}" data-progress-total="${progressTotal}"${progressDone === 0 ? ' hidden' : ''}>Reset</button>
+  const progressHtml = `<div class="batch-progress production-progress${progressComplete ? ' complete' : ''}">
+        <div class="batch-progress-head production-progress-head"><span class="production-progress-title">Batch progress</span><span class="production-progress-count" data-progress-count>${fmt(progressDone)} / ${fmt(progressTotal)} batches complete</span><span class="production-progress-remaining" data-progress-remaining>${fmt(progressRemaining)} remaining</span></div>
+        <div class="batch-progress-track production-progress-track" role="progressbar" aria-label="${esc(displayName(s.item))} batch progress" aria-valuemin="0" aria-valuemax="${progressTotal}" aria-valuenow="${progressDone}"><span class="batch-progress-fill production-progress-fill" data-progress-fill style="width:${progressTotal ? Math.round(progressDone / progressTotal * 100) : 0}%"></span></div>
+        <div class="batch-progress-actions production-progress-actions">
+          <button type="button" class="batch-progress-run progress-run" data-progress-kind="produce" data-progress-run data-progress-item="${encodeURIComponent(s.item)}" data-progress-total="${progressTotal}" data-progress-chunk="${progressChunk}"${progressRemaining === 0 ? ' disabled' : ''}>${progressLabel}</button>
+          <button type="button" class="ghost batch-progress-reset progress-reset" data-progress-reset="${encodeURIComponent(s.item)}" data-progress-total="${progressTotal}"${progressDone === 0 ? ' hidden' : ''}>Reset</button>
         </div>
-        <span class="production-progress-note">Local tracker only — the plan totals above stay unchanged.</span>
+        <span class="batch-progress-note production-progress-note">Local tracker only — the plan totals above stay unchanged.</span>
       </div>`;
 
   return `<div class="recipe-card ${s.process}${isFinal ? ' compact-manufacture' : ''}${PRODUCE_DONE[encodeURIComponent(s.item)] ? ' done' : ''}${progressComplete ? ' progress-complete' : ''}${isCurrent ? ' current-objective' : ''}" data-current-objective="${isCurrent ? 'true' : 'false'}"${isCurrent ? ' aria-current="step"' : ''}>
@@ -1524,42 +1536,6 @@ function renderPlanStats(plan) {
     </div>`;
 
   return `<div class="plan-top">${kpiHtml}${costPanel}${renderPerUnitPricing(plan)}</div>`;
-}
-
-// Compact task summary for the long execution checklist. It is derived from
-// the rendered plan and never changes calculation semantics or checklist state.
-function syncCalcExecutionSummary(plan, requestedItems, targetEl) {
-  const root = document.getElementById('calc-execution-summary');
-  if (!root) return;
-  if (!plan) {
-    root.hidden = true;
-    return;
-  }
-  const requests = Array.isArray(requestedItems) ? requestedItems : [];
-  const requested = requests.reduce((sum, entry) => sum + (Number(entry.qty) || 0), 0);
-  const produced = (plan.manufacture || []).reduce((sum, step) => sum + (Number(step.produced) || 0), 0);
-  const surplus = Math.max(0, produced - requested);
-  const refineCount = (plan.refine || []).length;
-  const manufactureCount = (plan.manufacture || []).length;
-  const current = targetEl?.querySelector('[data-current-objective="true"] .flow-name, [data-current-objective="true"] .recipe-name');
-  const fallback = Object.keys(plan.acquire || {}).length
-    ? 'Obtain required materials'
-    : refineCount
-      ? `Refine at ${REFINE_DESTINATION}`
-      : `Manufacture at ${DESTINATION}`;
-  const next = current?.textContent?.trim() || fallback;
-  const route = REFINE_DESTINATION !== DESTINATION
-    ? `Refine at ${REFINE_DESTINATION} → move intermediates → manufacture at ${DESTINATION}`
-    : `Refine and manufacture at ${DESTINATION}`;
-  const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-  set('calc-execution-next', next);
-  set('calc-execution-route', route);
-  set('calc-execution-requested', fmt(requested));
-  set('calc-execution-produced', fmt(produced));
-  set('calc-execution-surplus', surplus ? '+' + fmt(surplus) : '0');
-  set('calc-execution-actions', fmt(refineCount + manufactureCount));
-  set('calc-execution-note', `${fmt(refineCount)} refine · ${fmt(manufactureCount)} manufacture · detailed checklist continues below.`);
-  root.hidden = false;
 }
 
 // ── Show the math: player-readable walkthrough of the plan's arithmetic ──

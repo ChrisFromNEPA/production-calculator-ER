@@ -24,8 +24,8 @@ npm run check            # tests, Pages build, and baseline verification
 npm run assets:check     # required after asset/provenance changes
 ```
 
-For a browser on another machine in the private LAN, open the Linux host's LAN
-address rather than `localhost` or `127.0.0.1`.
+For a browser on another machine in the private LAN, open the host's LAN
+address rather than `localhost`.
 
 Focused checks are available when relevant:
 

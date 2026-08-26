@@ -106,7 +106,8 @@ function updateProductionProgressCard(card, item, total, chunk) {
     card.classList.toggle('progress-complete', compact);
   }
 }
-function recordProductionProgress(button) {
+function recordProductionProgress(button, container) {
+  container = container || planContainerForElement(button);
   var item = decodeURIComponent(button.dataset.progressItem || '');
   var total = Math.max(0, parseInt(button.dataset.progressTotal, 10) || 0);
   var chunk = Math.max(1, parseInt(button.dataset.progressChunk, 10) || PRODUCTION_PROGRESS_CHUNK);
@@ -120,13 +121,14 @@ function recordProductionProgress(button) {
     var checkbox = card.querySelector('input[data-produce-key]');
     if (checkbox && !checkbox.checked) {
       checkbox.checked = true;
-      toggleProduceCheck(checkbox);
+      toggleProduceCheck(checkbox, container);
     }
   }
   updateProductionProgressCard(card, item, total, chunk);
   syncApplyPlanReadiness();
 }
-function resetProductionProgress(button) {
+function resetProductionProgress(button, container) {
+  container = container || planContainerForElement(button);
   var item = decodeURIComponent(button.dataset.progressReset || '');
   var total = Math.max(0, parseInt(button.dataset.progressTotal, 10) || 0);
   if (!item) return;
@@ -137,7 +139,7 @@ function resetProductionProgress(button) {
     var checkbox = card.querySelector('input[data-produce-key]');
     if (checkbox && checkbox.checked) {
       checkbox.checked = false;
-      toggleProduceCheck(checkbox);
+      toggleProduceCheck(checkbox, container);
     }
   }
   updateProductionProgressCard(card, item, total, PRODUCTION_PROGRESS_CHUNK);
@@ -262,6 +264,7 @@ function resetCalculatorForNewPlan() {
   LAST_SINGLE = null;
   LAST_PLANS['calc-result'] = null;
   LAST_PLANS['calc-multi'] = null;
+  if (typeof COMBINED_PREVIOUS !== 'undefined') COMBINED_PREVIOUS = null;
 
   var item = document.getElementById('calc-item');
   var qty = document.getElementById('calc-qty');
@@ -310,14 +313,26 @@ function toggleColonyWorkGroup(head) {
   head.setAttribute('aria-expanded', String(group.classList.contains('expanded')));
 }
 
-// Checklist completion changes which action is current. Re-render the active
-// plan immediately so the completed card recedes and the next action advances
-// without waiting for an unrelated plan refresh.
-function advanceColonyObjective() {
-  rerunActivePlan({ preserveChecklist: true, preserveViewport: true });
+// Resolve actions to the result container they came from. The tray can contain
+// pending items while a single-item result remains visible, so global tray
+// state is not a reliable indication of which plan the player is working on.
+function planContainerForElement(element) {
+  if (!element) return null;
+  if (element.id === 'calc-result' || element.id === 'calc-multi') return element;
+  return typeof element.closest === 'function'
+    ? element.closest('#calc-result, #calc-multi')
+    : null;
 }
 
-function toggleProduceCheck(cb) {
+// Checklist completion changes which action is current. Re-render only the
+// result container that owns the completed control so a pending tray cannot
+// replace an otherwise visible single-item result (or vice versa).
+function advanceColonyObjective(container) {
+  rerunPlanForContainer(container, { preserveChecklist: true, preserveViewport: true });
+}
+
+function toggleProduceCheck(cb, container) {
+  container = container || planContainerForElement(cb);
   var key = cb.dataset.produceKey;
   var card = cb.closest('.recipe-card');
   var progressRun = card && card.querySelector('.progress-run');
@@ -350,7 +365,7 @@ function toggleProduceCheck(cb) {
   // Auto-collapse section if all items in it are checked
   var section = card.closest('.section');
   if (section) autoCollapseIfDone(section);
-  advanceColonyObjective();
+  advanceColonyObjective(container);
   syncApplyPlanReadiness();
 }
 window.toggleProduceCheck = toggleProduceCheck; // exported for inline onclick
@@ -428,11 +443,15 @@ saveTransportSource(); // seed the engine with the stored preferences on load
 function pickTransportSource(chip) {
   var item = decodeURIComponent(chip.dataset.srcItem);
   var src = chip.dataset.src;
-  if (!item || !src) return;
+  var container = planContainerForElement(chip);
+  if (!item || !src || !container) return;
   if (TRANSPORT_SOURCE[item] === src) { delete TRANSPORT_SOURCE[item]; } // click a pinned chip to unpin
   else { TRANSPORT_SOURCE[item] = src; }
   saveTransportSource();
-  if (CALC_TRAY.length) { runMultiPlan(); return; }
+  if (container.id === 'calc-multi') {
+    rerunPlanForContainer(container, { preserveChecklist: true });
+    return;
+  }
   if (!LAST_SINGLE || !LAST_SINGLE.item) return;
   // runCalculator() reads #calc-item / #calc-qty, not LAST_SINGLE. Those can
   // drift apart (the field is readonly but a later pick can change it), so
@@ -440,10 +459,11 @@ function pickTransportSource(chip) {
   // chip click could re-plan a different item, or blank the pane entirely.
   document.getElementById('calc-item').value = LAST_SINGLE.item;
   document.getElementById('calc-qty').value = LAST_SINGLE.qty;
-  runCalculator({ preserveChecklist: true });
+  rerunPlanForContainer(container, { preserveChecklist: true });
 }
 
-function toggleTransferCheck(cb) {
+function toggleTransferCheck(cb, container) {
+  container = container || planContainerForElement(cb);
   var key = cb.dataset.transferKey;
   var card = cb.closest('.flow-card');
   if (cb.checked) {
@@ -466,7 +486,7 @@ function toggleTransferCheck(cb) {
   var section = card && card.closest('.section');
   if (section) autoCollapseIfDone(section);
   syncColonyWorkGroupStates(card);
-  advanceColonyObjective();
+  advanceColonyObjective(container);
   syncApplyPlanReadiness();
 }
 
@@ -892,8 +912,7 @@ function onSlotLevelChange(el) {
   else return;
   saveSlotLevels();
   renderSlotLevels();
-  if (CALC_TRAY.length) runMultiPlan({ preserveChecklist: true });
-  else if (document.querySelector('#calc-result .plan-summary')) runCalculator({ preserveChecklist: true });
+  rerunActivePlan({ preserveChecklist: true });
 }
 
 // One handler for both controls — recalculating so the cost card moves with it.
@@ -926,15 +945,33 @@ function onColonyTaxChange(el) {
   rerunActivePlan();
 }
 
-// Re-cost whatever is on screen. Used after a rate changes locally and after a
-// change arrives from another member.
-function rerunActivePlan(options) {
-  options = options || {};
-  if (CALC_TRAY.length) runMultiPlan({ preserveChecklist: true, preserveViewport: !!options.preserveViewport });
-  else if (document.querySelector('#calc-result .plan-summary')) runCalculator({ preserveChecklist: true, preserveViewport: !!options.preserveViewport });
+function activePlanContainer() {
+  var multi = document.getElementById('calc-multi');
+  if (multi && multi.querySelector('.multi-head')) return multi;
+  var single = document.getElementById('calc-result');
+  if (single && single.querySelector('.plan-summary')) return single;
+  return CALC_TRAY.length ? multi : single;
 }
 
-function toggleObtainCheck(cb) {
+function rerunPlanForContainer(container, options) {
+  options = options || {};
+  container = planContainerForElement(container);
+  if (!container) return false;
+  var rerunOptions = { preserveChecklist: true, preserveViewport: !!options.preserveViewport };
+  if (container.id === 'calc-multi') { runMultiPlan(rerunOptions); return true; }
+  if (container.id === 'calc-result') { runCalculator(rerunOptions); return true; }
+  return false;
+}
+
+// Re-cost whatever plan is visibly on screen. The DOM wins over pending tray
+// state because a player may have staged a tray while still reviewing a single
+// item result.
+function rerunActivePlan(options) {
+  return rerunPlanForContainer(activePlanContainer(), options);
+}
+
+function toggleObtainCheck(cb, container) {
+  container = container || planContainerForElement(cb);
   var key = cb.dataset.obtainKey;
   var card = cb.closest('.flow-card');
   if (cb.checked) {
@@ -948,7 +985,7 @@ function toggleObtainCheck(cb) {
   var section = card && card.closest('.section');
   if (section) autoCollapseIfDone(section);
   syncColonyWorkGroupStates(card);
-  advanceColonyObjective();
+  advanceColonyObjective(container);
   syncApplyPlanReadiness();
 }
 
@@ -1036,7 +1073,8 @@ function renderAcquireSection(plan) {
       var mineRemaining = Math.max(0, mineTotal - mineDone);
       var mineBatchQty = Math.min(MINE_BATCH, mineRemaining);
       var batchButtonHtml = from.length && mineRemaining > 0
-        ? '<button type="button" class="mine-log obtain-batch progress-run" data-mine="' + encodeURIComponent(t.item) +
+        ? '<button type="button" class="mine-log obtain-batch progress-run batch-progress-run" data-progress-kind="mine" data-progress-item="' + encodeURIComponent(t.item) +
+            '" data-progress-total="' + mineTotal + '" data-progress-chunk="' + MINE_BATCH + '" data-mine="' + encodeURIComponent(t.item) +
             '" data-qty="' + mineBatchQty + '" data-mine-total="' + mineTotal +
             '" title="Record one mining batch for this material">Record ' +
               (mineBatchQty === mineRemaining ? 'final ' : 'next ') + fmt(mineBatchQty) +
@@ -1189,7 +1227,8 @@ function renderColonyWorkSection(plan) {
       }
 
       if (action.kind === 'refine') {
-        html += '<div class="colony-work-refine-card' + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' + stepCard(action.step || action) + '</div>';
+        var refineCurrent = objective && objective.id === window.CMG_COLONY_WORK.workActionId(action);
+        html += '<div class="colony-work-refine-card">' + stepCard(action.step || action, false, refineCurrent) + '</div>';
         return;
       }
 
@@ -1214,12 +1253,12 @@ function renderColonyWorkSection(plan) {
 // the selected item's recipe tree (recipe data only — no inventory needed) and
 // collect every intermediate that has alternative input sets, following the
 // paths currently chosen. Returns [{item, recipe}] in encounter order, unique.
-function refinementPaths(finalItems) {
+function refinementPaths(finalItems, container) {
   // `actualAlt` is item → the index the ENGINE really used. When the player has
   // not picked a path, the engine scores the alternatives and takes the best —
   // it does NOT default to 0 — so walking with 0 explored the wrong branch and
   // could list the wrong set of pickers.
-  var actualAlt = enginePathChoices();
+  var actualAlt = enginePathChoices(container);
   var found = [], foundSet = {}, seen = {};
   function walk(it) {
     if (seen[it]) return; seen[it] = true;
@@ -1243,9 +1282,10 @@ function refinementPaths(finalItems) {
 // item → alternative index actually used by the plan on screen. The steps record
 // altIndex, which is the ground truth; ALTERNATIVE_CHOICES only holds explicit
 // picks and is empty until the player changes something.
-function enginePathChoices() {
+function enginePathChoices(container) {
   var map = {};
-  var plan = LAST_PLANS[CALC_TRAY.length ? 'calc-multi' : 'calc-result'];
+  container = planContainerForElement(container) || activePlanContainer();
+  var plan = container && LAST_PLANS[container.id];
   if (plan && plan.steps) {
     plan.steps.forEach(function (s) { if (s.altIndex != null) map[s.item] = s.altIndex; });
   }
@@ -1309,20 +1349,22 @@ function estPathCost(item, altIndex, depth, memo) {
 function renderCalcPaths() {
   var box = document.getElementById('calc-paths');
   if (!box) return;
+  var container = planContainerForElement(box) || activePlanContainer();
   var items;
-  if (CALC_TRAY.length) {
+  if (container && container.id === 'calc-multi') {
     items = CALC_TRAY.map(function (t) { return t.item; });
   } else {
-    var it = document.getElementById('calc-item').value.trim();
+    var it = LAST_SINGLE && LAST_SINGLE.item;
+    if (!it) it = document.getElementById('calc-item').value.trim();
     // Fallback to LAST_SINGLE if the readonly field is somehow empty
     // (can happen if DOM replacement clears it before this runs)
     if (!it && LAST_SINGLE) it = LAST_SINGLE.item;
     items = (it && FINAL_ITEMS.includes(it)) ? [it] : [];
   }
-  var paths = items.length ? refinementPaths(items) : [];
+  var paths = items.length ? refinementPaths(items, container) : [];
   if (!paths.length) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
-  var actualAlt = enginePathChoices();
+  var actualAlt = enginePathChoices(container);
   var memo = {};
   // Per-path unit-cost estimate for every alternative shown below. Priced
   // options get "≈ N UC/unit"; the cheapest gets ★. Options stay readable when
@@ -1414,52 +1456,55 @@ function reopenAutoCollapsed() {
 // cheaper per unit, so that's the default action.
 var MINE_BATCH = 100;
 
-function markObtainCompleteForMining(item) {
-  var checkboxes = document.querySelectorAll('.obtain-cb');
+function markObtainCompleteForMining(item, container) {
+  var root = planContainerForElement(container) || activePlanContainer() || document;
+  var checkboxes = root.querySelectorAll('.obtain-cb');
   for (var i = 0; i < checkboxes.length; i++) {
     var cb = checkboxes[i];
     if (cb.dataset.obtainKey === item && !cb.checked) {
       cb.checked = true;
-      toggleObtainCheck(cb);
+      toggleObtainCheck(cb, root);
       break;
     }
   }
 }
 
 function resetMiningProgress(button) {
+  var container = planContainerForElement(button);
   var item = decodeURIComponent(button.dataset.miningReset || '');
   if (!item) return;
   delete MINING_PROGRESS[item];
   saveMiningProgress();
-  var checkboxes = document.querySelectorAll('.obtain-cb');
+  var root = container || activePlanContainer() || document;
+  var checkboxes = root.querySelectorAll('.obtain-cb');
   for (var i = 0; i < checkboxes.length; i++) {
     var cb = checkboxes[i];
     if (cb.dataset.obtainKey === item && cb.checked) {
       cb.checked = false;
-      toggleObtainCheck(cb);
+      toggleObtainCheck(cb, root);
       break;
     }
   }
-  rerunActivePlan({ preserveViewport: true });
+  rerunPlanForContainer(container, { preserveViewport: true });
 }
 
 function renderMiningProgress(item, total, done, remaining) {
   var enc = encodeURIComponent(item);
   if (!total) {
     if (!done) return '';
-    return '<div class="mine-progress unplanned" data-mine-progress="' + enc + '">' +
-      '<div class="mine-progress-head"><span data-mine-progress-count>' + fmt(done) + ' mined for later</span>' +
+    return '<div class="batch-progress mine-progress unplanned" data-mine-progress="' + enc + '">' +
+      '<div class="batch-progress-head mine-progress-head"><span data-mine-progress-count>' + fmt(done) + ' mined for later</span>' +
         '<span class="mine-progress-remaining" data-mine-progress-remaining>no plan target</span></div>' +
-      '<button type="button" class="mine-progress-reset" data-mining-reset="' + enc + '">Reset mining log</button>' +
+      '<button type="button" class="mine-progress-reset batch-progress-reset" data-mining-reset="' + enc + '">Reset mining log</button>' +
     '</div>';
   }
   var complete = remaining === 0;
-  return '<div class="mine-progress' + (complete ? ' complete' : '') + '" data-mine-progress="' + enc + '">' +
-    '<div class="mine-progress-head"><span data-mine-progress-count>' + fmt(done) + ' / ' + fmt(total) + ' mined</span>' +
+  return '<div class="batch-progress mine-progress' + (complete ? ' complete' : '') + '" data-mine-progress="' + enc + '">' +
+    '<div class="batch-progress-head mine-progress-head"><span data-mine-progress-count>' + fmt(done) + ' / ' + fmt(total) + ' mined</span>' +
       '<span class="mine-progress-remaining" data-mine-progress-remaining>' + fmt(remaining) + ' remaining</span></div>' +
-    '<div class="mine-progress-track" role="progressbar" aria-label="Mining progress for ' + esc(displayName(item)) + '" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done + '">' +
-      '<span class="mine-progress-fill" style="width:' + Math.round(done / total * 100) + '%"></span></div>' +
-    (complete ? '<button type="button" class="mine-progress-reset" data-mining-reset="' + enc + '">Reset mining log</button>' : '') +
+    '<div class="batch-progress-track mine-progress-track" role="progressbar" aria-label="Mining progress for ' + esc(displayName(item)) + '" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done + '">' +
+      '<span class="batch-progress-fill mine-progress-fill" style="width:' + Math.round(done / total * 100) + '%"></span></div>' +
+    (complete ? '<button type="button" class="mine-progress-reset batch-progress-reset" data-mining-reset="' + enc + '">Reset mining log</button>' : '') +
   '</div>';
 }
 
@@ -1513,10 +1558,10 @@ function renderMiningPanel(plan) {
     var smallQty = 25;
     var actions = complete ? '' :
       '<span class="mine-acts">' +
-        '<button type="button" class="mine-log full" data-mine="' + enc + '" data-qty="' + fullQty + '"' + totalAttr +
+        '<button type="button" class="mine-log full batch-progress-run" data-progress-kind="mine" data-progress-item="' + enc + '" data-mine="' + enc + '" data-qty="' + fullQty + '"' + totalAttr +
           ' title="Log a full batch — best rate per unit">+' + fullQty + '</button>' +
-        '<button type="button" class="mine-log" data-mine="' + enc + '" data-qty="' + midQty + '"' + totalAttr + '>+' + midQty + '</button>' +
-        '<button type="button" class="mine-log" data-mine="' + enc + '" data-qty="' + smallQty + '"' + totalAttr + '>+' + smallQty + '</button>' +
+        '<button type="button" class="mine-log batch-progress-run" data-progress-kind="mine" data-progress-item="' + enc + '" data-mine="' + enc + '" data-qty="' + midQty + '"' + totalAttr + '>+' + midQty + '</button>' +
+        '<button type="button" class="mine-log batch-progress-run" data-progress-kind="mine" data-progress-item="' + enc + '" data-mine="' + enc + '" data-qty="' + smallQty + '"' + totalAttr + '>+' + smallQty + '</button>' +
         '<input type="number" class="mine-qty" min="1" max="' + MINE_BATCH + '" placeholder="1-' + MINE_BATCH + '"' +
           ' data-mine-qty="' + enc + '"' + totalAttr + ' aria-label="Custom amount mined of ' + esc(item) + '" />' +
       '</span>';
@@ -1540,7 +1585,7 @@ function renderMiningPanel(plan) {
 }
 
 // Record mining progress for the current plan without changing inventory or plan totals.
-function logMined(item, qty, total) {
+function logMined(item, qty, total, container) {
   var requested = Math.max(1, Math.min(MINE_BATCH, parseInt(qty, 10) || 0));
   var target = Math.max(0, parseInt(total, 10) || 0);
   var recorded = Math.max(0, Number(MINING_PROGRESS[item]) || 0);
@@ -1554,7 +1599,7 @@ function logMined(item, qty, total) {
   if (state) {
     MINING_PROGRESS[item] = state.completed;
     saveMiningProgress();
-    if (state.remaining === 0) markObtainCompleteForMining(item);
+    if (state.remaining === 0) markObtainCompleteForMining(item, container);
   } else {
     MINING_PROGRESS[item] = recorded + requested;
     saveMiningProgress();
@@ -1563,11 +1608,14 @@ function logMined(item, qty, total) {
     (state ? ' (' + fmt(state.remaining) + ' remaining).' :
       ' (' + fmt(MINING_PROGRESS[item]) + ' mined for later).'),
     2500, 'success');
-  if (CALC_TRAY.length) runMultiPlan({ preserveChecklist: true, preserveViewport: true });
-  else if (LAST_SINGLE && LAST_SINGLE.item) {
+  if (container && container.id === 'calc-result' && LAST_SINGLE && LAST_SINGLE.item) {
     document.getElementById('calc-item').value = LAST_SINGLE.item;
     document.getElementById('calc-qty').value = LAST_SINGLE.qty;
-    runCalculator({ preserveChecklist: true, preserveViewport: true });
+  }
+  if (container) {
+    rerunPlanForContainer(container, { preserveChecklist: true, preserveViewport: true });
+  } else if (LAST_SINGLE && LAST_SINGLE.item) {
+    rerunActivePlan({ preserveChecklist: true, preserveViewport: true });
   }
 }
 
@@ -1795,7 +1843,6 @@ function renderPlan(item, qty, targetEl) {
       <span class="legend-chip legend-produce"></span> Produce (refine/manufacture) &nbsp;
       <span class="legend-chip legend-surplus"></span> Batch surplus
     </div>`;
-  syncCalcExecutionSummary(plan, [{ item: item, qty: qty }], targetEl);
   return true;
 }
 
@@ -1812,14 +1859,12 @@ function runCalculator() {
   getRefineDestination(); // sync from input
   if (!item || !ALL_ITEMS.has(item)) {
     clearQuantityValidation();
-    syncCalcExecutionSummary(null);
     out.innerHTML = '<div class="card"><span class="shortfall">Select a valid item from the list.</span></div>';
     window.CMG_VALUE_TRANSITION?.announce({ item: 'Production plan', quantity: 1, result: out });
     return;
   }
   if (!Number.isInteger(parsedQty) || parsedQty < 1) {
     showQuantityValidation('Quantity must be a whole number of at least 1. Your previous plan was not updated.');
-    syncCalcExecutionSummary(null);
     out.innerHTML = '<div class="card calculation-error" role="alert"><span class="shortfall">Enter a whole-number quantity of 1 or more, then calculate again.</span></div>';
     LAST_PLANS['calc-result'] = null;
     return;
@@ -1940,15 +1985,23 @@ function runMultiPlan(options) {
   const planSig = planSignature(CALC_TRAY);
   const planApplied = syncPlanIdentity(planSig);
 
-  // Build a shared ledger from current inventory
-  const ledger = Object.assign({}, INV_TOTAL);
+  // Build a shared ledger from current inventory, unless the user explicitly
+  // selected the scratch mode shared by single and combined calculations.
+  const scratch = document.getElementById('calc-scratch')?.checked;
+  const ledger = scratch ? {} : Object.assign({}, INV_TOTAL);
   // compute() mutates the location ledger while allocating owned stock. Keep
   // that working copy separate from the live inventory-location state.
   const invLoc = {};
-  for (const k in INV_LOCATIONS) invLoc[k] = INV_LOCATIONS[k].map(l => ({ ...l }));
+  if (!scratch) {
+    for (const k in INV_LOCATIONS) invLoc[k] = INV_LOCATIONS[k].map(l => ({ ...l }));
+  }
   // Compute all items against the shared ledger
   const discounts = getDiscounts();
   let result, plan;
+  const STORE = window.STORE;
+  const tmpTotal = scratch ? STORE.INV_TOTAL : null;
+  const tmpLocs = scratch ? STORE.INV_LOCATIONS : null;
+  if (scratch) { STORE.INV_TOTAL = {}; STORE.INV_LOCATIONS = {}; }
   try {
     result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, discounts, REFINE_DESTINATION);
     plan = result.plan;
@@ -1958,12 +2011,13 @@ function runMultiPlan(options) {
     // There is no id="plan" element — this used to throw a TypeError inside the
     // catch, masking the real compute error and leaving the user with a blank
     // pane. The combined plan renders into `out` (#calc-multi).
-    syncCalcExecutionSummary(null);
     out.innerHTML = '<div class="card"><span class="shortfall">Couldn\'t plan these items — one may have a recipe cycle or missing data. Check the console for details.</span></div>';
     return;
+  } finally {
+    if (scratch) { STORE.INV_TOTAL = tmpTotal; STORE.INV_LOCATIONS = tmpLocs; }
   }
 
-  let html = `<div class="multi-head">Combined production plan · ${CALC_TRAY.length} item(s) → ${esc(DESTINATION)}${REFINE_DESTINATION !== DESTINATION ? ' · refine at ' + esc(REFINE_DESTINATION) : ''}</div>`;
+  let html = `<div class="multi-head">Combined production plan · ${CALC_TRAY.length} item(s) → ${esc(DESTINATION)}${REFINE_DESTINATION !== DESTINATION ? ' · refine at ' + esc(REFINE_DESTINATION) : ''}${scratch ? ' · ignoring current inventory' : ''}</div>`;
 
   // Dashboard + stats for combined plan
   const statsHtml = renderPlanStats(plan);
@@ -1985,7 +2039,6 @@ function runMultiPlan(options) {
   html += renderMiningPanel(plan);
 
   out.innerHTML = html;
-  syncCalcExecutionSummary(plan, CALC_TRAY, out);
   if (CALC_TRAY.length) {
     out.innerHTML += `<div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>${planApplied
       ? `<button class="apply-plan applied" disabled title="Applied. Press Build combined plan again to plan another run.">✓ Applied to inventory</button>`

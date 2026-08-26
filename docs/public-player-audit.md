@@ -21,8 +21,8 @@ The Hermes browser harness could not attach to a running Chromium instance in th
 - Separate temporary profiles with no existing localStorage or service-worker state
 - Rendered DOM captured with `--dump-dom`
 - Screenshots captured to temporary paths outside the repository:
-  - `/tmp/er-public-desktop.png`
-  - `/tmp/er-public-mobile.png`
+  - `<temporary-desktop-screenshot>`
+  - `<temporary-mobile-screenshot>`
 
 The screenshots are temporary QA evidence and are not committed to the public repository. This fallback verifies real rendering and DOM activation; it is **not** a replacement for a full interactive accessibility traversal.
 

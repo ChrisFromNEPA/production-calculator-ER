@@ -15,8 +15,6 @@
   "validation": {
     "game_texture": "256x256 DXT1",
     "uv_constrained": true,
-    "turntable_review": "/tmp/erx_cyberpunk_release6_turntable.png",
-    "hold_validation": "/home/hermes-agent/projects/production-calculator/probe_hold.html",
     "visual_verdict": "PASS",
     "player_handling": "firing hand reaches grip/trigger; support hand under forward rail; shoulder brace contact clear; battery clearance verified"
   }

@@ -51,7 +51,7 @@ describe('production batch progress tracker', () => {
 
   it('checks the production box and exposes a compact completed step', () => {
     assert.match(appSrc, /checkbox\.checked = true/);
-    assert.match(appSrc, /toggleProduceCheck\(checkbox\)/);
+    assert.match(appSrc, /toggleProduceCheck\(checkbox, container\)/);
     assert.match(appSrc, /progress-complete/);
     assert.match(coreSrc, /progress-complete/);
   });
@@ -109,8 +109,7 @@ describe('production batch progress tracker', () => {
   });
 
   it('preserves the viewport when mining progress rerenders', () => {
-    assert.match(appSrc, /runMultiPlan\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
-    assert.match(appSrc, /runCalculator\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
+    assert.match(appSrc, /rerunPlanForContainer\(container, \{ preserveChecklist: true, preserveViewport: true \}\)/);
     assert.match(appSrc, /function rerunActivePlan\(options\)[\s\S]*preserveViewport/);
     assert.match(appSrc, /if \(!options\.preserveViewport\) \{[\s\S]*out\.scrollIntoView/);
   });
@@ -148,8 +147,8 @@ describe('production batch progress tracker', () => {
     assert.match(appSrc, /function resetChecklistForCalculation\(\)/);
     assert.match(appSrc, /function runCalculator\(\)[\s\S]*resetChecklistForCalculation\(\)/);
     assert.match(appSrc, /function runMultiPlan\(options\)[\s\S]*resetChecklistForCalculation\(\)/);
-    assert.match(appSrc, /runCalculator\(\{ preserveChecklist: true \}\)/);
-    assert.match(appSrc, /runMultiPlan\(\{ preserveChecklist: true \}\)/);
+    assert.match(appSrc, /function activePlanContainer\(\)/);
+    assert.match(appSrc, /function rerunPlanForContainer\(container, options\)/);
   });
 
   it('adds a record-batch action directly to mineable Obtain-step rows', () => {

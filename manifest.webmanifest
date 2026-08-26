@@ -1,7 +1,7 @@
 {
   "name": "Empire Rising Production Calculator",
   "short_name": "ER Calculator",
-  "description": "Offline-first Empire Rising production, inventory, gear, and economy planner",
+  "description": "Plan materials, refining steps, colonies, and local cost assumptions for Empire Rising production",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -135,6 +135,16 @@
       "evidence": "Explicit project-owner authorization in the project migration decision; retain upstream font attribution and license notices."
     },
     {
+      "path": "docs/assets/calculator-sample.png",
+      "class": "synthetic-qa-screenshot",
+      "origin": "Captured from the production artifact using fictional sample data.",
+      "rights_holder": "Project contributors",
+      "license_or_permission": "Project-owned documentation asset.",
+      "transformation": "Cropped browser screenshot with no real user data.",
+      "status": "approved_for_code_review",
+      "evidence": "README.md; fictional Demo Operator sample profile"
+    },
+    {
       "path": "src/vendor/**",
       "class": "third-party-javascript",
       "origin": "Vendored open-source browser libraries.",

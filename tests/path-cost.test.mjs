@@ -135,8 +135,7 @@ describe('refinement-path cost estimates (shipped app.js code)', () => {
   it('keeps path selection on one delegated radio listener with keyboard semantics', () => {
     const handler = initSrc.slice(initSrc.indexOf('input[data-alt]'), initSrc.indexOf('renderCalcPaths();', initSrc.indexOf('input[data-alt]')));
     assert.match(handler, /input\[data-alt\]/);
-    assert.match(handler, /runMultiPlan\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
-    assert.match(handler, /runCalculator\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
+    assert.match(handler, /rerunPlanForContainer\(e\.currentTarget, \{ preserveChecklist: true, preserveViewport: true \}\)/);
     assert.equal((initSrc.match(/input\[data-alt\]/g) || []).length, 1, 'refinement paths must have one delegated change listener');
   });
 
@@ -148,8 +147,7 @@ describe('refinement-path cost estimates (shipped app.js code)', () => {
 
   it('preserves the viewport when a refinement path changes', () => {
     const handler = initSrc.slice(initSrc.indexOf('input[data-alt]'), initSrc.indexOf('renderCalcPaths();', initSrc.indexOf('input[data-alt]')));
-    assert.match(handler, /runMultiPlan\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
-    assert.match(handler, /runCalculator\(\{ preserveChecklist: true, preserveViewport: true \}\)/);
+    assert.match(handler, /rerunPlanForContainer\(e\.currentTarget, \{ preserveChecklist: true, preserveViewport: true \}\)/);
     assert.equal((initSrc.match(/input\[data-alt\]/g) || []).length, 1, 'refinement paths must have one delegated change listener');
   });
 });

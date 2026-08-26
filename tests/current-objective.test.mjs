@@ -42,10 +42,10 @@ describe('current colony objective', () => {
   });
 
   it('advances the rendered objective immediately after checklist completion', () => {
-    assert.match(appSource, /function advanceColonyObjective\(\)/);
+    assert.match(appSource, /function advanceColonyObjective\(container\)/);
     for (const handler of ['toggleObtainCheck', 'toggleTransferCheck', 'toggleProduceCheck']) {
       const body = appSource.match(new RegExp(`function ${handler}\\([\\s\\S]*?\\n\\}`))?.[0] || '';
-      assert.match(body, /advanceColonyObjective\(\)/, `${handler} should advance objective state`);
+      assert.match(body, /advanceColonyObjective\(container\)/, `${handler} should advance objective state`);
     }
   });
 });

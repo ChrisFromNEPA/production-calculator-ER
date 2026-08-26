@@ -15,7 +15,7 @@ describe('combined per-colony work queue', () => {
   it('is the single calculator logistics section for both plan shapes', () => {
     assert.match(appSource, /renderColonyWorkSection\(plan\)/);
     assert.match(appSource, /planSection\('colony-work', 1, 'Visit, mine, move & refine by colony'/);
-    assert.match(appSource, /stepCard\(action\.step \|\| action\)/);
+    assert.match(appSource, /stepCard\(action\.step \|\| action/);
     assert.match(htmlSource, /src="src\/colony-work\.js\?v=1"/);
     assert.doesNotMatch(appSource, /planSection\('move', 1/);
     assert.doesNotMatch(appSource, /planSection\('obtain', 2/);

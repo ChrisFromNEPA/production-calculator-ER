@@ -87,7 +87,8 @@ def norm(s):
     return s
 
 # Sheet-name -> recipe-name alias table. The recipe list carries the published
-# sheet's names (rename_items.py), so only the sheet's OWN typos need mapping:
+# sheet's names after the historical name-normalization pass, so only the
+# sheet's OWN typos need mapping:
 #   - "Minimist" is the sheet's typo for the client's "Minimalist" (prodschema 441/476)
 #   - "Pythica Sustained Gloves" drops "Battle" (client 420 says Sustained Battle)
 ALIASES = {

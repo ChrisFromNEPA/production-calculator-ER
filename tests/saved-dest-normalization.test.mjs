@@ -39,6 +39,15 @@ function makeSelect(id) {
   return sel;
 }
 
+function makeToggle(id) {
+  return {
+    id, textContent: 'Same location: Off', title: '', attributes: {},
+    classList: { toggle() {} },
+    setAttribute(name, value) { this.attributes[name] = String(value); },
+    getAttribute(name) { return this.attributes[name] ?? null; },
+  };
+}
+
 // Runs the real app-core.js destination machinery plus the real loadSavedPlan
 // extracted from src/app.js, sharing one VM context (and therefore the same
 // module-scope DESTINATION / REFINE_DESTINATION lexical bindings).
@@ -46,7 +55,7 @@ function loadRuntime(localStorageData, savedPlans) {
   const elements = {
     'calc-dest': makeSelect('calc-dest'),
     'calc-refine-dest': makeSelect('calc-refine-dest'),
-    'calc-combined-dest': makeSelect('calc-combined-dest'),
+    'calc-combined-dest': makeToggle('calc-combined-dest'),
     'calc-item': { value: '' },
     'calc-qty': { value: '1' },
   };

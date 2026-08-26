@@ -4,16 +4,16 @@ This project can run directly from a stable local checkout instead of waiting fo
 
 ## One-time setup
 
-Use a stable checkout path. The configured host on the development machine is:
+Use a stable checkout path for the working tree:
 
 ```text
-/home/hermes/production-calculator-ER
+REPOSITORY_DIRECTORY
 ```
 
 Install dependencies there if needed:
 
 ```bash
-cd /home/hermes/production-calculator-ER
+cd REPOSITORY_DIRECTORY
 npm ci
 ```
 
@@ -22,25 +22,17 @@ npm ci
 To start the LAN-bound server in a terminal:
 
 ```bash
-cd /home/hermes/production-calculator-ER
+cd REPOSITORY_DIRECTORY
 npm run local:host
 ```
 
-It listens on TCP port `4173` on all local interfaces. On the Windows machine, open:
+It listens on TCP port `4173` on all local interfaces. On another machine on the trusted LAN, open:
 
 ```text
-http://<linux-lan-ip>:4173/
+http://<host-address>:4173/
 ```
 
-Find the current Linux LAN address with:
-
-```bash
-hostname -I
-```
-
-For this host, the current address is `192.168.1.124`, so the current URL is:
-
-<http://192.168.1.124:4173/>
+Use the host operating system's network tools to find its LAN address. Do not record or publish that address in repository documentation.
 
 ## Persistent user service
 
@@ -50,7 +42,7 @@ The installed user-level systemd service is:
 production-calculator.service
 ```
 
-It uses the stable checkout, restarts after an unexpected exit, and starts automatically for the `hermes` user:
+It uses the stable checkout, restarts after an unexpected exit, and starts automatically for the local user:
 
 ```bash
 systemctl --user status production-calculator.service
@@ -68,7 +60,7 @@ systemctl --user enable --now production-calculator.service
 
 ## Editing workflow
 
-1. Edit files in `/home/hermes/production-calculator-ER`.
+1. Edit files in `REPOSITORY_DIRECTORY`.
 2. Leave the service running.
 3. Refresh the Windows browser if Vite's hot reload does not update the page.
 4. Run `npm test` or `npm run check` before deciding whether a change is ready to commit.

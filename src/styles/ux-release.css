@@ -43,6 +43,49 @@ header:has(.settings-menu[open]) { position: relative; z-index: 300; }
 .player-actions-menu { left: 0; right: auto; min-width: 210px; }
 .player-actions-menu button { width: 100%; text-align: left; }
 
+/* Public-facing project introduction: useful context for a first-time visitor
+   without changing the calculator's existing onboarding or workbench flow. */
+.project-intro {
+  width: auto;
+  max-width: 1100px;
+  margin: .75rem auto 1rem;
+  padding: clamp(.85rem, 2vw, 1.25rem) clamp(1rem, 2.5vw, 1.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: 1px solid var(--line-bright);
+  border-left: 3px solid var(--cyan);
+  border-radius: var(--component-radius-md);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--cyan) 8%, var(--panel)), var(--panel));
+}
+.project-intro-copy { min-width: 0; }
+.project-intro h2 {
+  margin: .25rem 0 .35rem;
+  color: var(--text);
+  font: 700 clamp(1rem, 2vw, 1.35rem)/1.25 Orbitron, sans-serif;
+}
+.project-intro p { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.55; max-width: 70ch; }
+.project-intro-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 44px;
+  padding: .55rem .8rem;
+  border: 1px solid var(--line-bright);
+  border-radius: var(--component-radius-sm);
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--panel2) 78%, transparent);
+  font-size: .68rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.project-intro-link:hover { border-color: var(--cyan); color: var(--text); background: var(--panel2); }
+.project-intro-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
 .first-run {
   max-width: 960px; margin: 1rem auto 1.25rem; padding: clamp(1rem, 3vw, 2rem);
   display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 2rem;
@@ -218,6 +261,8 @@ header:has(.settings-menu[open]) { position: relative; z-index: 300; }
 [data-theme="pride"] .section .section-badge { background: var(--accent); color: #fff; }
 
 @media (max-width: 760px) {
+  .project-intro { flex-direction: column; align-items: stretch; gap: .9rem; margin-inline: .5rem; }
+  .project-intro-link { width: 100%; }
   .first-run { grid-template-columns: 1fr; gap: 1rem; }
   .calc-guide { grid-template-columns: 1fr; gap: 1rem; }
   .calc-steps, .beginner-kpis { grid-template-columns: 1fr; }

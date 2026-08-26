@@ -6,6 +6,7 @@ const root = process.cwd();
 const dist = path.join(root, 'dist');
 const files = [
   'index.html', 'favicon.svg', 'manifest.webmanifest', 'sw.js',
+  'docs/assets/calculator-sample.png',
 ];
 const directories = [
   'src', 'data', 'fonts', 'gallery', 'gear_textures', 'icons', 'logo', 'maps',
@@ -15,7 +16,9 @@ const directories = [
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 for (const relative of files) {
-  fs.cpSync(path.join(root, relative), path.join(dist, relative));
+  const destination = path.join(dist, relative);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.cpSync(path.join(root, relative), destination);
 }
 for (const relative of directories) {
   fs.cpSync(path.join(root, relative), path.join(dist, relative), { recursive: true });

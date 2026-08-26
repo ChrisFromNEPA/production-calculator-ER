@@ -28,7 +28,7 @@ Local server:
 python3 -m http.server 4173
 ```
 
-URL: `http://127.0.0.1:4173/`
+URL: `http://localhost:4173/`
 
 Observed browser viewport: **1280 × 577**.
 

@@ -48,15 +48,10 @@ describe('combined same-location mode', () => {
     assert.match(html, /aria-label="Refine and produce at the same location/);
   });
 
-  it('the combined control offers only final production locations', () => {
+  it('uses a toggle while keeping production/refinement selectors authoritative', () => {
     const populateFn = core.slice(core.indexOf('function populateDestinations('), core.indexOf('function getDestination('));
-    assert.match(populateFn, /combinedSel/);
-    assert.match(populateFn, /colonyList\(\)\.forEach/);
-    assert.doesNotMatch(populateFn, /allKnownLocations\(\)\s*\?\?/);
-    // The combined selector shares the production option list; it must not
-    // inject the broader refinement list into itself.
-    const combinedBlock = populateFn.slice(populateFn.indexOf('combinedSel'));
-    assert.doesNotMatch(combinedBlock, /allKnownLocations\(\)/);
+    assert.match(populateFn, /syncCombinedSelector\(\)/);
+    assert.doesNotMatch(populateFn, /combinedSel|colonyList\(\)\.forEach/);
   });
 
   it('sets both destinations together and returns to expert split mode when either selector changes', () => {
@@ -85,7 +80,7 @@ describe('production-only options and Apartment exclusion', () => {
 
   it('never offers Apartment in refinement, production, or combined selectors', () => {
     const populateFn = core.slice(core.indexOf('function populateDestinations('), core.indexOf('function getDestination('));
-    for (const selectorVar of ['refineSel', 'sel', 'combinedSel']) {
+    for (const selectorVar of ['refineSel', 'sel']) {
       const block = populateFn.slice(populateFn.indexOf(`const ${selectorVar} =`) > -1 ? populateFn.indexOf(`const ${selectorVar} =`) : 0);
       assert.doesNotMatch(populateFn, new RegExp(`${selectorVar}[^;]*'apartment'`, 'i'));
     }
@@ -123,11 +118,20 @@ function makeSelect(id) {
   return sel;
 }
 
+function makeToggle(id) {
+  return {
+    id, textContent: 'Same location: Off', title: '', attributes: {},
+    classList: { toggle() {} },
+    setAttribute(name, value) { this.attributes[name] = String(value); },
+    getAttribute(name) { return this.attributes[name] ?? null; },
+  };
+}
+
 function loadCore(localStorageData) {
   const elements = {
     'calc-dest': makeSelect('calc-dest'),
     'calc-refine-dest': makeSelect('calc-refine-dest'),
-    'calc-combined-dest': makeSelect('calc-combined-dest'),
+    'calc-combined-dest': makeToggle('calc-combined-dest'),
   };
   const storage = { data: { ...localStorageData }, getItem(k) { return this.data[k] ?? null; }, setItem(k, v) { this.data[k] = String(v); } };
   const sandbox = {
@@ -161,30 +165,28 @@ describe('combined-mode runtime', () => {
     ctx = loadCore({});
   });
 
-  it('populates refinement and production selectors refinement-first with production-only combined options', () => {
+  it('populates refinement and production selectors refinement-first and starts the toggle off', () => {
     ctx.context.populateDestinations();
     const prodOptions = ctx.elements['calc-dest'].options.map(o => o.value);
     assert.deepEqual(prodOptions, finalDestinations);
-    const combinedOptions = ctx.elements['calc-combined-dest'].options.map(o => o.value);
-    // A leading empty placeholder keeps a split expert state from displaying as
-    // a production colony in the convenience selector.
-    assert.deepEqual(combinedOptions, ['', ...finalDestinations]);
-    assert.ok(!combinedOptions.includes('apartment'));
+    assert.equal(ctx.elements['calc-combined-dest'].attributes['aria-pressed'], 'false');
+    assert.equal(ctx.elements['calc-combined-dest'].textContent, 'Same location: Off');
     assert.ok(!prodOptions.includes('apartment'));
     assert.ok(!ctx.elements['calc-refine-dest'].options.map(o => o.value).includes('apartment'));
   });
 
-  it('combined selection sets both destinations together', () => {
+  it('turning the combined toggle on sets both destinations together', () => {
     ctx.context.populateDestinations();
-    ctx.elements['calc-combined-dest'].value = 'Paris';
+    ctx.elements['calc-dest'].value = 'Paris';
     ctx.context.setCombinedDestination();
     assert.equal(ctx.elements['calc-refine-dest'].value, 'Paris');
     assert.equal(ctx.elements['calc-dest'].value, 'Paris');
+    assert.equal(ctx.elements['calc-combined-dest'].attributes['aria-pressed'], 'true');
   });
 
   it('switching the production selector after combined mode returns to expert split and keeps refinement', () => {
     ctx.context.populateDestinations();
-    ctx.elements['calc-combined-dest'].value = 'Paris';
+    ctx.elements['calc-dest'].value = 'Paris';
     ctx.context.setCombinedDestination();
     // user now changes the production selector directly
     ctx.elements['calc-dest'].value = 'Tokyo';
@@ -202,9 +204,8 @@ describe('combined-mode runtime', () => {
 
   it('keeps an explicit expert refinement choice through combined round-trip and back', () => {
     const c = loadCore({ cmg_destination: 'Berlin', cmg_refine_destination: "DeMorgan's Castle" });
-    c.context.setCombinedDestination && c.elements['calc-combined-dest'];
     // simulate: user enters combined mode at Paris, then leaves it via production change
-    c.elements['calc-combined-dest'].value = 'Paris';
+    c.elements['calc-dest'].value = 'Paris';
     c.context.setCombinedDestination();
     c.elements['calc-dest'].value = 'Tokyo';
     c.context.exitCombinedMode();
