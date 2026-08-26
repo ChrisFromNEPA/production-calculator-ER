@@ -31,18 +31,19 @@ function slotRuntime(saved = null) {
 describe('shared energy and cooling slot model', () => {
   it('keeps the shared slot guidance aligned with the level model and costs', () => {
     const index = readFileSync(join(root, 'index.html'), 'utf8');
-    assert.match(index, /Energy<\/b> and <b>cooling<\/b> both run 1[–-]20/);
-    assert.match(index, /recommended default is <b>15 energy, 15 cooling<\/b>/);
+    assert.match(index, /energy in <strong>levels 1[–-]20<\/strong> and cooling to <strong>off or levels 1[–-]20<\/strong>/);
+    assert.match(index, /<b>Energy<\/b> runs 1[–-]20 and <b>cooling<\/b> is <b>off<\/b> or runs 1[–-]20/);
+    assert.match(index, /recommended default is <strong>15 energy, 15 cooling<\/strong>/);
     assert.match(index, /1\.5 UC<\/b> per energy level and <b>1 UC/);
     assert.match(index, /mining, refinement, and production/);
-    assert.doesNotMatch(index, /Energy<\/b> runs 1[–-]21 and <b>cooling<\/b> 0[–-]21/);
+    assert.doesNotMatch(index, /<b>Energy<\/b> and <b>cooling<\/b> both run 1[–-]20/);
   });
 
   it('uses levels 1 through 20 and defaults both settings to level 15', () => {
     const slots = slotRuntime();
     assert.equal(JSON.stringify(slots.values()), JSON.stringify([15, 15]));
     assert.equal(slots.clampEnergy(0), 1);
-    assert.equal(slots.clampCooling(0), 1);
+    assert.equal(slots.clampCooling(0), 0);
     assert.equal(slots.clampEnergy(21), 20);
     assert.equal(slots.clampCooling(21), 20);
   });

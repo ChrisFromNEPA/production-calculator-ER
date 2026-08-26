@@ -742,17 +742,12 @@ function seedRemoteColonies() {
 }
 
 // ── Energy & cooling ───────────────────────────────────────────────────────
-// The in-game panel shows both dials as 0%–100% over 22 notches, and the client
-// (costs/calc.txt) does raw += energy * 0.01*30 + cooling * 0.01*20. That 0.01
-// is a percent→fraction conversion, so those variables hold the PERCENTAGE, not
-// the notch index: full energy adds 30 UC and full cooling 20, for 50 UC a batch
-// at max. A flat amount either way, so it dominates a cheap material and barely
-// registers on a gun.
-// Both in-game dials have twenty one-based levels. A slot cannot be run at
-// zero energy, and cooling uses the same level scale rather than an on/off
-// exception.
+// The in-game panel shows 22 visual lines, but the controls have 20 active
+// levels. The client cost constants work out to 1.5 UC per heat/energy level
+// and 1 UC per cooling level. Cooling 0 is a valid off setting; levels 1–20
+// are the active cooling range.
 const MAX_LEVEL = 20;
-const MIN_ENERGY = 1, MIN_COOLING = 1;
+const MIN_ENERGY = 1, MIN_COOLING = 0;
 const ENERGY_UC_AT_FULL = 30;
 const COOLING_UC_AT_FULL = 20;
 // The recommended starting point is five clicks below maximum. Explicit saved
@@ -817,7 +812,9 @@ function driftParams(base, loc) {
   const rate = (typeof COLONY_TAX[loc] === 'number' ? COLONY_TAX[loc] : 0);
   if (rate > 10) raw -= (rate - 10) * (raw * 0.25 / 90);
   const tax = Math.floor(0.01 * raw * rate);
-  const effStart = Math.round(raw);
+  // The client truncates the raw cost when it seeds the displayed charge.
+  // This is why 57 + 7.5 starts at 64 rather than 65 in the observed trace.
+  const effStart = Math.trunc(raw);
   const period = 360 / effStart;
   const delay = Math.round(period * period / 4.05);
   // whether the phase-2 step drops one cost unit or two
@@ -837,14 +834,16 @@ function driftParams(base, loc) {
 const MAX_BATCH = 100;
 
 // Cost of one batch of `n` (n <= MAX_BATCH) from a cold start.
+function cycleCost(p, i) {
+  const eff = i <= p.delay ? p.effStart : p.ep2Start * (1 - (i - p.delay) / 360);
+  // Floor at zero: the linear drift would go negative eventually, which is
+  // further than calc.txt models — and the 100 cap means it never gets there.
+  return Math.max(0, Math.trunc(eff)) + p.tax;
+}
+
 function batchCost(p, n) {
   let total = 0;
-  for (let i = 0; i < n; i++) {
-    const eff = i <= p.delay ? p.effStart : p.ep2Start * (1 - (i - p.delay) / 360);
-    // Floor at zero: the linear drift would go negative eventually, which is
-    // further than calc.txt models — and the 100 cap means it never gets there.
-    total += Math.max(0, Math.trunc(eff)) + p.tax;
-  }
+  for (let i = 0; i < n; i++) total += cycleCost(p, i);
   return total;
 }
 
