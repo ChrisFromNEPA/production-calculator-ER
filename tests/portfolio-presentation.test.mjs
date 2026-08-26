@@ -60,8 +60,9 @@ describe('employer-facing public presentation', () => {
       '## Usage',
       '## Privacy and data storage',
       '## Known limitations and roadmap',
-      '## Contributing, license, and disclaimer',
+      '## License and asset notice',
     ]) assert.match(readme, new RegExp(`^${heading}$`, 'm'));
+    assert.match(readme, /releases\/tag\/v1\.3\.0/);
     assert.match(readme, /docs\/assets\/calculator-sample\.png/);
     assert.match(readme, /npm run check/);
     assert.match(readme, /npm run test:browser-ux/);

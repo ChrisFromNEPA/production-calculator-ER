@@ -4,6 +4,8 @@
 
 [**Open the live calculator →**](https://chrisfromnepa.github.io/production-calculator-ER/)
 
+[**Latest release: v1.3.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0)
+
 [![CI](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml)
 [![GitHub Pages](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
@@ -384,9 +386,7 @@ GitHub Actions builds the public artifact from a clean checkout and deploys only
 
 A release is not considered verified merely because a push succeeded. The exact commit must pass CI and CodeQL, complete the Pages deployment, and be checked on the live site. Deployment evidence is maintained in [docs/release-qa.md](docs/release-qa.md).
 
-## Contributing, license, and disclaimer
-
-Contributions should preserve the local-first boundary and include reproducible verification. See [CONTRIBUTING.md](CONTRIBUTING.md) for the focused-change, data-provenance, privacy, and testing expectations.
+## License and asset notice
 
 This is an independent community project and is not officially affiliated with, sponsored by, or endorsed by the Empire Rising development team or publisher.
 
