@@ -49,15 +49,17 @@ function normalizePlayerState(state) {
   const players = source.players && typeof source.players === 'object' ? source.players : {};
   const profiles = source.profiles && typeof source.profiles === 'object' ? source.profiles : {};
   const migratedProfiles = {};
+  const normalizedPlayers = {};
   Object.keys(players).forEach(name => {
     const profile = profiles[name] && typeof profiles[name] === 'object' ? profiles[name] : {};
+    normalizedPlayers[name] = Array.isArray(players[name]) ? players[name] : [];
     migratedProfiles[name] = { faction: normalizeFaction(profile.faction) };
   });
   return {
     ...source,
     schema_version: PLAYER_SCHEMA_VERSION,
     active: typeof source.active === 'string' ? source.active : '',
-    players,
+    players: normalizedPlayers,
     profiles: migratedProfiles,
   };
 }

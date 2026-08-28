@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const DIRECT_HASH_ROUTES = new Set(['calc', 'inventory', 'gear', 'colonies', 'battle', 'models', 'drugs', 'community']);
+const DIRECT_HASH_ROUTES = new Set(['calc', 'inventory', 'gear', 'colonies', 'battle', 'models', 'drugs', 'patch-changes', 'community']);
 
 function parsePublicHashRoute() {
   const raw = String(location.hash || '').slice(1).split('?')[0].trim().toLowerCase();
@@ -651,6 +651,9 @@ document.addEventListener('DOMContentLoaded', () => {
     PLAYERS.profiles = PLAYERS.profiles || {};
     PLAYERS.profiles[name] = { faction: onboardingFaction?.value || 'UNAFFILIATED' };
     PLAYERS.active = name; savePlayers(PLAYERS); recomputeInv(); refreshAll();
+    // A gated direct route (for example #patch-changes) was held on the
+    // onboarding screen, so its once-only view hook may already have passed.
+    if (location.hash === '#patch-changes') window.initPatchChanges?.();
     document.getElementById('picker-search')?.focus();
     toast(`Welcome, ${name}. Choose an item to plan your first run.`, 4000, 'success');
   });
@@ -678,6 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerRemoveArmed = null;
     btn.textContent = '− Remove';
     delete PLAYERS.players[name];
+    delete PLAYERS.profiles?.[name];
     delete SHARED_INV[name];
     if (PLAYERS.active === name) PLAYERS.active = Object.keys(PLAYERS.players)[0] || '';
     savePlayersLocal(PLAYERS);
@@ -1142,6 +1146,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Inventory tab: refresh on enter
+  // Patch Changes tab: proposed balance preview
+  registerViewHook({ view: 'patch-changes', once: true, fn: initPatchChanges });
+  // Direct hash routes are resolved before hooks are registered.
+  if (location.hash === '#patch-changes' && S.isProfileComplete?.(PLAYERS.active, PLAYERS.profiles?.[PLAYERS.active]?.faction)) initPatchChanges();
   // Inventory tab: refresh on enter (handles player switches)
   registerViewHook({ view: 'inventory', enter: refreshInventoryUI });
   // Models tab: load manifest + init viewer on first visit

@@ -44,6 +44,17 @@ describe('faction-aware local player profiles', () => {
     assert.equal(fresh.profiles.Miner.faction, 'UNAFFILIATED');
   });
 
+  it('repairs malformed persisted player inventories instead of crashing', () => {
+    localStorage.setItem('cmg_players_v1', JSON.stringify({
+      active: 'Broken',
+      players: { Broken: { corrupt: true }, Empty: null, Valid: [{ item: 'coal', location: 'A', quantity: 2 }] },
+    }));
+    const fresh = STORE.loadPlayers();
+    assert.deepEqual(fresh.players.Broken, []);
+    assert.deepEqual(fresh.players.Empty, []);
+    assert.deepEqual(fresh.players.Valid, [{ item: 'coal', location: 'A', quantity: 2 }]);
+  });
+
   it('persists and retrieves the active player faction', () => {
     STORE.PLAYERS.players = { Miner: [] };
     STORE.PLAYERS.profiles = { Miner: { faction: 'UNAFFILIATED' } };
