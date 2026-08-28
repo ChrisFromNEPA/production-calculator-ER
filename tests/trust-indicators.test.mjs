@@ -137,7 +137,7 @@ describe('shell contract for the indicators', () => {
   });
 
   it('keeps the shell precache honest about its own version', () => {
-    assert.match(sw, /const CACHE\s*=\s*['"]er-v0\.2\.38['"]/);
+    assert.match(sw, /const CACHE\s*=\s*['"]er-v0\.2\.39['"]/);
     assert.match(sw, /'\.\/src\/ui\/trust-indicators\.js'/);
   });
 

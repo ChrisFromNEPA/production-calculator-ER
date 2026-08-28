@@ -1406,9 +1406,13 @@ function renderCalcPaths() {
             var reasonHtml = isRecommended
               ? '<span class="calc-path-reason">Recommended because this is the lowest estimated cost</span>'
               : '<span class="calc-path-reason">Alternative material path</span>';
+            // aria-checked must mirror the live checked state — a native radio
+            // whose checked attribute is rendered stale reads as nothing
+            // selected to assistive tech even when the plan uses this path.
             return '<label class="calc-path-option' + (isSelected ? ' selected' : '') + (isRecommended ? ' recommended' : '') + '">' +
               '<input type="radio" name="refinement-' + encodeURIComponent(p.item) + '" data-alt="' + encodeURIComponent(p.item) + '" value="' + i + '"' +
-                (isSelected ? ' checked aria-checked="true"' : ' aria-checked="false"') +
+                (isSelected ? ' checked' : '') +
+                ' aria-checked="' + (isSelected ? 'true' : 'false') + '"' +
                 ' aria-label="Path ' + (i + 1) + ' for ' + esc(p.item) + ': ' + desc + '">' +
               '<span class="calc-path-option-body"><span class="calc-path-option-head"><b>Path ' + (i + 1) + '</b>' +
                 (isSelected ? '<span class="calc-path-selected">Selected</span>' : '<span class="calc-path-not-selected">Not selected</span>') +
@@ -2038,9 +2042,8 @@ function runMultiPlan(options) {
   html += planSection('manufacture', 2, 'Manufacture at ' + esc(DESTINATION), mManufacture);
   html += renderMiningPanel(plan);
 
-  out.innerHTML = html;
   if (CALC_TRAY.length) {
-    out.innerHTML += `<div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>${planApplied
+    html += `<div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>${planApplied
       ? `<button class="apply-plan applied" disabled title="Applied. Press Build combined plan again to plan another run.">✓ Applied to inventory</button>`
       : `<button class="apply-plan primary" id="apply-multi">Apply combined plan → inventory</button>`}
     <div class="plan-actions">
@@ -2054,6 +2057,11 @@ function runMultiPlan(options) {
       <span class="legend-chip legend-surplus"></span> Batch surplus
     </div>`;
   }
+  // One assignment, not `innerHTML +=`: each += re-parses EVERYTHING rendered
+  // so far, which restarted every card-in/mat-bar-grow animation (the whole
+  // plan visibly re-faded) and handed back fresh node references for the
+  // nodes syncApplyPlanReadiness() and markDoneSections() then query.
+  out.innerHTML = html;
   markDoneSections(out);
   syncColonyWorkGroupStates(out);
   syncApplyPlanReadiness();

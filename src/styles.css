@@ -251,6 +251,11 @@ body::after {
     transition-duration: 0s !important;
   }
   body::before, body::after { display: none; }
+  /* 0s card-in with `both` fill kept every plan card at opacity 0 for a frame
+     and could leave flicker on slow paints; drop the entrance entirely. */
+  .calc-result .flow-card, .calc-result .recipe-card, .calc-result .kpi-tile,
+  .calc-result .cost-panel, .calc-multi .flow-card, .calc-multi .recipe-card,
+  .calc-multi .kpi-tile, .calc-multi .cost-panel { animation: none; }
 }
 
 /* =====================================================================
@@ -1072,7 +1077,14 @@ tr td:first-child { white-space: nowrap; }
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.flow-card, .recipe-card, .section, .stat-card, .kpi-tile, .cost-panel {
+/* Entrance animation belongs to plan BUILDS, not to every internal re-render:
+   it used to fire on .section too, so toggling a section folded, ticking a
+   checkbox, or any in-place refresh re-faded the whole checklist. Scope it to
+   the containers that are replaced wholesale by a calculation, and pause it
+   for reduced-motion users (the keyframes above stay for the hover states). */
+.calc-result .flow-card, .calc-result .recipe-card, .calc-result .kpi-tile,
+.calc-result .cost-panel, .calc-multi .flow-card, .calc-multi .recipe-card,
+.calc-multi .kpi-tile, .calc-multi .cost-panel {
   animation: card-in .3s ease both;
 }
 .stagger-0 { animation-delay: 0s; }
@@ -1199,7 +1211,7 @@ tr td:first-child { white-space: nowrap; }
 .flow-card.get {
   border-left: 2px solid var(--accent-dim);
   box-shadow: inset 2px 0 6px -2px rgba(255,45,149,.12);
-  display: flex; align-items: flex-start; gap: 0.15rem; min-width: 0;
+  display: flex; align-items: flex-start; gap: 0.5rem; min-width: 0;
 }
 .flow-card-body { flex: 1 1 auto; min-width: 0; }
 .flow-card.get .transport-check { margin-top: 0.15rem; }
@@ -1229,13 +1241,15 @@ tr td:first-child { white-space: nowrap; }
   padding: 0.15rem 0.45rem; cursor: pointer;
   transition: border-color .12s, color .12s, background .12s, box-shadow .12s;
 }
-.mine-pick:hover { border-color: var(--accent-dim); color: var(--text); }
+.mine-pick:hover { border-color: var(--accent-dim); color: var(--text); box-shadow: none; transform: none; }
 .mine-pick.active {
   border-color: var(--accent); color: var(--accent-bright);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   box-shadow: 0 0 6px rgba(255,45,149,.25);
   cursor: default;
 }
+.mine-pick.active:focus-visible,
+.mine-pick.active:hover { border-color: var(--accent); }
 .mine-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .obtain-batch.progress-run {
   display: block; margin-top: 0.4rem;
@@ -1728,7 +1742,9 @@ tr td:first-child { white-space: nowrap; }
 
 .plan-summary {
   position: sticky; top: 0; z-index: 10;
-  background: rgba(13,13,26,.92);
+  /* Theme tokens, not a hardcoded dark rgba(): light/faction themes kept a
+     dark glass bar on a light page and vice versa. */
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
   border: 1px solid var(--line-bright);
   border-radius: 8px;
   padding: 0.625rem 0.875rem;
@@ -2737,6 +2753,10 @@ button.primary:hover { box-shadow: var(--glow-pink); }
 
 #calc-multi .multi-head { font-weight: 700; color: var(--accent-bright); margin: 1rem 0 0.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 8px var(--accent); }
 #calc-result.multi { display: none; }
+/* The plan containers are smooth-scrolled to the top of the viewport after a
+   calculation; without scroll-margin the sticky plan summary bar covered the
+   first card of the result it just scrolled to. */
+.calc-result, .calc-multi { scroll-margin-top: 4.5rem; }
 
 /* =====================================================================
    INVENTORY / ZONE EDITOR

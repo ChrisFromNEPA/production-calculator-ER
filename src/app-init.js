@@ -494,11 +494,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Copy shopping list (single + multi)
   function copyShoppingList() {
-    const result = CALC_TRAY.length
-      ? compute(CALC_TRAY, ALTERNATIVE_CHOICES, Object.assign({}, INV_TOTAL), null, DESTINATION, getDiscounts(), REFINE_DESTINATION).plan
-      : (() => { const item = document.getElementById('calc-item').value.trim();
-          const qty = Math.max(1, parseInt(document.getElementById('calc-qty').value,10)||1);
-          return compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, getDiscounts(), REFINE_DESTINATION).plan; })();
+    // Single-item plans MUST use compute()'s positional call shape — passing
+    // `null` for the ledger slot put qty in the alternatives position and the
+    // list silently ignored the chosen refinement paths. Reconstruct the SAME
+    // plan that is on screen, including the scratch-mode inventory override.
+    const scratch = document.getElementById('calc-scratch')?.checked;
+    let result;
+    if (CALC_TRAY.length) {
+      result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, Object.assign({}, INV_TOTAL), null, DESTINATION, getDiscounts(), REFINE_DESTINATION).plan;
+    } else {
+      const item = document.getElementById('calc-item').value.trim();
+      const qty = Math.max(1, parseInt(document.getElementById('calc-qty').value, 10) || 1);
+      if (!item || !ALL_ITEMS.has(item)) { toast('Calculate a plan first — there is nothing to copy.'); return; }
+      const STORE = window.STORE;
+      const tmpTotal = scratch ? STORE.INV_TOTAL : null;
+      const tmpLocs = scratch ? STORE.INV_LOCATIONS : null;
+      if (scratch) { STORE.INV_TOTAL = {}; STORE.INV_LOCATIONS = {}; }
+      try {
+        result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, getDiscounts(), REFINE_DESTINATION).plan;
+      } finally {
+        if (scratch) { STORE.INV_TOTAL = tmpTotal; STORE.INV_LOCATIONS = tmpLocs; }
+      }
+    }
     const lines = [];
     Object.entries(result.transport).forEach(([n,info]) => {
       lines.push(`Move ${fmt(info.qty)} ${displayName(n)} → ${info.to || REFINE_DESTINATION || DESTINATION}`);
