@@ -51,7 +51,8 @@
   <nav id="legacy-nav" role="tablist" aria-label="Main navigation">
     <button class="tab active" data-view="calc" role="tab" aria-selected="true">Calculator</button>
     <button class="tab" data-view="inventory" role="tab" aria-selected="false">Inventory</button>
-    <button class="tab" data-view="gear" role="tab" aria-selected="false">Gear</button>
+    <button class="tab" data-view="gear" role="tab" aria-selected="false">Gear 1.9</button>
+    <button class="tab" data-view="patch-changes" role="tab" aria-selected="false">Gear 1.10</button>
     <button class="tab" data-view="colonies" role="tab" aria-selected="false">Colonies</button>
     <button class="tab" data-view="drugs" role="tab" aria-selected="false">Drugs</button>
     <button class="tab" data-view="battle" role="tab" aria-selected="false">Battle Nodes</button>
@@ -71,7 +72,8 @@
         <h2 id="nav-v2-workflows">Workflows</h2>
         <button type="button" data-nav-view="calc">Calculator</button>
         <button type="button" data-nav-view="inventory">Inventory</button>
-        <button type="button" data-nav-view="gear">Gear</button>
+        <button type="button" data-nav-view="gear">Gear 1.9</button>
+        <button type="button" data-nav-view="patch-changes">Gear 1.10</button>
       </section>
       <section class="nav-v2-group" data-nav-group="operations" aria-labelledby="nav-v2-operations">
         <h2 id="nav-v2-operations">Operations</h2>
@@ -91,7 +93,8 @@
     <div id="mobile-nav-v2" class="mobile-nav-v2" aria-label="Mobile navigation">
       <button type="button" data-nav-view="calc">Calculator</button>
       <button type="button" data-nav-view="inventory">Inventory</button>
-      <button type="button" data-nav-view="gear">Gear</button>
+      <button type="button" data-nav-view="gear">Gear 1.9</button>
+      <button type="button" data-nav-view="patch-changes">Gear 1.10</button>
       <button type="button" data-nav-toggle="drawer" aria-expanded="false" aria-controls="nav-v2-drawer">More</button>
     </div>
     <div id="nav-v2-drawer" class="nav-v2-drawer" role="dialog" aria-modal="true" aria-labelledby="nav-v2-drawer-title" hidden>
@@ -102,7 +105,8 @@
       <div class="nav-v2-drawer-grid">
         <button type="button" data-nav-view="calc">Calculator</button>
         <button type="button" data-nav-view="inventory">Inventory</button>
-        <button type="button" data-nav-view="gear">Gear</button>
+        <button type="button" data-nav-view="gear">Gear 1.9</button>
+        <button type="button" data-nav-view="patch-changes">Gear 1.10</button>
         <button type="button" data-nav-view="colonies">Colonies</button>
         <button type="button" data-nav-view="battle">Battle Nodes</button>
         <button type="button" data-nav-view="models">Models / Character Studio</button>
@@ -544,6 +548,55 @@
     <div id="drug-table" class="ui-table-wrap"></div>
   </section>
 
+  <!-- PATCH CHANGES -->
+  <section id="view-patch-changes" class="view" role="tabpanel" aria-label="Patch changes">
+    <h3 class="view-title">🛡️ Gear 1.10 — Proposed Armor Patch</h3>
+    <p class="muted patch-intro">Preview of the supplied next-patch notes. Current Gear and Calculator values remain unchanged. Stat deltas are shown exactly as proposed; undocumented combat conversions are not inferred.</p>
+
+    <section class="patch-panel patch-panel-goals" aria-labelledby="patch-goals-title">
+      <div class="patch-panel-head"><div><h4 id="patch-goals-title">What do you want your build to do?</h4><p class="muted">Pick a goal to rank every armor piece and implant by how well it delivers that stat — current vs. after the patch.</p></div></div>
+      <div id="patch-goals" class="patch-goals" aria-label="Build goals"></div>
+      <div id="patch-goal-detail" hidden></div>
+    </section>
+
+    <div class="patch-summary-grid">
+      <article class="patch-summary-card"><strong>🛡️ Defense tradeoff</strong><span>Many heavy families lose Armor and Shielding while gaining Agility.</span></article>
+      <article class="patch-summary-card"><strong>❤️ Sustain tradeoff</strong><span>Hypobaric and Metabolic lose defenses but gain Health Regen.</span></article>
+      <article class="patch-summary-card"><strong>🧠 Implant change</strong><span>Resistance Amp loses 0.5 Health Regen and gains 25 Armor + 25 Shielding.</span></article>
+      <article class="patch-summary-card"><strong>🧩 Common build</strong><span>2 EC Aramid + 3 Pythica armor pieces, including gloves, with Stamina Amplification in the leg/implant slot.</span></article>
+    </div>
+
+    <section class="patch-panel" aria-labelledby="patch-build-title">
+      <div class="patch-panel-head"><div><h4 id="patch-build-title">Build planner</h4><p class="muted">Default: two EC Aramid pieces plus three Pythica pieces, including gloves, with Stamina Amplification in the mutually exclusive leg/implant slot. Add any two food/drug boosters and one healing medikit to see the complete stat picture; medical guns remain separate gun-slot items.</p></div></div>
+      <div id="patch-build"></div>
+    </section>
+
+    <section class="patch-panel" aria-labelledby="patch-browser-title">
+      <div class="patch-panel-head">
+        <div><h4 id="patch-browser-title">Gear explorer</h4><p class="muted">Browse every published item grouped by exact stat profile, or see only what the patch changes.</p></div>
+        <div class="patch-tabs" role="tablist" aria-label="Explorer mode">
+          <button type="button" class="patch-tab is-active" data-patch-tab="profiles" role="tab" aria-selected="true">Stat profiles</button>
+          <button type="button" class="patch-tab" data-patch-tab="changes" role="tab" aria-selected="false">Changed items</button>
+        </div>
+      </div>
+      <span id="patch-count" class="muted patch-count" aria-live="polite"></span>
+      <div class="patch-toolbar" aria-label="Gear explorer filters">
+        <label>Search <input id="patch-search" type="search" placeholder="family or item…" autocomplete="off" aria-label="Search gear" /></label>
+        <label>Category <select id="patch-category" aria-label="Filter by gear category"><option value="">All gear</option><option value="Armor">Armor</option><option value="Implants &amp; Electronics">Implants &amp; Electronics</option><option value="Other">Other gear</option></select></label>
+        <label>Faction <select id="patch-faction" aria-label="Filter by faction"><option value="">All factions</option></select></label>
+        <label>Weight <select id="patch-weight" aria-label="Filter by armor weight"><option value="">All weights</option><option value="Light">Light</option><option value="Heavy">Heavy</option><option value="Unclassified">Unclassified</option><option value="—">Non-armor</option></select></label>
+        <label class="patch-check"><input id="patch-numeric-only" type="checkbox" /> defensive stats only</label>
+      </div>
+      <div id="patch-group-list" class="patch-group-list" aria-live="polite"></div>
+      <div id="patch-changes-list" class="patch-changes-list" aria-live="polite" hidden></div>
+    </section>
+
+    <section class="patch-panel" aria-labelledby="patch-protection-title">
+      <div class="patch-panel-head"><div><h4 id="patch-protection-title">Protection guide</h4><p class="muted">This is the published Gear-page mapping, retained here so the stat names are easy to interpret.</p></div></div>
+      <div class="patch-protection-grid"><div><b>Stat</b><b>Protects against</b><b>Faction association</b><span>Armor</span><span>Ballistic</span><span>FDC</span><span>Shielding</span><span>Energy</span><span>VI</span><span>Endurance</span><span>Stamina</span><span>CMG</span><span>Resistance</span><span>Bio</span><span>EC</span><span>Reflection</span><span>Aura</span><span>BoS</span></div></div>
+    </section>
+  </section>
+
   <!-- BATTLE NODES -->
   <section id="view-battle" class="view" role="tabpanel" aria-label="Battle Nodes">
     <h3 class="view-title">⚔️ Faction Battle Nodes</h3>
@@ -802,10 +855,11 @@
 <script src="src/views/models.js?v=22"></script>
 <script src="src/views/character.js?v=2"></script>
 <script src="src/views/reference.js?v=10"></script>
+<script src="src/views/patch-changes.js?v=7"></script>
 <script src="src/views/gear.js?v=21"></script>
 <script src="src/views/inventory.js?v=38"></script>
 <script src="src/views/player.js?v=6"></script>
-<script src="src/app-init.js?v=53"></script>
+<script src="src/app-init.js?v=54"></script>
 <script src="src/ui/trust-indicators.js?v=1"></script>
 
 </body>

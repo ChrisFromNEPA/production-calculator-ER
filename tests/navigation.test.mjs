@@ -16,7 +16,7 @@ const groupedMarkup = html.match(/<div class="nav-v2-groups">([\s\S]*?)<div id="
 const groupedViews = [...groupedMarkup.matchAll(/data-nav-view="([^"]+)"/g)].map(m => m[1]);
 
 const expectedGroups = {
-  workflows: ['calc', 'inventory', 'gear'],
+  workflows: ['calc', 'inventory', 'gear', 'patch-changes'],
   operations: ['colonies', 'battle', 'models'],
   reference: ['drugs'],
   culture: ['community'],

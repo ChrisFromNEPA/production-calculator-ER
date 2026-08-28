@@ -11,7 +11,7 @@ const player = readFileSync(join(root, 'src', 'views', 'player.js'), 'utf8');
 const sw = readFileSync(join(root, 'sw.js'), 'utf8');
 const pages = readFileSync(join(root, 'scripts', 'build-pages.mjs'), 'utf8');
 
-const routes = ['calc','inventory','gear','colonies','battle','models','drugs','community'];
+const routes = ['calc','inventory','gear','colonies','battle','models','drugs','patch-changes','community'];
 
 describe('all public tab contract', () => {
   it('has exactly one view section for every canonical route', () => {

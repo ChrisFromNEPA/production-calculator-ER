@@ -21,10 +21,10 @@ function unique(values) {
   return [...new Set(values)];
 }
 
-// Live 8-view topology. The app was consolidated from the 16 legacy panels
+// Live 9-view topology. The app was consolidated from the 16 legacy panels
 // captured in docs/design/ux-baseline.md to these primary views.
 const EXPECTED_VIEWS = [
-  'calc', 'inventory', 'gear', 'drugs', 'battle', 'models', 'community', 'colonies',
+  'calc', 'inventory', 'gear', 'drugs', 'patch-changes', 'battle', 'models', 'community', 'colonies',
 ].sort();
 
 describe('served layout baseline', () => {

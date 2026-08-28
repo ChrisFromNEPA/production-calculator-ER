@@ -1972,7 +1972,7 @@ window.setCMGFeatureFlag = setCMGFeatureFlag;
 
 // ---- Navigation manifest ----
 const CMG_NAV_GROUPS = Object.freeze({
-  workflows: Object.freeze(['calc', 'inventory', 'gear']),
+  workflows: Object.freeze(['calc', 'inventory', 'gear', 'patch-changes']),
   operations: Object.freeze(['colonies', 'battle', 'models']),
   reference: Object.freeze(['drugs']),
   culture: Object.freeze(['community']),
