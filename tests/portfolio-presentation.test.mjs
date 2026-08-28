@@ -42,7 +42,7 @@ describe('employer-facing public presentation', () => {
   it('keeps the portfolio screenshot in the Pages artifact and the service-worker version current', () => {
     assert.equal(existsSync(join(root, 'docs/assets/calculator-sample.png')), true);
     assert.match(buildPages, /docs\/assets\/calculator-sample\.png/);
-    assert.match(sw, /const CACHE = 'er-v0\.2\.39'/);
+    assert.match(sw, /const CACHE = 'er-v0\.2\.40'/);
   });
 
   it('keeps the project intro bounded and usable at mobile widths', () => {

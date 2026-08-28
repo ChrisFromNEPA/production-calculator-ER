@@ -107,6 +107,7 @@
 .patch-goal-icon { font-size: 1.1rem; }
 .patch-goal b { font-size: .84rem; }
 .patch-goal > span:not(.patch-goal-stats):not(.patch-goal-icon) { color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.patch-goal-formula { color: var(--accent-bright); font-size: .65rem; font-weight: 700; line-height: 1.35; }
 .patch-goal-stats { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .15rem; }
 .patch-goal-detail, #patch-goal-detail { margin-top: .9rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 .patch-goal-brief { margin: 0 0 .7rem; }
@@ -124,7 +125,7 @@
 .patch-goalbar { display: flex; align-items: center; gap: .55rem; min-width: 0; }
 .patch-goalbar-track { flex: 1 1 auto; min-width: 4rem; height: .5rem; border-radius: 999px; background: color-mix(in srgb, var(--line) 55%, transparent); overflow: hidden; }
 .patch-goalbar-track i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent-dim), var(--accent-bright)); }
-.patch-goalbar-num { flex: 0 0 auto; font-size: .72rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.patch-goalbar-num { flex: 0 1 auto; max-width: 18rem; font-size: .72rem; color: var(--muted); line-height: 1.35; white-space: normal; font-variant-numeric: tabular-nums; }
 .patch-goalbar-num b { color: var(--text); }
 
 /* Summary cards */
@@ -139,6 +140,7 @@
 .patch-chip b { color: var(--muted); font-weight: 500; }
 .patch-chip-empty { color: var(--muted); font-style: italic; }
 .patch-goalchip b { color: var(--text); font-weight: 700; }
+.patch-goalchip-formula { color: var(--muted); font-size: .64rem; }
 .patch-delta-chip { font-style: normal; font-size: .66rem; font-weight: 800; border-radius: 4px; padding: .04rem .3rem; margin-left: .15rem; }
 .patch-delta-chip.is-up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
 .patch-delta-chip.is-down { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
@@ -156,9 +158,9 @@
 
 /* Build planner */
 .patch-build-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
-.patch-build-slots label { display: grid; gap: .28rem; color: var(--muted); font-size: .74rem; }
-.patch-build-slots label > span { display: inline-flex; align-items: center; gap: .35rem; }
-.patch-build-slots select { min-width: 0; }
+.patch-build-slots label { display: grid; gap: .28rem; min-width: 0; color: var(--muted); font-size: .74rem; }
+.patch-build-slots label > span { display: flex; align-items: center; gap: .35rem; min-height: 1.45rem; flex-wrap: wrap; }
+.patch-build-slots select { width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .patch-build-goals { display: flex; flex-wrap: wrap; gap: .45rem; margin: .8rem 0 0; }
 .patch-callout { border-left: 3px solid var(--accent); padding: .6rem .75rem; margin: .8rem 0 0; background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--text); font-size: .78rem; line-height: 1.5; border-radius: 0 7px 7px 0; }
 .patch-callout strong { color: var(--accent-bright); }
@@ -186,6 +188,8 @@
 .patch-card p { margin: .25rem 0 0; font-size: .7rem; color: var(--muted); }
 .patch-badge { align-self: start; color: var(--accent-bright); font-size: .62rem; font-weight: 700; text-align: right; text-transform: uppercase; letter-spacing: .04em; }
 .patch-deltas { margin-top: .6rem; }
+.patch-delta-head, .patch-delta { display: grid; grid-template-columns: 1.5fr .65fr .35fr .65fr .65fr; gap: .35rem; align-items: center; min-width: 0; }
+.patch-delta-head { padding: 0 0 .25rem; color: var(--muted); font-size: .64rem; text-transform: uppercase; letter-spacing: .04em; }
 .patch-delta { display: grid; grid-template-columns: 1.5fr .65fr .35fr .65fr .65fr; gap: .35rem; align-items: center; padding: .24rem 0; font-size: .74rem; font-variant-numeric: tabular-nums; border-bottom: 1px dashed color-mix(in srgb, var(--line) 70%, transparent); }
 .patch-delta:last-child { border-bottom: 0; }
 .patch-delta span:nth-child(2), .patch-delta b, .patch-delta strong { text-align: right; }
@@ -225,6 +229,7 @@
   .patch-goals { grid-template-columns: repeat(2, 1fr); }
   .patch-ranking-row { grid-template-columns: 1.7rem minmax(0, 1fr); grid-auto-rows: auto; }
   .patch-ranking-row .patch-goalbar, .patch-ranking-row .patch-delta-chip { grid-column: 2; }
+  .patch-goalbar-num { max-width: none; }
 }
 @media (max-width: 600px) {
   .patch-summary-grid, .patch-build-slots, .patch-toolbar, .patch-goals { grid-template-columns: 1fr; }

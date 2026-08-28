@@ -476,7 +476,7 @@ function showGearPicker(slotName, armorType) {
   const IMPLANT_SLOTS = {
     ShoulderPads: ['Shoulder Lamp'],
     LegPads: ['Resistance Amp'],
-    TorsoArmor: ['Stamina Amplification'],
+    TorsoArmor: ['Stamina Amplification', 'Shield Implant'],
   };
   let items;
   if (slotType === 'armor') {

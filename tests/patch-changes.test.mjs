@@ -20,7 +20,7 @@ describe('proposed patch changes tab', () => {
     assert.match(html, /id="view-patch-changes"/);
     assert.match(html, /data-view="patch-changes"/);
     assert.match(html, /data-nav-view="patch-changes"/);
-    assert.match(html, /src="src\/views\/patch-changes\.js\?v=7"/);
+    assert.match(html, /src="src\/views\/patch-changes\.js\?v=11"/);
     assert.match(html, /id="patch-group-list"/);
     assert.match(html, /id="patch-build"/);
     assert.match(readFileSync(join(root, 'src', 'app-init.js'), 'utf8'), /patch-changes/);
@@ -98,12 +98,17 @@ describe('proposed patch changes tab', () => {
     const items = [
       { name: 'Locans Patrol Helmet', stats: {} },
       { name: 'Aramid Basic Helmet', stats: {} },
+      { name: 'Aramid Basic Torso Armor', stats: {} },
+      { name: 'Aramid Basic Leg Pads', stats: {} },
       { name: 'Scanner Implant', stats: {} },
       { name: 'Stamina Amplification', stats: {} },
+      { name: 'Shield Implant', stats: {} },
+      { name: 'Resistance Amp', stats: {} },
     ];
-    const recipes = items.map(item => ({ output: { item: item.name, category: item.name.includes('Implant') || item.name.includes('Amplification') ? 'Implants & Electronics' : 'Armor', stats: item.stats }, _armor_type: item.name.includes('Helmet') ? 'Helmet' : undefined }));
+    const recipes = items.map(item => ({ output: { item: item.name, category: /Implant|Amplification|Resistance Amp/.test(item.name) ? 'Implants & Electronics' : 'Armor', stats: item.stats }, _armor_type: item.name.includes('Helmet') ? 'Helmet' : item.name.includes('Torso') ? 'Torso' : item.name.includes('Leg Pads') ? 'LegPads' : undefined }));
     assert.deepEqual(buildCandidates('Helmet', items, recipes), ['Aramid Basic Helmet', 'Locans Patrol Helmet']);
-    assert.deepEqual(buildCandidates('Leg / implant slot', items, recipes), ['Scanner Implant', 'Stamina Amplification']);
+    assert.deepEqual(buildCandidates('Chest / implant slot', items, recipes), ['Aramid Basic Torso Armor', 'Shield Implant', 'Stamina Amplification']);
+    assert.deepEqual(buildCandidates('Leg / implant slot', items, recipes), ['Aramid Basic Leg Pads', 'Resistance Amp']);
     const consumables = [
       { name: 'Combat Booster', stats: {} }, { name: 'Standard Medikit', stats: {} }, { name: 'CryoTech Medigun CM2', stats: {} },
     ];
@@ -115,5 +120,23 @@ describe('proposed patch changes tab', () => {
   it('uses the shared item icon renderer for gear summaries', () => {
     const { renderGearIcon } = api();
     assert.match(renderGearIcon('Aramid Basic Helmet'), /Aramid Basic Helmet/);
+  });
+
+  it('maps implants to their real occupied armor slots', () => {
+    const { recordMeta } = api();
+    assert.equal(recordMeta({ item: { name: 'Stamina Amplification' }, category: 'Implants & Electronics' }).slot, 'Chest / implant slot');
+    assert.equal(recordMeta({ item: { name: 'Shield Implant' }, category: 'Implants & Electronics' }).slot, 'Chest / implant slot');
+    assert.equal(recordMeta({ item: { name: 'Resistance Amp' }, category: 'Implants & Electronics' }).slot, 'Leg / implant slot');
+  });
+
+  it('labels current and proposed values and avoids an unexplained arrow for no change', () => {
+    const { comparisonText } = api();
+    assert.equal(comparisonText(20, 25), 'Current 20 → Proposed 25');
+    assert.equal(comparisonText(20, 20), 'Current 20 · Proposed 20 · Unchanged');
+  });
+
+  it('memoizes the real-data index used by interactive renders', () => {
+    const { dataIndex } = api();
+    assert.equal(dataIndex(), dataIndex());
   });
 });

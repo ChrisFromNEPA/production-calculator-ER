@@ -19,6 +19,12 @@ describe('surviving tab runtime dependencies', () => {
     assert.match(sw, /\.\/src\/views\/reference\.js/);
   });
 
+  it('precaches the Gear 1.9 and Gear 1.10 view modules', () => {
+    assert.match(html, /<script src="src\/views\/patch-changes\.js\?v=\d+"><\/script>/);
+    assert.match(sw, /\.\/src\/views\/gear\.js/);
+    assert.match(sw, /\.\/src\/views\/patch-changes\.js/);
+  });
+
   it('does not expose an empty More navigation control', () => {
     const menu = html.match(/<nav id="nav-more-menu"[\s\S]*?<\/nav>/)?.[0] || '';
     const hasEntries = /class="tab"/.test(menu);

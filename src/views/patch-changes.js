@@ -44,14 +44,23 @@
   /* Build goals: the practical question "what should this gear do for me?".
    * `weight` turns a stat block into one comparable goal score. */
   const GOALS = [
-    { id: 'armor', icon: '🛡️', label: 'Armor protection', blurb: 'Soak ballistic and energy hits', stats: ['Armor', 'Shielding'], weight: { armor: 1, shielding: 1 } },
-    { id: 'stamina', icon: '⚡', label: 'Stamina sustain', blurb: 'Sprint and swing longer', stats: ['Endurance', 'Stamina Regen'], weight: { endurance: 1, staminaregen: 20 } },
-    { id: 'hp-regen', icon: '❤️', label: 'Health regen', blurb: 'Heal between fights without meds', stats: ['Health Regen'], weight: { healthregen: 40 } },
-    { id: 'bio-regen', icon: '🧬', label: 'Bio regen', blurb: 'Push the Bio Regen breakpoint', stats: ['Bio Regen'], weight: { bioregen: 40 } },
-    { id: 'mobility', icon: '🏃', label: 'Mobility', blurb: 'Keep Agility positive for fast movement', stats: ['Agility'], weight: { agility: 10 } },
+    { id: 'armor', icon: '🛡️', label: 'Armor protection', blurb: 'Soak ballistic and energy hits', formula: 'Armor + Shielding', stats: ['Armor', 'Shielding'], weight: { armor: 1, shielding: 1 } },
+    { id: 'stamina', icon: '⚡', label: 'Stamina sustain', blurb: 'Sprint and swing longer', formula: 'Endurance + (Stamina Regen × 20)', stats: ['Endurance', 'Stamina Regen'], weight: { endurance: 1, staminaregen: 20 } },
+    { id: 'hp-regen', icon: '❤️', label: 'Health regen', blurb: 'Heal between fights without meds', formula: 'Health Regen × 40', stats: ['Health Regen'], weight: { healthregen: 40 } },
+    { id: 'bio-regen', icon: '🧬', label: 'Bio regen', blurb: 'Push the Bio Regen breakpoint', formula: 'Bio Regen × 40', stats: ['Bio Regen'], weight: { bioregen: 40 } },
+    { id: 'mobility', icon: '🏃', label: 'Mobility', blurb: 'Keep Agility positive for fast movement', formula: 'Agility × 10', stats: ['Agility'], weight: { agility: 10 } },
   ];
 
   const state = { goal: null, tab: 'profiles' };
+  let profileRenderTimer = null;
+  let explorerRenderTimer = null;
+  const IMPLANT_SLOTS = Object.freeze({
+    'Shoulder Lamp': 'Shoulder Pads',
+    'Stamina Amplification': 'Chest / implant slot',
+    'Shield Implant': 'Chest / implant slot',
+    'Resistance Amp': 'Leg / implant slot',
+  });
+  const DATA_INDEX = { items: null, recipes: null, value: null };
 
   function cloneStats(stats) { return Object.assign({}, stats || {}); }
   function findPatchGroup(name) { return PATCH_GROUPS.find(group => group.match.test(name)); }
@@ -74,13 +83,23 @@
    * Recipe names sometimes differ from balance-sheet names (gender suffixes,
    * "Minimist" vs "Minimalist"), so reuse the recipe alias lookup. */
   function isCraftableItem(name, recipes) { return !!recipeFor(name, recipes); }
-  function allItems(items) { return (items || window.BALANCE_STATS?.items || []).map(item => applyPatch(item)); }
   function normalizeName(name) { return String(name || '').toLowerCase().replace(/\s*\((male|female)\)/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+  const RECIPE_INDEX = new WeakMap();
+  function recipeIndex(recipes) {
+    if (RECIPE_INDEX.has(recipes)) return RECIPE_INDEX.get(recipes);
+    const index = new Map();
+    (recipes || []).forEach(recipe => {
+      const key = normalizeName(recipe.output?.item);
+      if (key && !index.has(key)) index.set(key, recipe);
+    });
+    RECIPE_INDEX.set(recipes, index);
+    return index;
+  }
   function recipeFor(name, recipes) {
     const aliases = { 'infensus minimist gloves': 'infensus minimalist gloves', 'pythica sustained gloves': 'pythica sustained battle gloves' };
     const normalized = aliases[normalizeName(name)] || normalizeName(name);
     const source = Array.isArray(recipes) ? recipes : (window.GAME_DATA?.recipes || []);
-    return source.find(recipe => normalizeName(recipe.output?.item) === normalized) || null;
+    return recipeIndex(source).get(normalized) || null;
   }
   function categoryFor(record, recipes) {
     const recipe = recipeFor(record.item.name, recipes);
@@ -90,7 +109,33 @@
     if (/implant| amp\b/.test(name)) return 'Implants & Electronics';
     return 'Other';
   }
-  function allGearRecords(items) { return allItems(items).map(record => ({ ...record, category: categoryFor(record) })); }
+  function allItems(items) { return (items || window.BALANCE_STATS?.items || []).map(item => applyPatch(item)); }
+  function allGearRecords(items) {
+    if (items == null) return dataIndex().records;
+    const recipes = window.GAME_DATA?.recipes || [];
+    return allItems(items).map(record => ({ ...record, category: categoryFor(record, recipes) }));
+  }
+  function dataIndex() {
+    const items = window.BALANCE_STATS?.items || [];
+    const recipes = window.GAME_DATA?.recipes || [];
+    if (DATA_INDEX.value && DATA_INDEX.items === items && DATA_INDEX.recipes === recipes) return DATA_INDEX.value;
+    const records = allItems(items).map(record => ({ ...record, category: categoryFor(record, recipes) }));
+    const craftableRecords = records.filter(record => isCraftableItem(record.item.name, recipes));
+    const scopedRecords = craftableRecords.filter(record => record.category === 'Armor' || record.category === 'Implants & Electronics');
+    const scopedEntries = scopedRecords.map(record => ({ record, meta: recordMeta(record, recipes) }));
+    const value = {
+      items, recipes, records, craftableRecords, scopedRecords,
+      itemByName: new Map(items.map(item => [item.name, item])),
+      profileKeys: profileKeys(scopedRecords),
+      profileGroups: null,
+      scopedEntries,
+      candidateCache: new Map(),
+    };
+    DATA_INDEX.items = items;
+    DATA_INDEX.recipes = recipes;
+    DATA_INDEX.value = value;
+    return value;
+  }
   function armorFamily(name) {
     const families = window.ARMOR_CLASSES?.families || [];
     const hit = families.slice().sort((a, b) => b.prefix.length - a.prefix.length).find(f => name.indexOf(f.prefix) === 0);
@@ -114,19 +159,21 @@
   function recordMeta(record, recipes) {
     const family = armorFamily(record.item.name);
     const recipe = recipeFor(record.item.name, recipes);
+    const category = record.category || categoryFor(record, recipes);
     const type = recipe?._armor_type;
-    const slotNames = { Helmet: 'Helmet', ShoulderPads: 'Shoulder Pads', ArmPads: 'Arm Pads', Torso: 'Torso Armor', LegPads: 'Leg Pads' };
+    const slotNames = { Helmet: 'Helmet', ShoulderPads: 'Shoulder Pads', ArmPads: 'Arm Pads', Torso: 'Torso / chest slot', TorsoArmor: 'Torso / chest slot', LegPads: 'Leg / implant slot' };
     return {
-      family: family?.prefix || (record.category === 'Implants & Electronics' ? 'Implant' : 'Other'),
-      faction: recipe?._faction || family?.faction || (record.category === 'Implants & Electronics' ? 'Universal' : '—'),
-      weight: family?.weight || (record.category === 'Armor' ? 'Unclassified' : '—'),
-      slot: slotNames[type] || ARMOR_SUFFIXES.find(suffix => record.item.name.endsWith(suffix)) || (record.item.name.includes('Gloves') ? 'Gloves' : 'Implant'),
-      category: record.category || categoryFor(record, recipes),
+      family: family?.prefix || (category === 'Implants & Electronics' ? 'Implant' : 'Other'),
+      faction: recipe?._faction || family?.faction || (category === 'Implants & Electronics' ? 'Universal' : '—'),
+      weight: family?.weight || (category === 'Armor' ? 'Unclassified' : '—'),
+      slot: IMPLANT_SLOTS[record.item.name] || slotNames[type] || ARMOR_SUFFIXES.find(suffix => record.item.name.endsWith(suffix)) || (record.item.name.includes('Gloves') ? 'Gloves' : 'Implant'),
+      category,
     };
   }
   function profileKeys(records) {
+    if (!records) return dataIndex().profileKeys;
     const keys = new Set();
-    (records || allGearRecords()).forEach(record => Object.keys(record.current).forEach(key => keys.add(key)));
+    records.forEach(record => Object.keys(record.current).forEach(key => keys.add(key)));
     return [...keys].sort((a, b) => statOrderIndex(a) - statOrderIndex(b) || a.localeCompare(b));
   }
   function profileSignature(record, keys) { return (keys || profileKeys([record])).map(key => `${key}:${Number(record.current[key] || 0)}`).join('|'); }
@@ -162,6 +209,11 @@
     return Object.entries(goal.weight).reduce((sum, [key, weight]) => sum + (Number(source[key]) || 0) * weight, 0);
   }
   function goalDelta(record, goal) { return goalScore(record.proposed, goal) - goalScore(record.current, goal); }
+  function comparisonText(current, proposed) {
+    const before = formatNumber(Number(current) || 0);
+    const after = formatNumber(Number(proposed) || 0);
+    return before === after ? `Current ${before} · Proposed ${after} · Unchanged` : `Current ${before} → Proposed ${after}`;
+  }
 
   function renderProfileChips(stats, compare) {
     return profileKeys().filter(key => stats[key] !== undefined && Number(stats[key]) !== 0).map(key => {
@@ -186,15 +238,26 @@
     const faction = document.getElementById('patch-faction')?.value || '';
     const weight = document.getElementById('patch-weight')?.value || '';
     const category = document.getElementById('patch-category')?.value || '';
-    const recipes = window.GAME_DATA?.recipes || [];
-    return groupByExactStats(allGearRecords().filter(record => isCraftableItem(record.item.name, recipes))).map(group => {
+    const index = dataIndex();
+    const noFilters = !q && !faction && !weight && !category;
+    const records = noFilters
+      ? index.scopedRecords
+      : index.craftableRecords.filter(record => {
+        if (category === 'Other') return record.category === 'Other';
+        if (category && record.category !== category) return false;
+        return record.category === 'Armor' || record.category === 'Implants & Electronics';
+      });
+    const groups = noFilters
+      ? (index.profileGroups || (index.profileGroups = groupByExactStats(index.scopedRecords)))
+      : groupByExactStats(records);
+    return groups.map(group => {
       const metas = group.metas;
       const text = `${group.record.item.name} ${metas.map(meta => `${meta.family} ${meta.faction} ${meta.weight} ${meta.slot}`).join(' ')}`.toLowerCase();
       const factions = [...new Set(metas.map(meta => meta.faction))].sort();
       const weights = [...new Set(metas.map(meta => meta.weight))].sort();
       // The armor patch only touches armor and implants; keep other gear out
       // unless the user explicitly asks for it via the category filter.
-      const inScope = category === 'Other' || metas.some(meta => meta.category === 'Armor' || meta.category === 'Implants & Electronics');
+      const inScope = metas.some(meta => meta.category === 'Armor' || meta.category === 'Implants & Electronics') || category === 'Other';
       if (!inScope || (q && !text.includes(q)) || (category && !metas.some(meta => meta.category === category)) || (faction && !factions.includes(faction)) || (weight && !weights.includes(weight))) return null;
       return { ...group, factions, weights, slots: [...new Set(metas.map(meta => meta.slot))].sort() };
     }).filter(Boolean);
@@ -217,7 +280,7 @@
       const proposed = changedSample?.proposed || group.record.current;
       const tradeoffs = profileTradeoffs(group.record.current);
       const patchLabels = [...new Set(group.records.flatMap(record => record.group ? [record.group.label] : []))];
-      const goalBar = goal ? `<div class="patch-goalbar" title="${escText(goal.label)} score (after patch)"><span class="patch-goalbar-track"><i style="width:${Math.max(4, Math.round((group.score / topScore) * 100))}%"></i></span><span class="patch-goalbar-num">${formatNumber(group.scoreNow)} → <b>${formatNumber(group.score)}</b></span></div>` : '';
+      const goalBar = goal ? `<div class="patch-goalbar" title="${escText(goal.label)} score (after patch)"><span class="patch-goalbar-track"><i style="width:${Math.max(4, Math.round((group.score / topScore) * 100))}%"></i></span><span class="patch-goalbar-num">${escText(comparisonText(group.scoreNow, group.score))}</span></div>` : '';
       return `<article class="patch-profile-card${goal ? ' has-goal' : ''}">
         <div class="patch-profile-head">
           <div><h4>${escText([...new Set(group.metas.map(meta => meta.family))].sort().join(' / '))}</h4>
@@ -226,8 +289,8 @@
         </div>
         ${goalBar}
         <div class="patch-profile-stats">
-          <div><small>Current</small><div class="patch-chiprow">${renderProfileChips(group.record.current)}</div></div>
-          <div><small>After patch</small><div class="patch-chiprow">${renderProfileChips(proposed, group.record.current)}</div></div>
+          <div><small>Gear 1.9 · current</small><div class="patch-chiprow">${renderProfileChips(group.record.current)}</div></div>
+          <div><small>Gear 1.10 · proposed</small><div class="patch-chiprow">${renderProfileChips(proposed, group.record.current)}</div></div>
         </div>
         <div class="patch-pros-cons">
           <span class="patch-pros"><b>Good for</b> ${escText(tradeoffs.pros.join(', '))}</span>
@@ -240,6 +303,28 @@
       </article>`;
     }).join('') || '<p class="patch-empty">No armor profiles match these filters.</p>';
     return groups.length;
+  }
+
+  function scheduleProfileRender() {
+    if (profileRenderTimer !== null) {
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(profileRenderTimer);
+      else window.clearTimeout(profileRenderTimer);
+    }
+    const render = () => { profileRenderTimer = null; renderProfiles(); };
+    profileRenderTimer = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback(render, { timeout: 250 })
+      : window.setTimeout(render, 0);
+  }
+
+  function scheduleExplorerRender() {
+    if (explorerRenderTimer !== null) {
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(explorerRenderTimer);
+      else window.clearTimeout(explorerRenderTimer);
+    }
+    const render = () => { explorerRenderTimer = null; renderExplorer(); };
+    explorerRenderTimer = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback(render, { timeout: 250 })
+      : window.setTimeout(render, 0);
   }
 
   function renderChangeCards() {
@@ -258,7 +343,7 @@
     }).sort((a, b) => a.item.name.localeCompare(b.item.name));
     list.innerHTML = records.map(record => {
       const meta = recordMeta(record);
-      const changes = record.changes.map(change => `<div class="patch-delta"><span>${escText(statLabel(change.key))}</span><span>${formatNumber(change.before)}</span><span class="patch-arrow">→</span><b>${formatNumber(change.after)}</b><strong class="${change.delta > 0 ? 'is-up' : 'is-down'}">${signed(change.delta)}</strong></div>`).join('');
+      const changes = `<div class="patch-delta-head"><span>Stat</span><span>Gear 1.9</span><span></span><span>Gear 1.10</span><span>Delta</span></div>` + record.changes.map(change => `<div class="patch-delta"><span>${escText(statLabel(change.key))}</span><span>${formatNumber(change.before)}</span><span class="patch-arrow">→</span><b>${formatNumber(change.after)}</b><strong class="${change.delta > 0 ? 'is-up' : 'is-down'}">${signed(change.delta)}</strong></div>`).join('');
       return `<article class="patch-card">
         <div class="patch-card-head"><div><h4>${renderGearIcon(record.item.name)}${escText(record.item.name)}</h4>
         <p>${escText(meta.family)} · ${escText(meta.faction)} · ${escText(meta.weight)} · ${escText(meta.slot)}</p></div>
@@ -275,15 +360,16 @@
     const goal = GOALS.find(candidate => candidate.id === state.goal);
     if (!goal) { target.innerHTML = ''; target.hidden = true; return; }
     target.hidden = false;
-    const recipes = window.GAME_DATA?.recipes || [];
-    /* Rank craftable armor + implants per slot so one goal never returns six
-     * variations of the same slot (e.g. five helmets and one shoulder pad). */
+    const index = dataIndex();
+    /* Rank craftable armor + implants per real occupied slot so one goal
+     * never returns six variations of the same slot. */
     const ranked = [];
-    const slotOrder = ['Helmet', 'Shoulder Pads', 'Arm Pads', 'Torso Armor', 'Gloves', 'Leg Pads', 'Implant'];
+    const slotOrder = ['Helmet', 'Shoulder Pads', 'Arm Pads', 'Torso / chest slot', 'Gloves', 'Leg / implant slot'];
+    const candidateEntries = index.scopedEntries
+      .map(entry => ({ ...entry, score: goalScore(entry.record.proposed, goal), scoreNow: goalScore(entry.record.current, goal), delta: goalDelta(entry.record, goal) }))
+      .filter(entry => slotOrder.includes(entry.meta.slot));
     slotOrder.forEach(slot => {
-      const slotEntries = allGearRecords()
-        .filter(record => (record.category === 'Armor' || record.category === 'Implants & Electronics') && isCraftableItem(record.item.name, recipes))
-        .map(record => ({ record, meta: recordMeta(record), score: goalScore(record.proposed, goal), scoreNow: goalScore(record.current, goal), delta: goalDelta(record, goal) }))
+      const slotEntries = candidateEntries
         .filter(entry => entry.meta.slot === slot && (Math.abs(entry.score) > 0 || Math.abs(entry.delta) > 0))
         .sort((a, b) => b.score - a.score || b.delta - a.delta);
       if (slotEntries[0]) ranked.push(slotEntries[0]);
@@ -295,14 +381,14 @@
       ? `The patch changes this goal for ${patchImpact.length} of the top pieces: ${patchImpact.slice(0, 3).map(entry => `${escText(entry.record.item.name)} (${signed(entry.delta)})`).join(', ')}${patchImpact.length > 3 ? '…' : ''}.`
       : 'The patch does not change this goal for the current top pieces.';
     target.innerHTML = `<div class="patch-goal-brief">
-        <p class="patch-goal-lead">${goal.icon} <b>${escText(goal.label)}</b> — ${escText(goal.blurb)}. Stack ${escText(goal.stats.join(' + '))} across helmet, shoulders, arms, torso, gloves, and the leg/implant slot.</p>
+        <p class="patch-goal-lead">${goal.icon} <b>${escText(goal.label)}</b> — ${escText(goal.blurb)}. Comparison score: <b>${escText(goal.formula)}</b>. This is a ranking aid, not an in-game percentage. The list shows the best craftable option in each occupied slot.</p>
         <p class="patch-goal-impact">${impactNote}</p>
         <p class="patch-goal-note">Best piece per slot, craftable right now.</p>
       </div>
       <div class="patch-ranking">${ranked.map((entry, index) => `<div class="patch-ranking-row">          <span class="patch-rank">${index + 1}</span>
           <span class="patch-ranking-name">${renderGearIcon(entry.record.item.name)}${escText(entry.record.item.name)}<small>${escText(entry.meta.faction)} · ${escText(entry.meta.slot)}</small></span>
-          <span class="patch-goalbar" title="${escText(goal.label)} score after patch"><span class="patch-goalbar-track"><i style="width:${Math.max(4, Math.round((entry.score / topScore) * 100))}%"></i></span><span class="patch-goalbar-num">${formatNumber(entry.scoreNow)} → <b>${formatNumber(entry.score)}</b></span></span>
-          ${entry.delta !== 0 ? `<em class="patch-delta-chip ${entry.delta > 0 ? 'is-up' : 'is-down'}">${signed(entry.delta)} patch</em>` : '<em class="patch-delta-chip is-neutral">unchanged</em>'}
+          <span class="patch-goalbar" title="${escText(goal.label)} score after patch"><span class="patch-goalbar-track"><i style="width:${Math.max(4, Math.round((entry.score / topScore) * 100))}%"></i></span><span class="patch-goalbar-num">${escText(comparisonText(entry.scoreNow, entry.score))}</span></span>
+          ${entry.delta !== 0 ? `<em class="patch-delta-chip ${entry.delta > 0 ? 'is-up' : 'is-down'}">${signed(entry.delta)} patch</em>` : ''}
         </div>`).join('')}</div>`;
   }
 
@@ -313,13 +399,17 @@
         <span class="patch-goal-icon" aria-hidden="true">${goal.icon}</span>
         <b>${escText(goal.label)}</b>
         <span>${escText(goal.blurb)}</span>
+        <small class="patch-goal-formula">${escText(goal.formula)}</small>
         <span class="patch-goal-stats">${goal.stats.map(stat => `<span class="patch-chip">${escText(stat)}</span>`).join('')}</span>
       </button>`).join('');
     wrap.querySelectorAll('[data-patch-goal]').forEach(button => button.addEventListener('click', () => {
       state.goal = state.goal === button.dataset.patchGoal ? null : button.dataset.patchGoal;
       renderGoals();
       renderGoalDetail();
-      renderProfiles();
+      // The ranking above is the immediate interaction. Profile cards are
+      // below the fold and can rebuild during idle time without blocking the
+      // clicked goal's response.
+      scheduleProfileRender();
     }));
   }
 
@@ -327,9 +417,9 @@
     Helmet: 'Aramid Basic Helmet',
     'Shoulder Pads': 'Aramid Modified Shoulder Pads',
     'Arm Pads': 'Pythica Sustained Battle Arm Pads',
-    'Torso Armor': 'Pythica Durable Battle Torso Armor',
+    'Chest / implant slot': 'Stamina Amplification',
     Gloves: 'Pythica Sustained Gloves (Male)',
-    'Leg / implant slot': 'Stamina Amplification',
+    'Leg / implant slot': 'Pythica Sustained Battle Leg Pads',
     'Booster / food 1': '',
     'Booster / food 2': '',
     Medikit: '',
@@ -337,12 +427,14 @@
   let build = Object.assign({}, defaultBuild);
 
   function buildCandidates(slot) {
-    return buildCandidatesFromData(slot, allGearRecords(), window.GAME_DATA?.recipes || []);
+    const index = dataIndex();
+    if (!index.candidateCache.has(slot)) index.candidateCache.set(slot, buildCandidatesFromData(slot, index.craftableRecords, index.recipes, true));
+    return index.candidateCache.get(slot);
   }
-  function buildCandidatesFromData(slot, records, recipes) {
+  function buildCandidatesFromData(slot, records, recipes, alreadyCraftable = false) {
     const sourceRecords = records.map(record => record.item ? record : applyPatch(record))
       // Only craftable items belong in a build the player can actually assemble.
-      .filter(record => isCraftableItem(record.item.name, recipes));
+      .filter(record => alreadyCraftable || isCraftableItem(record.item.name, recipes));
     if (slot === 'Booster / food 1' || slot === 'Booster / food 2') {
       return sourceRecords.filter(record => ['Drugs', 'Food & Drink'].includes(categoryFor(record, recipes)) && !/medigun/i.test(record.item.name)).map(record => record.item.name).sort();
     }
@@ -350,9 +442,17 @@
       // Medical guns occupy a gun slot; only healing consumables belong here.
       return sourceRecords.filter(record => /medikit|biocell/i.test(record.item.name) && !/medigun/i.test(record.item.name)).map(record => record.item.name).sort();
     }
+    if (slot === 'Chest / implant slot') {
+      return sourceRecords.filter(record => {
+        const meta = recordMeta({ ...record, category: categoryFor(record, recipes) }, recipes);
+        return meta.slot === 'Torso / chest slot' || meta.slot === 'Chest / implant slot';
+      }).map(record => record.item.name).sort();
+    }
     if (slot === 'Leg / implant slot') {
-      return sourceRecords.filter(record => { const meta = recordMeta({ ...record, category: categoryFor(record, recipes) }, recipes); return meta.slot === 'Leg Pads' || meta.category === 'Implants & Electronics'; })
-        .map(record => record.item.name).sort();
+      return sourceRecords.filter(record => {
+        const meta = recordMeta({ ...record, category: categoryFor(record, recipes) }, recipes);
+        return meta.slot === 'Leg / implant slot';
+      }).map(record => record.item.name).sort();
     }
     return sourceRecords.filter(record => recordMeta({ ...record, category: categoryFor(record, recipes) }, recipes).slot === slot && categoryFor(record, recipes) === 'Armor')
       .map(record => record.item.name).sort();
@@ -360,8 +460,10 @@
 
   function buildTotal(names, proposed) {
     const total = {};
+    const itemByName = dataIndex().itemByName;
     names.forEach(name => {
-      const record = applyPatch({ name, stats: (window.BALANCE_STATS?.items || []).find(i => i.name === name)?.stats || {} });
+      const source = itemByName.get(name);
+      const record = applyPatch({ name, stats: source?.stats || {} });
       const stats = proposed ? record.proposed : record.current;
       Object.entries(stats).forEach(([key, value]) => { if (typeof value === 'number') total[key] = (total[key] || 0) + value; });
     });
@@ -380,7 +482,7 @@
       const now = goalScore(before, goal);
       const next = goalScore(after, goal);
       const delta = next - now;
-      return `<span class="patch-chip patch-goalchip" title="${escText(goal.label)} score, current → proposed"><span aria-hidden="true">${goal.icon}</span> ${escText(goal.label)} <b>${formatNumber(now)} → ${formatNumber(next)}</b>${delta !== 0 ? `<em class="patch-delta-chip ${delta > 0 ? 'is-up' : 'is-down'}">${signed(delta)}</em>` : ''}</span>`;
+      return `<span class="patch-chip patch-goalchip" title="${escText(goal.label)} — ${escText(goal.formula)}"><span aria-hidden="true">${goal.icon}</span> ${escText(goal.label)} <small class="patch-goalchip-formula">(${escText(goal.formula)})</small> <b>${escText(comparisonText(now, next))}</b>${delta !== 0 ? `<em class="patch-delta-chip ${delta > 0 ? 'is-up' : 'is-down'}">${signed(delta)} patch</em>` : ''}</span>`;
     }).join('');
     const rows = keys.map(key => {
       const delta = (after[key] || 0) - (before[key] || 0);
@@ -393,13 +495,13 @@
       return `<label><span>${renderGearIcon(selected)}${escText(label)}</span><select data-patch-slot="${escText(slot)}" aria-label="${escText(label)} build item">${options}</select></label>`;
     }).join('')}</div>
     <div class="patch-build-goals" aria-label="Build goal summary">${goalChips}</div>
-    <p class="patch-callout"><strong>Bio Regen breakpoint:</strong> this five-piece armor example totals ${formatNumber(bio)} Bio Regen before any food, drugs, medikits, or implants. The sixth slot is occupied by the selected leg/implant item. This is a stat total, not a claim about the game’s undocumented conversion formula.</p>
-    <div class="patch-build-head"><span>Stat</span><span>Current</span><span></span><span>Proposed</span><span>Change</span></div>
+    <p class="patch-callout"><strong>Recorded Bio Regen total:</strong> ${formatNumber(bio)} from this build’s selected equipment. Chest is one choice — torso armor, Stamina Amplification, or Shield Implant — and the leg slot is one choice — leg armor or Resistance Amp. These choices are mutually exclusive and this total is not a claim about the game’s undocumented conversion formula.</p>
+    <div class="patch-build-head"><span>Stat</span><span>Gear 1.9</span><span></span><span>Gear 1.10</span><span>Patch delta</span></div>
     <div class="patch-build-table">${rows}</div>`;
     root.querySelectorAll('[data-patch-slot]').forEach(select => select.addEventListener('change', event => { build[event.target.dataset.patchSlot] = event.target.value; renderBuild(); }));
   }
 
-  function renderExplorer() {
+  function renderExplorer(renderItems = true) {
     const profilesList = document.getElementById('patch-group-list');
     const changesList = document.getElementById('patch-changes-list');
     const count = document.getElementById('patch-count');
@@ -411,6 +513,10 @@
       button.classList.toggle('is-active', active);
       button.setAttribute('aria-selected', String(active));
     });
+    if (!renderItems) {
+      if (count) count.textContent = 'Loading gear profiles…';
+      return;
+    }
     const total = isProfiles ? renderProfiles() : renderChangeCards();
     if (count) {
       count.textContent = isProfiles
@@ -432,9 +538,10 @@
     renderGoals();
     renderGoalDetail();
     renderBuild();
-    renderExplorer();
+    renderExplorer(false);
+    scheduleExplorerRender();
   }
 
-  window.PATCH_CHANGES = { PATCH_GROUPS, GOALS, applyPatch, changedRecords, recordMeta, initPatchChanges, protectionMapping: PROTECTION_MAPPING, allGearRecords, groupByExactStats, renderGearIcon, buildCandidates: (slot, items, recipes) => buildCandidatesFromData(slot, items || allGearRecords(), recipes || window.GAME_DATA?.recipes || []) };
+  window.PATCH_CHANGES = { PATCH_GROUPS, GOALS, applyPatch, changedRecords, recordMeta, comparisonText, dataIndex, initPatchChanges, protectionMapping: PROTECTION_MAPPING, allGearRecords, groupByExactStats, renderGearIcon, buildCandidates: (slot, items, recipes) => buildCandidatesFromData(slot, items || allGearRecords(), recipes || window.GAME_DATA?.recipes || []) };
   window.initPatchChanges = initPatchChanges;
 })(window, document);

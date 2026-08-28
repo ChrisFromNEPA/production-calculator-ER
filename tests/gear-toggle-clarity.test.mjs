@@ -41,6 +41,11 @@ describe('gear loadout toggle clarity', () => {
     assert.ok(picker >= 0 && guide > picker && actions > guide);
   });
 
+  it('maps both chest implants to the torso/chest slot', () => {
+    assert.match(gear, /TorsoArmor:\s*\['Stamina Amplification',\s*'Shield Implant'\]/);
+    assert.match(gear, /Stamina Amp - Torso, Shield Implant - Torso/);
+  });
+
   it('gives each checkbox an accessible description and visible state', () => {
     assert.match(gear, /gear-toggle-control/);
     assert.match(gear, /gear-toggle-text/);

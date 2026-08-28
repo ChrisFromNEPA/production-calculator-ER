@@ -1,4 +1,4 @@
-const CACHE = 'er-v0.2.39';
+const CACHE = 'er-v0.2.40';
 // SHELL is the install-time precache: only assets the app needs immediately
 // to render and calculate. Optional 3D/chart payloads (three.js, the R3F
 // workbench bundle, Chart.js, and the model manifest) are intentionally NOT
@@ -39,6 +39,7 @@ const SHELL = [
   './src/views/models.js',
   './src/views/reference.js',
   './src/views/gear.js',
+  './src/views/patch-changes.js',
   './src/views/inventory.js',
   './src/views/player.js',
   './src/app-init.js',
