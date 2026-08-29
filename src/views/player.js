@@ -129,6 +129,14 @@ function toast(msg, duration, type) {
   }, duration);
 }
 
+function dismissToast(msg) {
+  const area = document.getElementById('toast-area');
+  if (!area) return;
+  area.querySelectorAll('.toast').forEach(t => {
+    if (t.textContent === msg) t.remove();
+  });
+}
+
 // ---- Import with preview ----
 function handleImportFile(file) {
   const reader = new FileReader();
