@@ -6,6 +6,7 @@ import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 const css = readFileSync(join(root, 'src/styles.css'), 'utf8');
+const survivingReferenceCss = readFileSync(join(root, 'src/styles/surviving-reference.css'), 'utf8');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
 
 describe('Gear loadout layout readability', () => {
@@ -37,5 +38,12 @@ describe('Gear loadout layout readability', () => {
     assert.match(html, /class="gear-sidebar"[\s\S]*id="gear-stats"/);
     assert.match(html, /id="gear-toggle-guide"/);
     assert.match(css, /\.gear-sidebar\s*\{[^}]*min-width:\s*0/s);
+  });
+
+  it('reflows the Protection guide into readable rows on narrow screens', () => {
+    assert.match(survivingReferenceCss, /@media\s*\(max-width:\s*480px\)[\s\S]*\.patch-protection-grid\s*>\s*div\s*\{[^}]*min-width:\s*0/s);
+    assert.match(survivingReferenceCss, /@media\s*\(max-width:\s*480px\)[\s\S]*\.patch-protection-head\s*\{[^}]*display:\s*none/s);
+    assert.match(survivingReferenceCss, /@media\s*\(max-width:\s*480px\)[\s\S]*\.patch-protection-row\s*\{[^}]*display:\s*block/s);
+    assert.match(html, /class="patch-protection-row"[\s\S]*<span>Armor<\/span>[\s\S]*<span>Ballistic<\/span>[\s\S]*<span>FDC<\/span>/);
   });
 });
