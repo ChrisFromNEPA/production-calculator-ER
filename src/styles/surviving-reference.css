@@ -218,9 +218,23 @@
 
 /* Protection guide */
 .patch-protection-grid { overflow-x: auto; }
-.patch-protection-grid > div { display: grid; grid-template-columns: repeat(3, minmax(9rem, 1fr)); min-width: 31rem; }
-.patch-protection-grid > div > * { padding: .45rem .6rem; border-bottom: 1px solid var(--line); font-size: .76rem; }
+.patch-protection-grid > div { min-width: 31rem; }
+.patch-protection-head, .patch-protection-row { display: grid; grid-template-columns: repeat(3, minmax(9rem, 1fr)); }
+.patch-protection-grid > div > * > * { padding: .45rem .6rem; border-bottom: 1px solid var(--line); font-size: .76rem; }
+.patch-protection-head b { color: var(--muted); }
+.patch-protection-row:last-child > * { border-bottom: 0; }
 .patch-protection-grid b { color: var(--accent-bright); font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; }
+@media (max-width: 480px) {
+  .patch-protection-grid { overflow-x: visible; }
+  .patch-protection-grid > div { min-width: 0; }
+  .patch-protection-head { display: none; }
+  .patch-protection-row { display: block; padding: .45rem .6rem; border-bottom: 1px solid var(--line); }
+  .patch-protection-row:last-child { border-bottom: 0; }
+  .patch-protection-grid > div > .patch-protection-row > * { padding: 0; border-bottom: 0; }
+  .patch-protection-row > span:first-child { display: block; color: var(--accent-bright); font-weight: 700; }
+  .patch-protection-row > span:nth-child(2)::before { content: 'protects '; color: var(--muted); }
+  .patch-protection-row > span:nth-child(3)::before { content: ' · faction '; color: var(--muted); }
+}
 @media (max-width: 1000px) {
   .patch-summary-grid { grid-template-columns: repeat(2, 1fr); }
   .patch-build-slots { grid-template-columns: repeat(2, 1fr); }
