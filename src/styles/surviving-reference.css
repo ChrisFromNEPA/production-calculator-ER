@@ -235,3 +235,15 @@
   .patch-summary-grid, .patch-build-slots, .patch-toolbar, .patch-goals { grid-template-columns: 1fr; }
   .patch-build-head, .patch-build-row { grid-template-columns: 1.4fr .7fr .35fr .7fr .7fr; font-size: .72rem; }
 }
+
+/* Use the extra canvas for Gear 1.10 without making individual cards too wide. */
+@media (min-width: 2000px) {
+  #view-patch-changes.active .patch-group-list,
+  #view-patch-changes.active .patch-changes-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  #view-patch-changes.active .patch-profile-card,
+  #view-patch-changes.active .patch-card {
+    max-width: 70ch;
+  }
+}
