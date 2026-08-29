@@ -48,4 +48,11 @@ test('profile gate requires a real name and faction before navigation', async (t
     assert.match(init, /Choose a faction/);
     assert.match(init, /onboardingFaction\?\.value/);
   });
+
+  await t.test('keeps the profile-gate toast single-instance and clears it when unlocked', () => {
+    assert.match(player, /function dismissToast\(msg\)/);
+    assert.match(core, /const PROFILE_GATE_TOAST = ['"]Finish your player name and faction before opening another tab\.["'];/);
+    assert.match(core, /dismissToast\(PROFILE_GATE_TOAST\);[\s\S]*toast\(PROFILE_GATE_TOAST, 3500\)/);
+    assert.match(core, /if \(!locked && typeof dismissToast === ['"]function['"]\) dismissToast\(PROFILE_GATE_TOAST\)/);
+  });
 });

@@ -94,6 +94,8 @@ function hasCompletePlayerProfile() {
   return !!(S.isProfileComplete && S.isProfileComplete(name, faction));
 }
 
+const PROFILE_GATE_TOAST = 'Finish your player name and faction before opening another tab.';
+
 function syncProfileGateState() {
   const locked = !hasCompletePlayerProfile();
   const root = document.documentElement;
@@ -109,6 +111,7 @@ function syncProfileGateState() {
   });
   const notice = document.getElementById('profile-gate-notice');
   if (notice) notice.hidden = !locked;
+  if (!locked && typeof dismissToast === 'function') dismissToast(PROFILE_GATE_TOAST);
   return !locked;
 }
 
@@ -1985,7 +1988,8 @@ function setView(v) {
     setView._pendingProfileView = v;
     v = 'calc';
     syncProfileGateState();
-    if (typeof toast === 'function') toast('Finish your player name and faction before opening another tab.', 3500);
+    if (typeof dismissToast === 'function') dismissToast(PROFILE_GATE_TOAST);
+    if (typeof toast === 'function') toast(PROFILE_GATE_TOAST, 3500);
   }
   const prev = setView._prev;
   const applyView = () => {
