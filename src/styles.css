@@ -522,6 +522,14 @@ main {
 @media (min-width: 3000px) {
   main { max-width: 1680px; padding: 2rem; }
 }
+/* Gear 1.10 is a wide explorer on high-resolution displays. Keep the wider
+   canvas opt-in to its active view so compact tabs retain their proportions. */
+@media (min-width: 2000px) {
+  main:has(> #view-patch-changes.active) { max-width: 1800px; }
+}
+@media (min-width: 3000px) {
+  main:has(> #view-patch-changes.active) { max-width: 2200px; }
+}
 .view { display: none; }
 .view.active { display: block; }
 
