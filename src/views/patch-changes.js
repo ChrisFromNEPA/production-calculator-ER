@@ -190,6 +190,11 @@
     });
     return [...groups.values()];
   }
+  function profileTitle(group) {
+    const allImplants = group.records.length > 0 && group.records.every(record => record.category === 'Implants & Electronics');
+    if (allImplants) return [...new Set(group.records.map(record => record.item.name))].sort().join(' / ');
+    return [...new Set(group.metas.map(meta => meta.family))].sort().join(' / ');
+  }
   function profileTradeoffs(stats) {
     const s = stats || {};
     const pros = [];
@@ -289,7 +294,7 @@
       const goalBar = goal ? `<div class="patch-goalbar" title="${escText(goal.label)} score (after patch)"><span class="patch-goalbar-track"><i style="width:${Math.max(4, Math.round((group.score / topScore) * 100))}%"></i></span><span class="patch-goalbar-num">${escText(comparisonText(group.scoreNow, group.score))}</span></div>` : '';
       return `<article class="patch-profile-card${goal ? ' has-goal' : ''}">
         <div class="patch-profile-head">
-          <div><h4>${escText([...new Set(group.metas.map(meta => meta.family))].sort().join(' / '))}</h4>
+          <div><h4>${escText(profileTitle(group))}</h4>
           <div class="patch-chiprow">${renderMetaChips(group)}</div></div>
           <strong>${group.records.length} item${group.records.length === 1 ? '' : 's'}</strong>
         </div>
@@ -548,6 +553,6 @@
     scheduleExplorerRender();
   }
 
-  window.PATCH_CHANGES = { PATCH_GROUPS, GOALS, applyPatch, changedRecords, recordMeta, comparisonText, dataIndex, initPatchChanges, protectionMapping: PROTECTION_MAPPING, allGearRecords, groupByExactStats, renderGearIcon, buildCandidates: (slot, items, recipes) => buildCandidatesFromData(slot, items || allGearRecords(), recipes || window.GAME_DATA?.recipes || []) };
+  window.PATCH_CHANGES = { PATCH_GROUPS, GOALS, applyPatch, changedRecords, recordMeta, comparisonText, dataIndex, initPatchChanges, protectionMapping: PROTECTION_MAPPING, allGearRecords, groupByExactStats, profileTitle, renderGearIcon, buildCandidates: (slot, items, recipes) => buildCandidatesFromData(slot, items || allGearRecords(), recipes || window.GAME_DATA?.recipes || []) };
   window.initPatchChanges = initPatchChanges;
 })(window, document);

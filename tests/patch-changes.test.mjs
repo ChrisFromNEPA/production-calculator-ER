@@ -129,6 +129,32 @@ describe('proposed patch changes tab', () => {
     assert.equal(recordMeta({ item: { name: 'Resistance Amp' }, category: 'Implants & Electronics' }).slot, 'Leg / implant slot');
   });
 
+  it('uses implant item names for otherwise ambiguous stat-profile titles', () => {
+    const { profileTitle } = api();
+    assert.equal(profileTitle({
+      records: [
+        { item: { name: 'Shield Implant' }, category: 'Implants & Electronics' },
+        { item: { name: 'Stamina Amplification' }, category: 'Implants & Electronics' },
+      ],
+      metas: [
+        { family: 'Implant', category: 'Implants & Electronics' },
+        { family: 'Implant', category: 'Implants & Electronics' },
+      ],
+    }), 'Shield Implant / Stamina Amplification');
+    assert.equal(profileTitle({
+      records: [{ item: { name: 'Aramid Basic Helmet' }, category: 'Armor' }],
+      metas: [{ family: 'Aramid Basic', category: 'Armor' }],
+    }), 'Aramid Basic');
+  });
+
+  it('keeps stat chips on one line while constraining them to narrow rows', () => {
+    const css = readFileSync(join(root, 'src', 'styles', 'surviving-reference.css'), 'utf8');
+    assert.match(css, /\.patch-chip\s*\{[^}]*white-space:\s*nowrap;/s);
+    assert.match(css, /\.patch-chip\s*\{[^}]*max-width:\s*100%;/s);
+    assert.match(css, /\.patch-chip\s*\{[^}]*overflow:\s*hidden;/s);
+    assert.match(css, /\.patch-chiprow\s*\{[^}]*flex-wrap:\s*wrap;/s);
+  });
+
   it('labels damage stat keys instead of leaking raw balance-sheet names', () => {
     // statLabel is internal; reach it through the rendered chip markup instead.
     const source = readFileSync(join(root, 'src', 'views', 'patch-changes.js'), 'utf8');

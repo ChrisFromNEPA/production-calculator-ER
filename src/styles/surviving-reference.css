@@ -136,7 +136,7 @@
 
 /* Chips */
 .patch-chiprow { display: flex; flex-wrap: wrap; gap: .3rem; }
-.patch-chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; padding: .14rem .45rem; font-variant-numeric: tabular-nums; }
+.patch-chip { display: inline-flex; align-items: center; gap: .3rem; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .72rem; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; padding: .14rem .45rem; font-variant-numeric: tabular-nums; }
 .patch-chip b { color: var(--muted); font-weight: 500; }
 .patch-chip-empty { color: var(--muted); font-style: italic; }
 .patch-goalchip b { color: var(--text); font-weight: 700; }
