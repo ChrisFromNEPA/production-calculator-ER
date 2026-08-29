@@ -498,7 +498,7 @@
     root.innerHTML = `<div class="patch-build-slots">${Object.entries(build).map(([slot, selected]) => {
       const options = `<option value="">None</option>${buildCandidates(slot).map(name => `<option value="${escText(name)}" ${name === selected ? 'selected' : ''}>${escText(name)}</option>`).join('')}`;
       const label = slot === 'Medikit' ? 'Medikit (healing item)' : slot;
-      return `<label><span>${renderGearIcon(selected)}${escText(label)}</span><select data-patch-slot="${escText(slot)}" aria-label="${escText(label)} build item">${options}</select></label>`;
+      return `<label><span>${renderGearIcon(selected)}${escText(label)}<small class="patch-slot-selected">${selected ? `${renderGearIcon(selected)}${escText(selected)}` : 'None'}</small></span><select data-patch-slot="${escText(slot)}" aria-label="${escText(label)} build item">${options}</select></label>`;
     }).join('')}</div>
     <div class="patch-build-goals" aria-label="Build goal summary">${goalChips}</div>
     <p class="patch-callout"><strong>Recorded Bio Regen total:</strong> ${formatNumber(bio)} from this build’s selected equipment. Chest is one choice — torso armor, Stamina Amplification, or Shield Implant — and the leg slot is one choice — leg armor or Resistance Amp. These choices are mutually exclusive and this total is not a claim about the game’s undocumented conversion formula.</p>

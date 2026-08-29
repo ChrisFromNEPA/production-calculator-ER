@@ -156,6 +156,13 @@ describe('proposed patch changes tab', () => {
     assert.equal(comparisonText(20, 20), 'Current 20 · Proposed 20 · Unchanged');
   });
 
+  it('renders the full selected gear name outside the truncating select', () => {
+    assert.match(source, /class="patch-slot-selected"/);
+    assert.match(source, /selected \? `\$\{renderGearIcon\(selected\)\}\$\{escText\(selected\)\}` : 'None'/);
+    const styles = readFileSync(join(root, 'src', 'styles', 'surviving-reference.css'), 'utf8');
+    assert.match(styles, /\.patch-slot-selected\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+
   it('memoizes the real-data index used by interactive renders', () => {
     const { dataIndex } = api();
     assert.equal(dataIndex(), dataIndex());
