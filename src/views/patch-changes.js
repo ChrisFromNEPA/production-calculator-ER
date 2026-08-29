@@ -22,6 +22,9 @@
     block_rating: 'Block', weaponrecoil: 'Weapon Recoil', health: 'Health', stamina: 'Stamina', aura: 'Aura',
     armor: 'Armor', shielding: 'Shielding', endurance: 'Endurance',
     reflection: 'Reflection', resistance: 'Resistance',
+    /* Damage stats appear on a few craftable armor pieces (e.g. Leech set).
+     * Without these entries the raw balance-sheet key leaks into the UI. */
+    biodamage: 'Bio Dmg', staminadamage: 'Stam Dmg',
   };
   const STAT_ORDER = ['armor', 'shielding', 'endurance', 'resistance', 'reflection', 'agility', 'bioregen', 'healthregen', 'staminaregen', 'addictiontreatment'];
   const ARMOR_SUFFIXES = ['Helmet', 'Shoulder Pads', 'Arm Pads', 'Torso Armor', 'Leg Pads'];
@@ -219,7 +222,10 @@
     return profileKeys().filter(key => stats[key] !== undefined && Number(stats[key]) !== 0).map(key => {
       const value = Number(stats[key]);
       const was = compare ? Number(compare[key] || 0) : null;
-      const changed = was !== null && was !== value;
+      // Suppress the delta chip when it would merely restate the base value
+      // (e.g. "Agility +0.3 +0.3" for pieces that had no recorded stat before,
+      // or Resistance Amp's "Armor +25 +25") — the pair reads as a typo.
+      const changed = was !== null && was !== value && value - was !== value;
       const delta = changed ? `<em class="patch-delta-chip ${value > was ? 'is-up' : 'is-down'}">${signed(value - was)}</em>` : '';
       return `<span class="patch-chip"><b>${escText(statLabel(key))}</b> ${signed(value)}${delta}</span>`;
     }).join('') || '<span class="patch-chip patch-chip-empty">no recorded stats</span>';

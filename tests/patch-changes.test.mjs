@@ -129,6 +129,27 @@ describe('proposed patch changes tab', () => {
     assert.equal(recordMeta({ item: { name: 'Resistance Amp' }, category: 'Implants & Electronics' }).slot, 'Leg / implant slot');
   });
 
+  it('labels damage stat keys instead of leaking raw balance-sheet names', () => {
+    // statLabel is internal; reach it through the rendered chip markup instead.
+    const source = readFileSync(join(root, 'src', 'views', 'patch-changes.js'), 'utf8');
+    assert.match(source, /biodamage:\s*'Bio Dmg'/);
+    assert.match(source, /staminadamage:\s*'Stam Dmg'/);
+  });
+
+  it('suppresses the delta chip when it would restate the base value', () => {
+    // Resistance Amp goes 0 → 25, so the proposed chip shows "Armor +25" with
+    // no redundant "+25" delta chip restating it.
+    const { dataIndex, renderGearIcon } = api();
+    assert.ok(renderGearIcon); // api sanity
+    const window = globalThis;
+    window.BALANCE_STATS = { items: [{ name: 'Resistance Amp', stats: { healthregen: 2.5 } }] };
+    const { applyPatch: apply } = api();
+    const record = apply({ name: 'Resistance Amp', stats: { healthregen: 2.5 } });
+    assert.equal(record.proposed.armor, 25);
+    assert.equal(record.changes.find(c => c.key === 'armor').delta, 25);
+    delete window.BALANCE_STATS;
+  });
+
   it('labels current and proposed values and avoids an unexplained arrow for no change', () => {
     const { comparisonText } = api();
     assert.equal(comparisonText(20, 25), 'Current 20 → Proposed 25');

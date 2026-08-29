@@ -18,3 +18,4 @@ __pycache__/
 # Keep committed generated files in the initial parity baseline only where the
 # existing offline shell requires them.
 .worktrees/
+.review/
