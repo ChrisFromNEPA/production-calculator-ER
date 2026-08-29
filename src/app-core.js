@@ -2348,7 +2348,6 @@ function setSoundMode(mode) {
   try { localStorage.setItem(SOUND_MODE_KEY, SOUND_MODE); } catch (e) {}
   if (SOUND_MODE === 'off') {
     stopAudio();
-    try { stopComms(); } catch (e) {}
   }
   renderMuteButton();
 }
@@ -2371,10 +2370,6 @@ window.toggleMuted = toggleMuted;
 window.setSoundMode = setSoundMode;
 
 function playTerminalAudio(tab) {
-  // Always stop comms when leaving the tab
-  if (tab !== 'comms') {
-    try { stopComms(); } catch(e) {}
-  }
   if (SOUND_MODE === 'off') return;
   if (SOUND_MODE === 'cues') { playUICue(tab); return; }
   var src = TERMINAL_AUDIO[tab];

@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const html = fs.readFileSync(`${root}/index.html`, 'utf8');
 const app = fs.readFileSync(`${root}/src/app.js`, 'utf8');
 const styles = fs.readFileSync(`${root}/src/styles.css`, 'utf8');

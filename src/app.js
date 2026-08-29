@@ -10,7 +10,6 @@
  * MOVED:
  *   src/app-core.js        — IMPORTS, STORE, DESTINATION, setView, THEME, audio
  *   src/app-init.js        — DOMContentLoaded and event wiring
- *   src/views/comms.js     — Radio player + terminal audio
  *   src/views/reference.js — Drugs and Battle Nodes
  *   src/views/gear.js      — Gear textures and local loadouts
  *   src/views/inventory.js — Zone editor, mining, and inventory
