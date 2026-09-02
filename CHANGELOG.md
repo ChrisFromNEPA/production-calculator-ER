@@ -4,7 +4,22 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
-No unreleased public changes.
+Post-v1.3.0 changes are deployed from `main` but are not a new public release.
+
+### Improved
+
+- Rebuilt the Gear 1.10 patch view and refined calculator presentation and
+  narrow-screen layouts.
+- Restored meaningful quality-gate coverage and removed stale communication
+  code and generated Python cache artifacts from the tracked surface.
+- Kept the npm package metadata at `0.1.0` as repository metadata, not a public
+  application release version; the existing repository convention separates
+  package metadata from the published `v1.3.0` tag.
+
+### Verification
+
+- Current deployment evidence is recorded in [release QA](docs/release-qa.md).
+- No v1.4 release, tag, or publication was created for these changes.
 
 ## [1.3.0] — 2026-08-26
 

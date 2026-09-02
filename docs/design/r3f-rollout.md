@@ -2,7 +2,7 @@
 
 ## Current state
 
-The R3F island is built as a committed Vite IIFE at `src/generated/cmg-3d-workbench.js` and loaded only by explicit 3D selection. `layout_v2`, `motion_v2`, and `r3f_v1` remain default-off.
+The R3F island is built as a committed Vite IIFE at `src/generated/er-3d-workbench.js` and loaded only by explicit 3D selection. `layout_v2`, `motion_v2`, and `r3f_v1` remain default-off.
 
 The live local browser probe verified:
 

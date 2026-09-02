@@ -88,6 +88,10 @@
   /* The compact navigation is the safe default on phones. The legacy strip
    * cannot fit beside the theme controls and otherwise clips labels offscreen. */
   header { padding-bottom: 4.5rem; }
+  /* The mobile navigation is fixed and therefore removed from layout flow.
+   * Reserve its footprint so the profile gate/onboarding panel can be read
+   * and scrolled without the last controls sitting behind the nav. */
+  body { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
   .nav-bar { position: static; }
   .nav-bar > #legacy-nav,
   .nav-bar > .nav-more { display: none; }
