@@ -8,9 +8,12 @@
   },
   "scripts": {
     "test": "node scripts/guard-test-count.mjs",
+    "test:python": "python3 -m unittest discover -s tests -p 'test_*.py'",
     "test:baseline": "node scripts/check-baseline.mjs",
     "test:sw-update": "npm run build && node --test tests/browser/service-worker-update.spec.mjs",
     "test:browser-ux": "npm run build && node --test tests/browser/calculator-ux.spec.mjs",
+    "generate": "node scripts/build-data.mjs && node scripts/build-balance.mjs && npm run build:3d",
+    "check:generated": "npm run generate && git diff --exit-code -- src/game_data.js src/balance_stats.js src/generated/er-3d-workbench.js",
     "stats:update": "python3 scripts/update_balance_stats.py && node scripts/build-balance.mjs && node scripts/build-data.mjs",
     "local:host": "vite --host 0.0.0.0 --port 4173 --strictPort",
     "build:3d": "vite build --config vite.config.mjs",
@@ -20,7 +23,7 @@
     "assets:report": "node scripts/check-assets.mjs --report-only",
     "build:pages": "npm run build:3d && node scripts/build-pages.mjs",
     "build": "npm run build:pages",
-    "check": "npm test && npm run build && npm run test:baseline"
+    "check": "npm test && npm run test:python && npm run check:generated && npm run build && npm run test:baseline"
   },
   "repository": {
     "type": "git",

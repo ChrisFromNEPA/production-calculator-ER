@@ -31,8 +31,10 @@ jobs:
         run: npm run check
       - name: Enforce asset provenance
         run: npm run assets:check
-      - name: Check production dependencies for known vulnerabilities
-        run: npm audit --omit=dev
+      - name: Audit all dependencies for known vulnerabilities
+        run: npm audit --include=dev
+      - name: Run Python tests
+        run: npm run test:python
       - name: Scan repository for secrets
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
         env:
@@ -62,3 +64,29 @@ jobs:
         env:
           CHROMIUM_BIN: /usr/bin/chromium
         run: npm run test:sw-update
+
+  calculator-browser-ux:
+    name: Chromium calculator UX
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Check out source history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes chromium
+      - name: Run calculator browser UX tests
+        env:
+          BROWSER_TEST_REQUIRED: '1'
+          CHROMIUM_BIN: /usr/bin/chromium
+        run: npm run test:browser-ux

@@ -22,6 +22,8 @@ npm ci
 npm run local:host       # working-tree server on port 4173
 npm run check            # tests, Pages build, and baseline verification
 npm run assets:check     # required after asset/provenance changes
+npm run test:python      # all Python unittest cases
+npm run check:generated  # regenerate committed sources and require a clean diff
 ```
 
 For a browser on another machine in the private LAN, open the host's LAN
@@ -31,6 +33,7 @@ Focused checks are available when relevant:
 
 ```bash
 npm run test:sw-update   # clean-profile service-worker lifecycle
+npm run test:browser-ux  # optional locally; requires Chromium when BROWSER_TEST_REQUIRED=1
 npm run test:3d          # optional React Three Fiber build
 npm run test:budgets     # 3D transfer/performance budgets
 ```

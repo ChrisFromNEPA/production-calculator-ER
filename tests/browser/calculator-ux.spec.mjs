@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dist = join(root, 'dist');
 const externalBase = process.env.SMOKE_URL?.replace(/\/$/, '');
+const browserRequired = process.env.BROWSER_TEST_REQUIRED === '1' || process.env.CI === 'true';
 
 function findChromium() {
   if (process.env.CHROMIUM_BIN) {
@@ -293,6 +294,7 @@ describe('real-browser calculator UX smoke', () => {
     } catch (error) {
       setupError = error instanceof Error ? error : new Error(String(error));
       await cleanupBrowser();
+      if (browserRequired) throw setupError;
     }
   });
 
