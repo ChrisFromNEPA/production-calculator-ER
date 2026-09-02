@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "purpose": "Explicit exceptions for data whose canonical game source or image is not present in this repository. These entries do not supply game facts or prices.",
+  "external_materials": [
+    {
+      "name": "solid carbonite shell",
+      "source_status": "external_unknown_source",
+      "price_status": "priced_without_canonical_source",
+      "reason": "Referenced by verified recipe data and present in the existing cost table, but no canonical source record is available in this repository; retain the existing price without asserting provenance."
+    },
+    {
+      "name": "ultra resilient mineral",
+      "source_status": "external_unknown_source",
+      "price_status": "unpriced",
+      "reason": "Referenced by seven recipes, but no canonical source or verified price is available; preserve the unpriced state rather than infer a value."
+    }
+  ],
+  "icon_fallbacks": [
+    {
+      "name": "Portable Vortex Particle Emitter",
+      "mode": "letter",
+      "reason": "The item is present in recipe data but no verified icon asset is available; use the deliberate UI letter fallback."
+    },
+    {
+      "name": "ultra resilient mineral",
+      "mode": "letter",
+      "reason": "The material has no verified icon asset or canonical source; use the deliberate UI letter fallback."
+    }
+  ]
+}

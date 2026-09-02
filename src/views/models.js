@@ -563,6 +563,15 @@
     });
   }
 
+  function iconCatalogImage(entry, detail) {
+    var imgSrc = entry.icon || entry.png;
+    if (entry.has_icon !== false && imgSrc) {
+      return '<img src="icons/' + imgSrc + '" alt="' + (entry.name || entry.id) + '" loading="lazy" />';
+    }
+    var letter = (entry.name || entry.id || '?').replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase() || '?';
+    return '<span class="icon-badge" aria-label="Icon unavailable">' + letter + '</span>';
+  }
+
   function renderIconGrid() {
     var el = document.getElementById('icons-grid');
     if (!el || !iconCatalog) return;
@@ -575,10 +584,9 @@
       var cls = iconCurrent && iconCurrent.id === e.id && iconCurrent.file === e.file ? 'icon-card active' : 'icon-card';
       var badge = '';
       if (e.recipe_count > 0) badge = '<div class="icon-card-badge">📦 craftable</div>';
-      var imgSrc = e.icon || e.png;
       var pressed = iconCurrent && iconCurrent.id === e.id && iconCurrent.file === e.file ? 'true' : 'false';
       return '<div class="' + cls + '" data-icon-id="' + e.id + '" data-icon-file="' + (e.file || e.id) + '" role="button" tabindex="0" aria-pressed="' + pressed + '">' +
-        '<img src="icons/' + imgSrc + '" alt="' + (e.name || e.id) + '" loading="lazy" />' +
+        iconCatalogImage(e) +
         '<div class="icon-card-name">' + (e.name || e.id) + '</div>' +
         '<div class="icon-card-group">' + (e.item_category || e.group || '') + '</div>' +
         badge +
