@@ -35,7 +35,7 @@ const OPTIONAL_3D_CHART_ASSETS = [
 
 describe('offline and deployment verification', () => {
   it('precaches only the shell and lazy-loader stubs, never optional 3D/chart payloads', () => {
-    assert.match(sw, /const CACHE = 'er-v\d+\.\d+\.\d+'/);
+    assert.match(sw, /const CACHE = 'er-prodcalc-v\d+\.\d+\.\d+-shell'/);
     // The loader stubs stay in the shell so lazy loading can start.
     for (const path of SHELL_LAZY_LOADERS) {
       assert.ok(sw.includes(path), `${path} must stay precached`);
@@ -57,7 +57,7 @@ describe('offline and deployment verification', () => {
     assert.match(chartLoader, /src\/vendor\/chart\.min\.js/);
     assert.match(modelsView, /fetch\('models\/models_manifest\.json'\)/);
     // …and the fetch handler still runtime-caches what it serves.
-    assert.match(sw, /cache\.put\(e\.request, clone\)/);
+    assert.match(sw, /cache\.put\(request, response\)/);
   });
 
   it('keeps the page entry references versioned and the generated bundle lazy', () => {

@@ -350,6 +350,36 @@ describe('clean-profile service-worker lifecycle', () => {
     // The install precache landed under the versioned CACHE constant.
     const keys = await evalJs(page, `caches.keys()`, true);
     assert.ok(keys.includes(baseCache), `expected precache ${baseCache}, found ${keys.join(', ')}`);
+
+    // A separate application cache on the same origin must not be treated as
+    // stale service-worker state by this project's activation cleanup.
+    const unrelated = await evalJs(page, `(async () => {
+      const cache = await caches.open('unrelated-app-cache');
+      await cache.put('/unrelated.txt', new Response('keep me'));
+      return caches.keys();
+    })()`, true);
+    assert.ok(unrelated.includes('unrelated-app-cache'));
+  });
+
+  it('keeps optional runtime assets bounded to the declared maximum', async () => {
+    const { page } = state;
+    await evalJs(page, `(async () => {
+      await Promise.all(Array.from({ length: 40 }, (_, i) =>
+        fetch('/src/vendor/chart.min.js?cache-test=' + i)));
+      return true;
+    })()`, true);
+    const runtimeCount = await waitFor(
+      page,
+      `(async () => {
+        const names = await caches.keys();
+        const runtime = names.find(name => name.endsWith('-runtime'));
+        if (!runtime) return -1;
+        return (await (await caches.open(runtime)).keys()).length;
+      })()`,
+      { description: 'runtime cache eviction to complete', awaitPromise: true },
+    );
+    assert.ok(runtimeCount > 0 && runtimeCount <= 32,
+      `runtime cache must stay within its maximum (observed ${runtimeCount})`);
   });
 
   it('rejects a defective update install and keeps the existing worker in control', async () => {
@@ -418,10 +448,13 @@ describe('clean-profile service-worker lifecycle', () => {
       { description: 'controller to be present after reload' },
     );
 
-    // The updated worker is now live: its precache exists, the old one is gone.
+    // The updated worker is now live: its precache exists, and activation has
+    // Give the activation task a turn to finish before inspecting CacheStorage.
+    await sleep(1000);
     const keys = await evalJs(page, `caches.keys()`, true);
     assert.ok(keys.includes(updateCache), `expected updated cache ${updateCache}, found ${keys.join(', ')}`);
-    assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate`);
+    assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate; found ${keys.join(', ')}`);
+    assert.ok(keys.includes('unrelated-app-cache'), 'unrelated origin cache must survive activation');
 
     // With the update applied there is nothing pending: the chip is hidden again.
     assert.equal(await evalJs(page, `document.getElementById('trust-update').hidden`), true);
