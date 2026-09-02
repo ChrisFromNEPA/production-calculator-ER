@@ -746,9 +746,9 @@ function renderGearSets() {
     const myVote = (s.votes || {})[me] || 0;
     return `<div class="gear-set-item">
       <div class="gs-votes">
-        <button data-gear-vote="${s.id}" data-dir="1" class="gs-vote up ${myVote === 1 ? 'active' : ''}" title="Upvote">▲</button>
+        <button data-gear-vote="${safeGearSetId(s.id)}" data-dir="1" class="gs-vote up ${myVote === 1 ? 'active' : ''}" title="Upvote">▲</button>
         <span class="gs-score ${score > 0 ? 'pos' : score < 0 ? 'neg' : ''}">${score}</span>
-        <button data-gear-vote="${s.id}" data-dir="-1" class="gs-vote down ${myVote === -1 ? 'active' : ''}" title="Downvote">▼</button>
+        <button data-gear-vote="${safeGearSetId(s.id)}" data-dir="-1" class="gs-vote down ${myVote === -1 ? 'active' : ''}" title="Downvote">▼</button>
       </div>
       <div class="gs-info">
         <span class="set-name">${esc(s.name)}</span>
@@ -776,8 +776,8 @@ function renderGearSets() {
         })()}
       </div>
       <div class="gs-actions">
-        <button data-gear-load="${s.id}" class="ghost">Load</button>
-        <button data-gear-del="${s.id}" class="ghost" style="color:var(--bad)" title="Delete this local preset">×</button>
+        <button data-gear-load="${safeGearSetId(s.id)}" class="ghost">Load</button>
+        <button data-gear-del="${safeGearSetId(s.id)}" class="ghost" style="color:var(--bad)" title="Delete this local preset">×</button>
       </div>
     </div>`;
   }).join('');
@@ -1017,6 +1017,10 @@ function migrateLocalInventory(remote) {
     if (!(name in remote) && Array.isArray(entries)) ops.push({ op: 'setplayer', name, entries });
   });
   if (ops.length) syncShared('inventory', ops);
+}
+
+function safeGearSetId(id) {
+  return esc(String(id == null ? '' : id));
 }
 
 async function loadShared() {

@@ -2185,3 +2185,28 @@ function renderSavedPlans() {
 // § INIT — DOMContentLoaded: all event wiring, keyboard shortcuts, tab nav
 // ═══════════════════════════════════════════════════════════════════════════
 // moved to src/app-init.js
+
+// Rehydrate calculator module state after an atomic workspace import. This hook
+// is deliberately explicit: module-level values were initialized before import.
+function hydrateCalculatorWorkspace() {
+  const read = (key, fallback) => {
+    try { const value = JSON.parse(localStorage.getItem(key)); return value == null ? fallback : value; }
+    catch (e) { return fallback; }
+  };
+  PRODUCE_DONE = read('cmg_produce_done_v1', {});
+  PRODUCTION_PROGRESS = read('cmg_production_progress_v1', {});
+  MINING_PROGRESS = read('cmg_mining_progress_v1', {});
+  TRANSFERS_DONE = read('cmg_transfers_done_v1', {});
+  OBTAINED_DONE = read('cmg_obtained_done_v1', {});
+  TRANSPORT_SOURCE = read('cmg_transport_source_v1', {});
+  const paths = read('cmg_paths_v1', {});
+  Object.keys(ALTERNATIVE_CHOICES).forEach(k => delete ALTERNATIVE_CHOICES[k]);
+  Object.assign(ALTERNATIVE_CHOICES, paths);
+  CALC_TRAY = read('cmg_tray_v1', []);
+  SAVED_PLANS = read('er_saved_plans_v1', []);
+  try { LAST_PLAN_SIG = localStorage.getItem('cmg_plan_sig_v1') || ''; } catch (e) { LAST_PLAN_SIG = ''; }
+  renderTray();
+  if (typeof renderSavedPlans === 'function') renderSavedPlans();
+  if (typeof syncApplyPlanReadiness === 'function') syncApplyPlanReadiness();
+}
+window.CMG_HYDRATE_CALCULATOR = hydrateCalculatorWorkspace;

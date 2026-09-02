@@ -369,83 +369,7 @@ function saveDestination() {
 loadDestination();
 
 function applyPlan(res, dest) {
-  const finalDest = dest || res.plan.destination || DESTINATION;
-  const refineDest = res.plan.refineDestination || finalDest;
-  const inv = getInv().slice();
-  const log = [];
-
-  // helper: deduct qty of item at location, return actual amount taken
-  function deductAt(item, location, qty) {
-    const idx = inv.findIndex(e => e.item === item && e.location === location);
-    if (idx < 0) return 0;
-    const take = Math.min(qty, inv[idx].quantity);
-    inv[idx].quantity -= take;
-    if (inv[idx].quantity <= 0) inv.splice(idx, 1);
-    return take;
-  }
-
-  // helper: add qty of item at location
-  function addAt(item, location, qty) {
-    const idx = inv.findIndex(e => e.item === item && e.location === location);
-    if (idx >= 0) inv[idx].quantity += qty;
-    else inv.push({ item, location, quantity: qty });
-  }
-
-  function availableAt(item, location) {
-    return inv.filter(e => e.item === item && e.location === location)
-      .reduce((sum, e) => sum + e.quantity, 0);
-  }
-
-  // 1) Transport: deduct from source colonies, add to destination
-  Object.entries(res.plan.transport).forEach(([item, info]) => {
-    let need = info.qty;
-    const target = info.to || refineDest;
-    info.from.forEach(loc => {
-      if (need <= 0) return;
-      const take = deductAt(item, loc, need);
-      need -= take;
-    });
-    addAt(item, target, info.qty);
-    log.push(`Moved ${fmt(info.qty)} ${esc(item)} → ${esc(target)}`);
-  });
-
-  // 2) Process steps in build order (raws first, finals last).
-  // The engine now returns steps in correct build order.
-  let previousLocation = refineDest;
-  res.plan.steps.forEach(step => {
-    const location = step.location || finalDest;
-    const inputs = step.resolvedInputs || [];
-
-    // Refinements happen at refineDest, then the intermediate outputs and any
-    // direct inputs travel to the final production colony before manufacture.
-    const transferSource = location === refineDest ? previousLocation : refineDest;
-    if (transferSource !== location) {
-      inputs.forEach(inp => {
-        const needAtSource = Math.max(0, inp.qty - availableAt(inp.item, location));
-        const moved = deductAt(inp.item, transferSource, needAtSource);
-        if (moved > 0) addAt(inp.item, location, moved);
-      });
-    }
-
-    // Add the produced output
-    addAt(step.item, location, step.produced);
-    log.push(`${step.type === 'manufacture' ? 'Manufactured' : 'Refined'} ${fmt(step.produced)} ${esc(step.item)} at ${esc(location)}`);
-
-    // Deduct inputs using resolvedInputs (respects the chosen refinement path)
-    inputs.forEach(inp => {
-      const taken = deductAt(inp.item, location, inp.qty);
-      const shortfall = inp.qty - taken;
-      if (shortfall > 0) {
-        log.push(`⚠ assumed mined: ${fmt(shortfall)}× ${esc(inp.item)} (not at ${esc(location)})`);
-      }
-    });
-    previousLocation = location;
-  });
-
-  setInv(inv);
-  recomputeInv();
-  refreshAll();
-  return log;
+  return window.APPLY_PRODUCTION_PLAN(res, dest);
 }
 
 // =========================================================================
@@ -2375,4 +2299,35 @@ function playTerminalAudio(tab) {
   var src = TERMINAL_AUDIO[tab];
   if (src) playAudio(src, 0.3);
 }
+
+// Workspace imports replace storage after module initialization. Rehydrate every
+// live module mirror immediately so the next calculation uses imported choices,
+// slot levels, destinations, colony settings, gear, and checklist state.
+function hydrateWorkspaceRuntime() {
+  loadDestination();
+  try {
+    const raw = JSON.parse(localStorage.getItem('cmg_slot_levels_v1') || '{}');
+    ENERGY_LEVEL = clampEnergy(raw.energy);
+    COOLING_LEVEL = clampCooling(raw.cooling);
+  } catch (e) {}
+  try {
+    const raw = JSON.parse(localStorage.getItem('er_colony_world_v2') || localStorage.getItem('cmg_colony_tax_v1') || '{}');
+    if (raw && raw.owner) {
+      COLONY_OWNER = Object.fromEntries(Object.entries(raw.owner).flatMap(([colony, value]) => {
+        const owners = normalizeColonyWorldOwner(value, colony);
+        return owners.length ? [[colony, owners]] : [];
+      }));
+      COLONY_TAX = raw.tax || {};
+    }
+  } catch (e) {}
+  if (typeof refreshGear === 'function') refreshGear();
+  if (typeof window.ENGINE !== 'undefined') {
+    window.ENGINE.DESTINATION = DESTINATION;
+    window.ENGINE.REFINE_DESTINATION = REFINE_DESTINATION;
+    window.ENGINE.TRANSPORT_SOURCE = JSON.parse(localStorage.getItem('cmg_transport_source_v1') || '{}');
+  }
+  if (typeof window.CMG_HYDRATE_CALCULATOR === 'function') window.CMG_HYDRATE_CALCULATOR();
+  if (typeof window.refreshAll === 'function') window.refreshAll();
+}
+window.CMG_HYDRATE_WORKSPACE = hydrateWorkspaceRuntime;
 

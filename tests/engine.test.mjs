@@ -296,10 +296,20 @@ describe('T1f — array-form compute honours an explicit external ledger', () =>
 
 // ---- T1e: applyPlan must consume intermediates (FAILS until T3) ----
 describe('T1e — applyPlan consumes inputs correctly (fails until T3)', () => {
-  it('does not inflate intermediate inventory', () => {
+  it('does not add transported stock that was not deducted', () => {
     reset();
+    setPlayerInv([{ item: 'iron', location: 'Andromeda', quantity: 3 }]);
+    applyPlan({ plan: {
+      destination: 'Berlin', refineDestination: 'Berlin',
+      transport: { iron: { qty: 10, from: ['Andromeda'], to: 'Berlin' } }, steps: []
+    } });
+    const totals = {};
+    getPlayerInv().forEach(e => { totals[e.item + '@' + e.location] = e.quantity; });
+    assert.equal(totals['iron@Berlin'], 3);
+    assert.equal(totals['iron@Andromeda'], undefined);
+  });
+  it('does not inflate intermediate inventory', () => {
     setPlayerInv([
-      // Raw materials that would need to be acquired — simulate having mined them
       { item: 'iron', location: 'apartment', quantity: 10 },
       { item: 'chrome', location: 'apartment', quantity: 10 },
       { item: 'chemicals', location: 'apartment', quantity: 10 },

@@ -20,10 +20,12 @@ describe('portable public workspace', () => {
   it('includes player, local settings, and all public local-storage namespaces', () => {
     assert.match(store, /players/);
     assert.match(store, /localStorage/);
-    assert.match(store, /cmg_|er_/);
+    assert.match(store, /cmg_tray_v1/);
+    assert.match(store, /er_saved_plans_v1/);
+    assert.match(store, /CMG_HYDRATE_WORKSPACE/);
   });
 
-  it('exposes workspace export/import controls in the public shell', () => {
+  it('exposes workspace import/export controls in the public shell', () => {
     assert.match(init, /workspace-export|Export workspace/i);
     assert.match(init, /workspace-import|Import workspace/i);
     assert.match(init, /S\.exportWorkspace|S\.importWorkspace/);

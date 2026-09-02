@@ -29,11 +29,14 @@ const WORKSPACE_KEYS = [
   'cmg_medikit_toggle', 'cmg_gearsets_migrated_v1', 'cmg_inv_migrated_v1',
   'cmg_auto_collapsed_v1', 'cmg_collapsed_sections_v1', 'cmg_produce_done_v1',
   'cmg_production_progress_v1', 'cmg_mining_progress_v1', 'cmg_transfers_done_v1', 'cmg_obtained_done_v1', 'cmg_plan_applied_v1',
-  'cmg_muted_v1',
+  'cmg_muted_v1', 'cmg_tray_v1', 'er_saved_plans_v1', 'cmg_recent_v1', 'cmg_plan_sig_v1',
+  'cmg_theme', 'cmg_size', 'cmg_feature_flags_v1', 'er_calculator_shared_v1',
+  'cmg_gear_', 'cmg_gear_sets_',
 ];
 const WORKSPACE_RAW_KEYS = [
   'cmg_destination', 'cmg_refine_destination', 'cmg_medikit_', 'cmg_medikit_toggle',
-  'cmg_gearsets_migrated_v1', 'cmg_inv_migrated_v1',
+  'cmg_gearsets_migrated_v1', 'cmg_inv_migrated_v1', 'cmg_theme', 'cmg_size',
+  'cmg_gear_', 'cmg_gear_sets_',
 ];
 
 function normalizeFaction(value) {
@@ -277,7 +280,7 @@ function validateImport(arr) {
 function importPlayer(name, arr) {
   const err = validateImport(arr);
   if (err) throw new Error('Invalid import: ' + err);
-  PLAYERS.players[name] = arr.map(e => {
+  const imported = arr.map(e => {
     const loc = String(e.location).trim();
     return {
       item: String(e.item).trim(),
@@ -287,6 +290,21 @@ function importPlayer(name, arr) {
       quantity: Math.floor(e.quantity)
     };
   });
+  // Imports are additive for an existing player. Merge by the canonical
+  // (item, location) key so aliases combine and zero-valued entries cannot
+  // erase unrelated stock.
+  const prior = Array.isArray(PLAYERS.players[name]) ? PLAYERS.players[name] : [];
+  const merged = prior.concat(imported);
+  const byKey = new Map();
+  merged.forEach(e => {
+    const loc = LOCATION_ALIASES[e.location] || String(e.location).trim();
+    const item = String(e.item).trim();
+    const key = item + '\\u0000' + loc;
+    const current = byKey.get(key);
+    if (current) current.quantity += Math.floor(Number(e.quantity) || 0);
+    else byKey.set(key, { item, location: loc, quantity: Math.floor(Number(e.quantity) || 0) });
+  });
+  PLAYERS.players[name] = Array.from(byKey.values());
   PLAYERS.profiles = PLAYERS.profiles || {};
   PLAYERS.profiles[name] = { ...(PLAYERS.profiles[name] || {}), faction: normalizeFaction(PLAYERS.profiles[name]?.faction) };
   migrateLocationNames(PLAYERS); // fold any duplicates the rename created
@@ -387,6 +405,7 @@ function importWorkspace(snapshot) {
   Object.assign(PLAYERS, nextPlayers);
   ensureActivePlayer();
   recomputeInv();
+  if (typeof window.CMG_HYDRATE_WORKSPACE === 'function') window.CMG_HYDRATE_WORKSPACE();
   return exportWorkspace();
 }
 

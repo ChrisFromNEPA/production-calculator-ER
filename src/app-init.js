@@ -481,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calc-result').addEventListener('click', e => {
     const btn = e.target.closest('.apply-plan');
     if (!btn || btn.disabled || !btn.dataset.apply) return;
+    if (btn.dataset.readyToApply !== 'true') { toast('Record every manufacture batch before applying this plan.', 4000, 'error'); return; }
     const item = decodeURIComponent(btn.dataset.apply);
     const qty = parseInt(btn.dataset.qty, 10);
     snapshotInv();
@@ -556,6 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calc-multi').addEventListener('click', e => {
     const btn = e.target.closest('#apply-multi');
     if (!btn) return;
+    if (btn.dataset.readyToApply !== 'true') { toast('Record every manufacture batch before applying this plan.', 4000, 'error'); return; }
     btn.textContent = 'Applying…';
     btn.disabled = true;
     snapshotInv();
@@ -1147,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             importedSets.forEach(s => {
               if (!s || !s.gear || !s.name) return;
               if (SHARED_GEAR.some(x => x.name === s.name)) return;
-              const set = { id: s.id || localId(), name: s.name, gear: s.gear, owner: s.owner || owner, created_at: s.created_at || Date.now(), votes: s.votes || {} };
+              const set = { id: localId(), name: s.name, gear: s.gear, owner: s.owner || owner, created_at: s.created_at || Date.now(), votes: s.votes || {} };
               SHARED_GEAR.push(set);
               ops.push({ op: 'upsert', set });
             });

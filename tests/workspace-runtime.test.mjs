@@ -57,6 +57,23 @@ describe('workspace snapshot runtime', () => {
     assert.deepEqual(S.getInv(), [{ item: 'coal', location: 'Andromeda', quantity: 84 }]);
   });
 
+  it('merges an existing player import by canonical item and location', () => {
+    S.importPlayer('Chris', [
+      { item: 'coal', location: 'Necars Field', quantity: 4 },
+      { item: 'iron', location: 'Berlin', quantity: 2 },
+    ]);
+    S.importPlayer('Chris', [
+      { item: 'coal', location: "NECAR's Field", quantity: 3 },
+      { item: 'iron', location: 'Berlin', quantity: 0 },
+      { item: 'chrome', location: 'Paris', quantity: 5 },
+    ]);
+    assert.deepEqual(S.PLAYERS.players.Chris, [
+      { item: 'coal', location: "Necar's Field", quantity: 7 },
+      { item: 'iron', location: 'Berlin', quantity: 2 },
+      { item: 'chrome', location: 'Paris', quantity: 5 },
+    ]);
+  });
+
   it('keeps the public player object identity stable across workspace imports', () => {
     S.importPlayer('Imported', []);
     const playersRef = S.PLAYERS;
