@@ -1,6 +1,6 @@
 {
   "name": "production-calculator-er",
-  "version": "0.1.0",
+  "version": "1.4.0",
   "description": "Offline-first Empire Rising production, inventory, gear, and economy calculator for every player.",
   "main": "sw.js",
   "directories": {
@@ -19,12 +19,11 @@
     "check:generated": "npm run generate && git diff --exit-code -- src/game_data.js src/balance_stats.js",
     "stats:update": "python3 scripts/update_balance_stats.py && node scripts/build-balance.mjs && node scripts/build-data.mjs",
     "local:host": "vite --host 0.0.0.0 --port 4173 --strictPort",
-
     "assets:check": "node scripts/check-assets.mjs",
     "assets:hygiene": "node scripts/check-binary-hygiene.mjs",
     "assets:report": "node scripts/check-assets.mjs --report-only",
     "build:pages": "node scripts/build-pages.mjs",
-    "build": "npm run build:pages",
+    "build": "node scripts/build-pages.mjs",
     "check": "npm test && npm run test:python && npm run check:quality && npm run check:a11y && npm run check:generated && npm run build && npm run test:baseline && npm run test:coverage"
   },
   "repository": {
@@ -44,10 +43,8 @@
     "url": "https://github.com/ChrisFromNEPA/production-calculator-ER/issues"
   },
   "homepage": "https://chrisfromnepa.github.io/production-calculator-ER/",
-  "dependencies": {
-    "vite": "^8.2.2"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "esbuild": "^0.28.2"
+    "vite": "^8.2.2"
   }
 }

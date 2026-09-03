@@ -20,8 +20,8 @@
     "voice_extracted/*.ogg"
   ],
   "budgets": {
-    "max_bytes": 209715200,
-    "max_files": 3000
+    "max_bytes": 33554432,
+    "max_files": 2000
   },
   "excluded": [
     ".git",

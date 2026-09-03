@@ -13,12 +13,17 @@
     isCurrent(token, entries) { return token === this.capture(entries); },
   };
 
-  function applyProductionPlan(res, dest) {
+  function applyProductionPlan(res, dest, options) {
     const engine = window.ENGINE;
     const store = window.STORE;
+    const scratch = options?.scratch === true;
     const finalDest = dest || res.plan.destination || engine.DESTINATION || 'Berlin';
     const refineDest = res.plan.refineDestination || finalDest;
-    const inv = store.getInv().slice();
+    const baseline = store.getInv().map(entry => ({ ...entry }));
+    // A scratch plan represents separately acquired materials. Execute it in an
+    // empty working inventory, then merge only its produced remainder/output
+    // into the untouched live baseline.
+    const inv = scratch ? [] : baseline.map(entry => ({ ...entry }));
     const log = [];
     const deductAt = (item, location, qty) => {
       const idx = inv.findIndex(e => e.item === item && e.location === location);
@@ -67,9 +72,29 @@
       });
       previousLocation = location;
     });
-    store.setInv(inv);
-    store.recomputeInv();
-    if (typeof window.refreshAll === 'function') window.refreshAll();
+    const nextInventory = scratch ? (() => {
+      const merged = baseline.map(entry => ({ ...entry }));
+      inv.forEach(entry => {
+        const existing = merged.find(candidate => candidate.item === entry.item && candidate.location === entry.location);
+        if (existing) existing.quantity += entry.quantity;
+        else merged.push({ ...entry });
+      });
+      return merged;
+    })() : inv;
+    try {
+      store.setInv(nextInventory);
+      store.recomputeInv();
+      if (typeof window.refreshAll === 'function') window.refreshAll();
+    } catch (error) {
+      // Do not leave a partially committed inventory when persistence or runtime
+      // hydration fails. Best-effort rollback is attempted before rethrowing the
+      // original failure to the UI boundary.
+      try {
+        store.setInv(baseline);
+        store.recomputeInv();
+      } catch { /* preserve the original error */ }
+      throw error;
+    }
     return log;
   }
   window.APPLY_PRODUCTION_PLAN = applyProductionPlan;

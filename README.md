@@ -4,7 +4,7 @@
 
 [**Open the live calculator →**](https://chrisfromnepa.github.io/production-calculator-ER/)
 
-[**Latest release: v1.3.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0)
+[**Latest release: v1.3.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0) · **v1.4.0 candidate:** [PR #22](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/22)
 
 [![CI](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml)
@@ -27,7 +27,7 @@ Production planning is a chain of decisions: which materials are needed, where t
 - **Browser-local data:** profiles, inventories, saved plans, preferences, and colony-world settings stay in browser storage unless the user explicitly exports them.
 - **Portable workspace state:** versioned player/workspace exports are validated before import, with legacy inventory-only JSON support retained.
 - **Responsive and accessible UI:** responsive layouts, mobile table containment, keyboard-operable controls, semantic regions, focus handling, and reduced-motion behavior are covered by source contracts and browser smoke tests.
-- **Automated quality gates:** Node tests, production builds, asset-provenance checks, dependency auditing, Gitleaks, a clean-profile Chromium service-worker test, GitHub Actions, and CodeQL are part of the repository workflow.
+- **Automated quality gates:** Node and Python tests, module-scoped coverage, static syntax/accessibility checks, production and artifact budgets, binary-growth policy, dependency auditing, Gitleaks, fail-closed Chromium UX/service-worker tests, GitHub Actions, and CodeQL are part of the repository workflow.
 
 ## Architecture and data flow
 
@@ -227,7 +227,7 @@ See [Known limitations](docs/known-limitations.md) for the complete boundary lis
 
 The public application has no login, shared guild database, remote analytics endpoint, Cloudflare Worker dependency, or GitHub-token requirement.
 
-Profiles, inventory, saved plans, preferences, and world-state settings remain in browser storage unless you explicitly export or share them. The browser still requests public application assets—and optional model files when selected—from the public deployment, so “local-first” does not mean “no network requests during initial loading.”
+Profiles, inventory, saved plans, preferences, and world-state settings remain in browser storage unless you explicitly export or share them. The browser requests the public application shell and any icons, maps, audio, or chart data used by the active workflow, so “local-first” does not mean “no network requests during initial loading.”
 
 Never put passwords, tokens, private URLs, connection strings, or private player information in an issue or committed workspace fixture.
 

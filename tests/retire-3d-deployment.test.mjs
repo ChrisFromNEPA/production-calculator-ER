@@ -45,3 +45,8 @@ test('source model archive stays tracked but is absent from Pages allowlist', ()
   assert.equal(allowlist.runtime.some(pattern => /^models\//i.test(pattern)), false);
   assert.equal(allowlist.runtime.some(pattern => /skin/i.test(pattern)), false);
 });
+
+test('Pages budgets are tightened around the post-3D artifact', () => {
+  assert.ok(allowlist.budgets.max_bytes <= 32 * 1024 * 1024);
+  assert.ok(allowlist.budgets.max_files <= 2000);
+});

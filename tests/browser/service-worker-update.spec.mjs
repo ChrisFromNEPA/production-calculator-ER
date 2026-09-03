@@ -155,11 +155,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /** Evaluate an expression in the page and return its value. */
 async function evalJs(page, expression, awaitPromise = false) {
-  const { result } = await page.send('Runtime.evaluate', { expression, awaitPromise, returnByValue: true });
-  if (result && result.exceptionDetails) {
-    throw new Error(`page exception in ${expression}: ${result.exceptionDetails.text}`);
+  const response = await page.send('Runtime.evaluate', { expression, awaitPromise, returnByValue: true });
+  if (response.exceptionDetails) {
+    throw new Error(`page exception in ${expression}: ${response.exceptionDetails.text || 'evaluation failed'}`);
   }
-  return result && 'value' in result ? result.value : undefined;
+  return response.result && 'value' in response.result ? response.result.value : undefined;
 }
 
 /** Poll an expression until it is truthy (deterministic waits, no fixed sleeps). */
@@ -448,16 +448,23 @@ describe('clean-profile service-worker lifecycle', () => {
       { description: 'controller to be present after reload' },
     );
 
-    // The updated worker is now live: its precache exists, and activation has
-    // Give the activation task a turn to finish before inspecting CacheStorage.
-    await sleep(1000);
-    const keys = await evalJs(page, `caches.keys()`, true);
+    // Wait for activation and project-scoped cleanup to finish before inspecting
+    // CacheStorage; controller presence alone can precede the activation task.
+    const keys = await waitFor(
+      page,
+      `(async () => { const keys = await caches.keys(); return keys.includes(${JSON.stringify(updateCache)}) && !keys.includes(${JSON.stringify(baseCache)}) && keys.includes('unrelated-app-cache') ? keys : null; })()`,
+      { description: 'updated cache activation and old-cache cleanup', awaitPromise: true },
+    );
     assert.ok(keys.includes(updateCache), `expected updated cache ${updateCache}, found ${keys.join(', ')}`);
     assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate; found ${keys.join(', ')}`);
     assert.ok(keys.includes('unrelated-app-cache'), 'unrelated origin cache must survive activation');
 
     // With the update applied there is nothing pending: the chip is hidden again.
-    assert.equal(await evalJs(page, `document.getElementById('trust-update').hidden`), true);
+    await waitFor(
+      page,
+      `document.getElementById('trust-update')?.hidden === true`,
+      { description: 'update chip to be hidden after reload' },
+    );
   });
 
   it('offline shell/runtime behavior is preserved: reload still renders from cache with the origin down', async () => {

@@ -1,33 +1,31 @@
 # Release QA and deployment evidence
 
-## Current public deployment
+## v1.4.0 release verification
 
 - URL: <https://chrisfromnepa.github.io/production-calculator-ER/>
 - Source branch: `main`
-- Last verified public application commit: [`75eb18ff3952fb52ee8e426700c5b6a8b303f91c`](https://github.com/ChrisFromNEPA/production-calculator-ER/commit/75eb18ff3952fb52ee8e426700c5b6a8b303f91c) (`fix: restore real signal to the quality gate (C1, H3, H6, H8) (#17)`)
-- Current public release: [v1.3.0](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0)
-- Verified deployment date: 2026-08-29 (post-v1.3.0 deployment; release not created)
+- Release pull request: [#22](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/22)
+- Package and lockfile version: `1.4.0`
+- Service-worker caches: `er-prodcalc-v0.2.46-shell` and `er-prodcalc-v0.2.46-runtime`
 - Deployment workflow: [GitHub Pages Actions](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
-- CI run: [33240656692](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656692)
-- CodeQL run: [33240656738](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656738)
-- Pages run: [33240768046](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240768046)
 
-The public site is a static GitHub Pages application. A release is considered
-verified only after the exact commit passes CI and CodeQL, the Pages workflow
-builds and deploys that SHA, and the live site serves the expected artifact.
+The public site is a static GitHub Pages application. The v1.4.0 release is
+considered verified only after the exact merge commit passes required CI and
+CodeQL, the Pages workflow builds and deploys that SHA, the live manifest and
+service worker match the candidate, and the GitHub release tag targets that
+verified commit. Exact run, commit, artifact, and release links are recorded
+here after those conditions pass.
 
-## Post-v1.3.0 deployment (no new release)
+## Historical post-v1.3.0 deployment
 
-The following evidence belongs to the deployed post-v1.3.0 application state;
-it does not create or imply a v1.4 release.
+The following evidence belongs to the deployment that preceded v1.4.0.
 
 - Application SHA: [`75eb18ff3952fb52ee8e426700c5b6a8b303f91c`](https://github.com/ChrisFromNEPA/production-calculator-ER/commit/75eb18ff3952fb52ee8e426700c5b6a8b303f91c)
 - CI: [run 33240656692](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656692)
 - CodeQL: [run 33240656738](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656738)
 - Pages: [run 33240768046](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240768046)
 - Service-worker cache identifier: `er-v0.2.40`
-- Package metadata remains `0.1.0`; it is not evidence of the deployed release
-  version. Align it with release tags or document a policy before the next release.
+- Package metadata at that historical commit was `0.1.0`.
 
 ## Verified 2026-08-26 v1.3.0 application release
 

@@ -263,6 +263,8 @@ function resetCalculatorForNewPlan() {
   LAST_SINGLE = null;
   LAST_PLANS['calc-result'] = null;
   LAST_PLANS['calc-multi'] = null;
+  LAST_RESULTS['calc-result'] = null;
+  LAST_RESULTS['calc-multi'] = null;
   if (typeof COMBINED_PREVIOUS !== 'undefined') COMBINED_PREVIOUS = null;
 
   var item = document.getElementById('calc-item');
@@ -660,6 +662,9 @@ function saveObtainSite() { try { localStorage.setItem('cmg_obtain_site_v1', JSO
 // Last computed plan per result container, so a site pick can re-render the
 // obtain section in place without recomputing the whole plan.
 var LAST_PLANS = {};
+// Exact engine results behind the visible plan. Apply and copy actions consume
+// these instead of recomputing against state that may use different semantics.
+var LAST_RESULTS = {};
 
 // ── Colonies tab ───────────────────────────────────────────────────────────
 // Absorbs the old Worlds reference. One card per place in the game: what it
@@ -1753,8 +1758,16 @@ function drugProductionInstruction(drug) {
 }
 
 function renderPlan(item, qty, targetEl) {
+  if (targetEl && targetEl.id) {
+    LAST_PLANS[targetEl.id] = null;
+    LAST_RESULTS[targetEl.id] = null;
+  }
   if (!FINAL_ITEMS.includes(item)) {
     targetEl.innerHTML = '<div class="card"><span class="shortfall">That is not a final item. The calculator is for end products (medkits, ammo, foams, etc.). It is produced as an intermediate of another recipe — compute that final item instead.</span></div>';
+    if (targetEl && targetEl.id) {
+      LAST_PLANS[targetEl.id] = null;
+      LAST_RESULTS[targetEl.id] = null;
+    }
     return false;
   }
   // New target? Start with a clean checklist. Same target (path switch, source
@@ -1772,10 +1785,10 @@ function renderPlan(item, qty, targetEl) {
   try {
     result = compute(item, qty, altChoices, Object.assign({}, planLedger), INV_LOCATIONS, DESTINATION, REFINE_DESTINATION);
     plan = result.plan;
-    if (targetEl && targetEl.id) LAST_PLANS[targetEl.id] = plan;
   } catch (e) {
     console.error('Compute error:', e);
     targetEl.innerHTML = '<div class="card"><span class="shortfall">Couldn\'t plan this item — it may have a recipe cycle or missing data. Check the console for details.</span></div>';
+    if (targetEl && targetEl.id) LAST_RESULTS[targetEl.id] = null;
     return false;
   }
 
@@ -1845,6 +1858,13 @@ function renderPlan(item, qty, targetEl) {
       <span class="legend-chip legend-produce"></span> Produce (refine/manufacture) &nbsp;
       <span class="legend-chip legend-surplus"></span> Batch surplus
     </div>`;
+  if (targetEl && targetEl.id) {
+    LAST_PLANS[targetEl.id] = plan;
+    LAST_RESULTS[targetEl.id] = {
+      result,
+      scratch: !!document.getElementById('calc-scratch')?.checked,
+    };
+  }
   return true;
 }
 
@@ -1862,6 +1882,8 @@ function runCalculator() {
   if (!item || !ALL_ITEMS.has(item)) {
     clearQuantityValidation();
     out.innerHTML = '<div class="card"><span class="shortfall">Select a valid item from the list.</span></div>';
+    LAST_PLANS['calc-result'] = null;
+    LAST_RESULTS['calc-result'] = null;
     window.CMG_VALUE_TRANSITION?.announce({ item: 'Production plan', quantity: 1, result: out });
     return;
   }
@@ -1869,6 +1891,7 @@ function runCalculator() {
     showQuantityValidation('Quantity must be a whole number of at least 1. Your previous plan was not updated.');
     out.innerHTML = '<div class="card calculation-error" role="alert"><span class="shortfall">Enter a whole-number quantity of 1 or more, then calculate again.</span></div>';
     LAST_PLANS['calc-result'] = null;
+    LAST_RESULTS['calc-result'] = null;
     return;
   }
   clearQuantityValidation();
@@ -1954,6 +1977,13 @@ let SAVED_PLANS = [];
 try { SAVED_PLANS = JSON.parse(localStorage.getItem(SAVED_PLANS_KEY)) || []; } catch (e) { SAVED_PLANS = []; }
 function saveSavedPlans() { try { localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(SAVED_PLANS)); } catch (e) {} }
 
+function invalidateCombinedPlan() {
+  LAST_PLANS['calc-multi'] = null;
+  LAST_RESULTS['calc-multi'] = null;
+  const output = document.getElementById('calc-multi');
+  if (output) output.innerHTML = '';
+}
+
 function renderTray() {
   const tray = document.getElementById('calc-tray');
   tray.hidden = CALC_TRAY.length === 0;
@@ -1972,13 +2002,20 @@ function addToTray(item, qty) {
   if (!FINAL_ITEMS.includes(item)) { toast(item + ' is not a final product — add a final item to the plan.'); return; }
   const ex = CALC_TRAY.find(t => t.item === item);
   if (ex) ex.qty += qty; else CALC_TRAY.push({ item, qty });
-  saveTray(); renderTray();
+  saveTray(); invalidateCombinedPlan(); renderTray();
 }
 
 // ---- Combined multi-item plan with shared ledger (FIXED) ----
 function runMultiPlan(options) {
+  LAST_PLANS['calc-multi'] = null;
+  LAST_RESULTS['calc-multi'] = null;
   options = options || {};
-  if (CALC_TRAY.length === 0) { toast('Add at least one item to the plan.'); return; }
+  if (CALC_TRAY.length === 0) {
+    LAST_PLANS['calc-multi'] = null;
+    LAST_RESULTS['calc-multi'] = null;
+    toast('Add at least one item to the plan.');
+    return;
+  }
   if (!options.preserveChecklist) resetChecklistForCalculation();
   const out = document.getElementById('calc-multi');
   const single = document.getElementById('calc-result');
@@ -2006,13 +2043,14 @@ function runMultiPlan(options) {
   try {
     result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, REFINE_DESTINATION);
     plan = result.plan;
-    LAST_PLANS['calc-multi'] = plan;
   } catch (e) {
     console.error('Multi-plan compute error:', e);
     // There is no id="plan" element — this used to throw a TypeError inside the
     // catch, masking the real compute error and leaving the user with a blank
     // pane. The combined plan renders into `out` (#calc-multi).
     out.innerHTML = '<div class="card"><span class="shortfall">Couldn\'t plan these items — one may have a recipe cycle or missing data. Check the console for details.</span></div>';
+    LAST_PLANS['calc-multi'] = null;
+    LAST_RESULTS['calc-multi'] = null;
     return;
   } finally {
     if (scratch) { STORE.INV_TOTAL = tmpTotal; STORE.INV_LOCATIONS = tmpLocs; }
@@ -2067,6 +2105,8 @@ function runMultiPlan(options) {
   updateShareLink();
   window.CMG_VALUE_TRANSITION?.markChanged(out);
   window.CMG_VALUE_TRANSITION?.announce({ item: 'Combined production plan', quantity: CALC_TRAY.length, result: out });
+  LAST_PLANS['calc-multi'] = plan;
+  LAST_RESULTS['calc-multi'] = { result, scratch };
 }
 
 // ── Saved production plans ──

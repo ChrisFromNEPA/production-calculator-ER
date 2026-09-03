@@ -11,7 +11,7 @@ This public release is intentionally local-first. The following limitations are 
 - Unaffiliated mode reports gross-cost behavior and does not invent ownership or rebates.
 - Production-time estimates and live market/ownership feeds are not provided.
 - The service worker can retain an older static asset until the browser completes an update cycle. Reload with network access after a release if behavior appears stale.
-- The real-browser fallback verifies rendered production artifacts, but the Hermes interactive browser harness was unavailable during this audit. Full interactive assistive-technology traversal remains a follow-up QA item when that harness is available.
+- Fail-closed Chromium tests cover desktop/mobile rendering, navigation, service-worker lifecycle, console/page errors, and measured load budgets; static checks cover labels, names, IDs, image alternatives, and ARIA references. Manual screen-reader traversal is not automated and remains a documented human QA boundary rather than a claimed guarantee.
 - Game-derived names, data, and assets retain separate rights-holder status. They are not automatically covered by the MIT license for application code.
 - The 2026-08-24 balance snapshot retains its upstream CSV digest, but the exact historical CSV response was not committed and cannot be reconstructed: the live source had a different digest when checked on 2026-09-02. Future `update_balance_stats.py` refreshes archive the exact ingested CSV under `data/source-snapshots/balance-sheet/` before updating generated consumers; no historical or replacement values are inferred.
 - `pythica sustained gloves` is retained only as the documented balance-sheet alias for `Pythica Sustained Battle Gloves`; no separate item or stats are fabricated.
@@ -30,3 +30,15 @@ The game has five PreMet armor variants for each armor body slot: **Buffer, Cont
 - `icons/premet buffer leg pads.png` is present, but its artwork does not match the supplied in-game Buffer or Tremor screenshots. Do not rename or reuse it without confirming its source identity.
 
 The remaining limitation is the source/import collision in which a second **PreMet Buffer X** row was likely meant to be **PreMet Tremor X**. The Tremor Leg Pads asset itself is now repaired; the legacy helmet naming and distinct Buffer/Tremor artwork review remain separate tasks. The recipe and cost calculations are not affected.
+
+A repeat audit on 2026-09-02 searched repository history and public web/archive sources and found no stronger primary evidence for resolving the remaining glove/helmet naming and artwork ambiguity. The compatibility naming and explicit uncertainty are therefore the safe completed data-integrity state until new primary evidence is supplied.
+
+## External material provenance
+
+### `ultra resilient mineral`
+
+This material appears as an input to seven verified recipes, but there is no recipe, mining-site entry, or other canonical source record for the material itself. An authoritative-source search was repeated on 2026-09-02 across repository history, the public Face of Mankind wiki, public web and GitHub search, and available web archives. The bootstrap price dump contains an item-number candidate (`1210`, `36 UC`), but no surviving provenance establishes that dump as canonical for this calculator or confirms acquisition semantics. The material therefore remains explicitly unpriced rather than promoting a plausible value to fact.
+
+### `solid carbonite shell`
+
+This material is referenced by verified recipe data and has an existing price. The 2026-09-02 source search confirmed the existing item-number/price record (`1208`, `36 UC`) in the repository's client-derived bootstrap material, but found no authoritative acquisition, mining, or manufacturing record in public sources or archives. The existing project price is preserved; the external/unknown source classification is not inferred away.

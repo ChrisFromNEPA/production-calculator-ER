@@ -27,6 +27,48 @@ function applyPublicHashRoute() {
   return true;
 }
 
+let itemInputsReady = false;
+function ensureItemInputs() {
+  if (itemInputsReady) return;
+  renderItemOptions();
+  const inventoryList = document.getElementById('inv-item-list');
+  if (inventoryList) ALL_ITEMS.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    inventoryList.appendChild(option);
+  });
+  initPickerFilters();
+  itemInputsReady = true;
+}
+
+function refreshPublicView(view) {
+  if (!hasCompletePlayerProfile()) return;
+  if (view === 'calc') {
+    ensureItemInputs();
+    renderPicker();
+  } else if (view === 'inventory') {
+    ensureItemInputs();
+    ZONE_MOVE_SELECTED.clear();
+    refreshInventoryUI();
+  } else if (view === 'gear') {
+    refreshGear();
+    initBalanceBrowser();
+  } else if (view === 'colonies') {
+    renderColonies();
+  } else if (view === 'battle') {
+    populateBattleColonies();
+    renderBattleNodes();
+  } else if (view === 'drugs') {
+    renderDrugs();
+  }
+}
+
+function refreshActivePublicView() {
+  const active = document.querySelector('.view.active');
+  refreshPublicView(active?.id.replace('view-', '') || 'calc');
+}
+window.refreshActivePublicView = refreshActivePublicView;
+
 function requiredFactionOptions() {
   const factions = (window.ER_FACTIONS?.selectable || []).filter(f => f.id !== 'UNAFFILIATED');
   return '<option value="" disabled selected>Choose a faction…</option>' + factions.map(f =>
@@ -34,12 +76,7 @@ function requiredFactionOptions() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderItemOptions();
-  const edl = document.getElementById('inv-item-list');
-  if (edl) ALL_ITEMS.forEach(name => { const o = document.createElement('option'); o.value = name; edl.appendChild(o); });
-  initPickerFilters();
   refreshAll();
-  renderPicker();
 
   try {
     if (sessionStorage.getItem('er_workspace_imported_once') === '1') {
@@ -282,8 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     reader.readAsText(file);
   });
-  registerViewHook({ view: 'colonies', fn: renderColonies });
-  renderColonies();
+  registerViewHook({ view: 'colonies', fn: () => refreshPublicView('colonies') });
   // Energy/cooling: 'input' keeps the readout live while dragging, 'change'
   // does the replan once the slider is let go rather than on every pixel.
   ['slot-energy', 'slot-cooling'].forEach(id => {
@@ -297,17 +333,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   renderSlotLevels();
   document.getElementById('calc-cleartray').addEventListener('click', () => {
-    CALC_TRAY = []; saveTray(); renderTray();
-    document.getElementById('calc-multi').innerHTML = '';
+    CALC_TRAY = []; saveTray(); invalidateCombinedPlan(); renderTray();
     updateShareLink();
   });
   document.getElementById('tray-items').addEventListener('input', e => {
     const q = e.target.closest('input[data-tray-q]'); if (!q) return;
-    const i = +q.dataset.trayQ; CALC_TRAY[i].qty = Math.max(1, parseInt(q.value, 10) || 1); saveTray();
+    const i = +q.dataset.trayQ; CALC_TRAY[i].qty = Math.max(1, parseInt(q.value, 10) || 1); saveTray(); invalidateCombinedPlan();
   });
   document.getElementById('tray-items').addEventListener('click', e => {
     const x = e.target.closest('button[data-tray-x]'); if (!x) return;
-    CALC_TRAY.splice(+x.dataset.trayX, 1); saveTray(); renderTray();
+    CALC_TRAY.splice(+x.dataset.trayX, 1); saveTray(); invalidateCombinedPlan(); renderTray();
   });
   initTheme();
   renderTray();
@@ -462,7 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('drug-sort').addEventListener('change', renderDrugs);
   document.getElementById('drug-search').addEventListener('input', renderDrugs);
   document.getElementById('bn-search').addEventListener('input', renderBattleNodes);
-  initBalanceBrowser();
 
   // Keep utility popovers singular and dismiss them without trapping the player bar.
   const playerActions = document.querySelector('.player-actions');
@@ -491,11 +525,17 @@ document.addEventListener('DOMContentLoaded', () => {
       toast('Inventory changed since this plan was calculated. Recalculate before applying it.', 4500, 'error');
       return;
     }
-    const item = decodeURIComponent(btn.dataset.apply);
-    const qty = parseInt(btn.dataset.qty, 10);
+    const current = LAST_RESULTS['calc-result'];
+    if (!current?.result) { toast('This plan is no longer current. Calculate it again before applying.', 4000, 'error'); return; }
     snapshotInv();
-    const result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, REFINE_DESTINATION);
-    const log = applyPlan(result);
+    let log;
+    try {
+      log = applyPlan(current.result, undefined, { scratch: current.scratch });
+    } catch (error) {
+      console.error('Apply plan failed:', error);
+      toast('The plan could not be applied. Inventory was restored; recalculate and try again.', 5000, 'error');
+      return;
+    }
 
     // Inventory is updated before the calculator returns to a clean new-plan state.
     resetCalculatorForNewPlan();
@@ -503,29 +543,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Copy shopping list (single + multi)
-  function copyShoppingList() {
-    // Single-item plans MUST use compute()'s positional call shape — passing
-    // `null` for the ledger slot put qty in the alternatives position and the
-    // list silently ignored the chosen refinement paths. Reconstruct the SAME
-    // plan that is on screen, including the scratch-mode inventory override.
-    const scratch = document.getElementById('calc-scratch')?.checked;
-    let result;
-    if (CALC_TRAY.length) {
-      result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, Object.assign({}, INV_TOTAL), null, DESTINATION, REFINE_DESTINATION).plan;
-    } else {
-      const item = document.getElementById('calc-item').value.trim();
-      const qty = Math.max(1, parseInt(document.getElementById('calc-qty').value, 10) || 1);
-      if (!item || !ALL_ITEMS.has(item)) { toast('Calculate a plan first — there is nothing to copy.'); return; }
-      const STORE = window.STORE;
-      const tmpTotal = scratch ? STORE.INV_TOTAL : null;
-      const tmpLocs = scratch ? STORE.INV_LOCATIONS : null;
-      if (scratch) { STORE.INV_TOTAL = {}; STORE.INV_LOCATIONS = {}; }
-      try {
-        result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, REFINE_DESTINATION).plan;
-      } finally {
-        if (scratch) { STORE.INV_TOTAL = tmpTotal; STORE.INV_LOCATIONS = tmpLocs; }
-      }
-    }
+  function copyShoppingList(containerId) {
+    // Copy the exact engine result behind the clicked plan. Recomputing here can
+    // disagree after tray edits or when the visible plan ignores inventory.
+    const current = LAST_RESULTS[containerId];
+    if (!current?.result?.plan) { toast('Calculate this plan again — there is nothing current to copy.'); return; }
+    const result = current.result.plan;
     const lines = [];
     Object.entries(result.transport).forEach(([n,info]) => {
       lines.push(`Move ${fmt(info.qty)} ${displayName(n)} → ${info.to || REFINE_DESTINATION || DESTINATION}`);
@@ -537,17 +560,38 @@ document.addEventListener('DOMContentLoaded', () => {
     result.steps.forEach(s => {
       lines.push(`Craft ${fmt(s.produced)} ${displayName(s.item)} at ${s.location || DESTINATION} (${s.batches} batch${s.batches>1?'es':''})`);
     });
-    navigator.clipboard.writeText(lines.join('\n')).then(() => toast('Shopping list copied!', 3000, 'success'));
+    const text = lines.join('\n');
+    const copyFailed = error => {
+      console.error('Copy shopping list failed:', error);
+      toast('Could not copy the shopping list. Select and copy it manually instead.', 5000, 'error');
+    };
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      Promise.resolve(navigator.clipboard.writeText(text))
+        .then(() => toast('Shopping list copied!', 3000, 'success'))
+        .catch(copyFailed);
+    } catch (error) {
+      copyFailed(error);
+    }
   }
   function sharePlanLink() {
-    updateShareLink();
-    navigator.clipboard.writeText(location.href)
-      .then(() => toast('Share link copied — send it to another player.', 3000, 'success'))
-      .catch(() => toast('Could not copy — copy the URL from the address bar.', 4000, 'error'));
+    const copyFailed = error => {
+      console.error('Copy share link failed:', error);
+      toast('Could not copy — copy the URL from the address bar.', 4000, 'error');
+    };
+    try {
+      updateShareLink();
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      Promise.resolve(navigator.clipboard.writeText(location.href))
+        .then(() => toast('Share link copied — send it to another player.', 3000, 'success'))
+        .catch(copyFailed);
+    } catch (error) {
+      copyFailed(error);
+    }
   }
   ['calc-result', 'calc-multi'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
-      if (e.target.closest('.copy-list')) copyShoppingList();
+      if (e.target.closest('.copy-list')) copyShoppingList(e.currentTarget.id);
       else if (e.target.closest('.share-plan')) sharePlanLink();
     });
   });
@@ -571,15 +615,20 @@ document.addEventListener('DOMContentLoaded', () => {
       toast('Inventory changed since this plan was calculated. Rebuild the combined plan before applying it.', 4500, 'error');
       return;
     }
+    const current = LAST_RESULTS['calc-multi'];
+    if (!current?.result) { toast('This combined plan is no longer current. Build it again before applying.', 4000, 'error'); return; }
     btn.textContent = 'Applying…';
     btn.disabled = true;
     snapshotInv();
-    // Shared ledger across all tray items
-    const ledger = Object.assign({}, INV_TOTAL);
-    const invLoc = {};
-    for (const k in INV_LOCATIONS) invLoc[k] = INV_LOCATIONS[k].map(l => ({ ...l }));
-  const result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, REFINE_DESTINATION);
-    applyPlan(result);
+    try {
+      applyPlan(current.result, undefined, { scratch: current.scratch });
+    } catch (error) {
+      console.error('Apply combined plan failed:', error);
+      btn.textContent = 'Apply combined plan → inventory';
+      btn.disabled = false;
+      toast('The combined plan could not be applied. Inventory was restored; rebuild it and try again.', 5000, 'error');
+      return;
+    }
 
     // Inventory is updated before the combined calculator is cleared for a new tray.
     resetCalculatorForNewPlan();
@@ -753,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Inventory editor
-  populateZones(); renderQuickPicker();
+  populateZones();
   // Lazy-load inventory charts on expand
   document.getElementById('inv-charts-details').addEventListener('toggle', function() {
     if (this.open) renderInvCharts();
@@ -1005,6 +1054,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  registerViewHook({ view: 'calc', fn: () => refreshPublicView('calc') });
+  registerViewHook({ view: 'inventory', fn: () => refreshPublicView('inventory') });
+  registerViewHook({ view: 'gear', fn: () => refreshPublicView('gear') });
+  registerViewHook({ view: 'battle', fn: () => refreshPublicView('battle') });
+  registerViewHook({ view: 'drugs', fn: () => refreshPublicView('drugs') });
+  registerViewHook({ view: 'patch-changes', once: true, fn: initPatchChanges });
+
   // Load shared plan from URL hash, or activate a direct public tab route.
   loadPlanFromHash();
   applyPublicHashRoute();
@@ -1014,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---- Gear loadout ----
-  refreshGear();
+  // Heavy gear rendering is deferred until the Gear view is opened.
   // Slot clicks → picker (right-click to unequip)
   document.querySelectorAll('.gear-slot').forEach(slot => {
     slot.addEventListener('click', (e) => {
@@ -1177,12 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Inventory tab: refresh on enter
-  // Patch Changes tab: proposed balance preview
-  registerViewHook({ view: 'patch-changes', once: true, fn: initPatchChanges });
-  // Direct hash routes are resolved before hooks are registered.
-  if (location.hash === '#patch-changes' && S.isProfileComplete?.(PLAYERS.active, PLAYERS.profiles?.[PLAYERS.active]?.faction)) initPatchChanges();
-  // Inventory tab: refresh on enter (handles player switches)
-  registerViewHook({ view: 'inventory', enter: refreshInventoryUI });
+  // Inventory and other data-heavy views are rendered by the view hooks above.
   // ═══════════════════════════════════════════════════════════════════════════
   // moved to src/app-core.js (global audio + terminal audio)
   // ═══════════════════════════════════════════════════════════════════════════

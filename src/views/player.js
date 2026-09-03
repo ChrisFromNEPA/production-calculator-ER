@@ -52,15 +52,10 @@ function refreshAll() {
     setView(pendingView);
   }
   populateDestinations();
-  // Whole inventory tab (zones, quick-picker, totals, dashboard, live charts) —
-  // a player switch changes all of it, so go through the one refresh path.
-  ZONE_MOVE_SELECTED.clear();
-  refreshInventoryUI();
-  // renderColonies replaces the old renderMining here: the colony cards show
-  // held quantities per ore, so they go stale on a player switch too.
-  renderColonies(); renderDrugs(); populateBattleColonies(); renderBattleNodes();
-  renderPicker();
-  refreshGear();
+  // Data-heavy views render only while active. Hidden views are refreshed by
+  // their setView hooks when opened, so player switches never leave visible
+  // data stale and startup does not construct thousands of invisible nodes.
+  if (typeof window.refreshActivePublicView === 'function') window.refreshActivePublicView();
   // Guild status readout — feature manifest with flavor
   const playerName = PLAYERS.active || 'no operator';
   const invCount = getInv().length;

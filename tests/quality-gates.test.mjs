@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -40,4 +40,25 @@ test('quality gate scripts are wired into check and coverage names an instrument
   const result = run('check-coverage.mjs', ['--help']);
   assert.equal(result.status, 0);
   assert.match(result.stdout, /engine\.js/);
+});
+
+test('the calculator picker caps rendered cards while reporting the full match count', () => {
+  const source = readFileSync(join(root, 'src', 'app-core.js'), 'utf8');
+  const render = source.match(/function renderPicker\(\)[\s\S]*?\n}/)?.[0] || '';
+  assert.match(render, /PICKER_RENDER_LIMIT/);
+  assert.match(render, /matches\.slice\(0, PICKER_RENDER_LIMIT\)/);
+  assert.match(render, /matches\.length/);
+});
+
+test('browser transfer budgets wait for settled responses and fail on network errors', () => {
+  const source = readFileSync(join(root, 'tests', 'browser', 'calculator-ux.spec.mjs'), 'utf8');
+  const serviceWorkerSource = readFileSync(join(root, 'tests', 'browser', 'service-worker-update.spec.mjs'), 'utf8');
+  assert.match(source, /Network\.responseReceived/);
+  assert.match(source, /Network\.loadingFailed/);
+  assert.match(source, /waitForNetworkIdle/);
+  assert.match(source, /networkFailures/);
+  assert.match(source, /response\.exceptionDetails/);
+  assert.match(serviceWorkerSource, /response\.exceptionDetails/);
+  assert.doesNotMatch(source, /BROWSER_TEST_OPTIONAL/);
+  assert.match(source, /redirectResponse/);
 });

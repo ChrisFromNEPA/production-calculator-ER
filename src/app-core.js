@@ -361,8 +361,8 @@ function saveDestination() {
 }
 loadDestination();
 
-function applyPlan(res, dest) {
-  return window.APPLY_PRODUCTION_PLAN(res, dest);
+function applyPlan(res, dest, options) {
+  return window.APPLY_PRODUCTION_PLAN(res, dest, options);
 }
 
 // =========================================================================
@@ -415,6 +415,7 @@ function siteColor(site) {
   return SITE_COLORS[Math.abs(h) % SITE_COLORS.length];
 }
 
+const PICKER_RENDER_LIMIT = 48;
 function renderPicker() {
   const q = normalizeSearchText(document.getElementById('picker-search').value);
   const cat = document.getElementById('picker-cat').value;
@@ -423,9 +424,10 @@ function renderPicker() {
     if (q && !normalizeSearchText(name).includes(q)) return false;
     return true;
   });
+  const visibleMatches = matches.slice(0, PICKER_RENDER_LIMIT);
   const grid = document.getElementById('picker-grid');
   if (!grid) return;
-  grid.innerHTML = matches.map(name => {
+  grid.innerHTML = visibleMatches.map(name => {
     const have = INV_TOTAL[name] || 0;
     const cat = catOf(name);
     const typeLabel = itemTypeLabel(name);
@@ -436,7 +438,9 @@ function renderPicker() {
         <span class="pick-have${have > 0 ? ' have' : ''}" aria-label="${have > 0 ? fmt(have) + ' owned' : 'none owned'}">${have > 0 ? fmt(have) : '—'}</span>
       </button>`;
   }).join('') || `<div class="muted" style="padding:20px;text-align:center">No items match${q ? ' for “' + esc(document.getElementById('picker-search').value.trim()) + '”' : ''}. Try a shorter term, another spelling, or clear the category filter.</div>`;
-  document.getElementById('picker-count').textContent = `${matches.length} final items`;
+  document.getElementById('picker-count').textContent = matches.length > visibleMatches.length
+    ? `${matches.length} final items · showing first ${visibleMatches.length}; refine the search to narrow the list`
+    : `${matches.length} final items`;
 }
 
 // ---- Step card (recipe-flow visual) ----

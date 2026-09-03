@@ -4,8 +4,8 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
-`main` contains deployed post-v1.3.0 work, while the entries below remain
-unreleased until their exact commit is merged and deployed.
+> Planned release: **v1.4.0**. Candidate verification and production deployment
+> are tracked in PR #22 and `docs/release-qa.md`.
 
 ### Fixed
 
@@ -15,37 +15,44 @@ unreleased until their exact commit is merged and deployed.
   workspace imports reload from the restored snapshot so all runtime mirrors agree.
 - Rejected incomplete or inventory-stale Apply actions, shared production Apply
   logic with the test harness, and capped transported output to stock actually moved.
+- Made Apply and shopping-list actions consume the exact displayed plan, preserved
+  existing stock for scratch plans, invalidated stale combined plans after tray
+  edits, and rolled inventory back if an Apply commit fails.
 - Stopped mining discounts from reducing physical material requirements.
 - Classified unresolved external materials explicitly and replaced missing icon
   requests with deliberate text fallbacks.
 
 ### Improved
 
-- Removed the complete public Models area, including its 3D Models, Character
-  Studio, and Item Catalog subtabs; existing `#models` links now fall back safely
-  to the calculator.
+- Removed the complete public Models area and the remaining contextual 3D preview,
+  Character Studio, Item Catalog, viewer code, runtime dependencies, and deployed
+  model payload; existing `#models` links fall back safely to the calculator.
 - Rebuilt the Gear 1.10 patch view and refined calculator presentation and
   narrow-screen layouts.
 - Restored meaningful quality-gate coverage and removed stale communication
   code and generated Python cache artifacts from the tracked surface.
 - Replaced broad Pages copying with a runtime allowlist and fail-closed size/file
-  budgets; source-only extracted textures, test skins, galleries, and model sources
-  no longer ship in the web artifact.
+  budgets; source-only extracted textures, test skins, galleries, and the archived
+  model sources no longer ship in the roughly 24 MB web artifact.
 - Namespaced service-worker caches, separated a bounded optional-asset cache, and
   preserved caches belonging to other projects on the same origin.
 - Added fail-closed Chromium calculator coverage, Python tests, generated-file
   drift checks, full dependency auditing, and synchronized CodeQL updates to CI.
+- Added static syntax/accessibility checks, module-scoped coverage enforcement,
+  measured browser request/byte/DOM budgets with settled/failure-aware network
+  accounting, lazy hidden-view rendering, and a bounded calculator picker.
+- Added a fail-closed policy for newly tracked oversized and duplicate binaries.
 - Added upstream OFL notices for the bundled JetBrains Mono and Orbitron fonts.
 - Made future balance-sheet refreshes retain the exact ingested CSV under a
   date-and-digest snapshot path; the unavailable 2026-08-24 raw response remains
   explicitly documented rather than reconstructed.
-- Documented that npm package metadata still reports `0.1.0`; it is not valid
-  release evidence and needs an explicit alignment policy before the next tag.
+- Aligned npm package and lockfile metadata with release `1.4.0` and removed
+  obsolete 3D dependencies.
 
 ### Verification
 
-- Current deployment evidence is recorded in [release QA](docs/release-qa.md).
-- No v1.4 release, tag, or publication was created for these changes.
+- Exact CI, CodeQL, Pages, browser, artifact, and live-site evidence is recorded
+  in [release QA](docs/release-qa.md).
 
 ## [1.3.0] — 2026-08-26
 
