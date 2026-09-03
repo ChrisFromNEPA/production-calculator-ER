@@ -455,14 +455,6 @@ function concreteInputs(recipe, chosen, totalNeed, dest) {
   return recipe.inputs_alternatives[pickAlternativeIndex(recipe, chosen, totalNeed, dest)];
 }
 
-// Read discount values from the UI panel
-function getDiscounts() {
-  const prod = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-prod')?.value, 10) || 0));
-  const mine = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-mine')?.value, 10) || 0));
-  const trans = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-trans')?.value, 10) || 0));
-  return { prod: prod / 100, mine: mine / 100, trans: trans / 100 };
-}
-
 let DESTINATION = 'Berlin';
 
 // item → colony the player chose to move that item FROM. Set by the UI; the
@@ -471,11 +463,10 @@ let DESTINATION = 'Berlin';
 // because compute()'s signature already juggles two call shapes.
 let TRANSPORT_SOURCE = {};
 
-function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest, discounts, refineDest) {
+function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest, refineDest) {
   // normalize args — two call shapes:
-  //   compute(item, qty, chosen, extLedger, extInvLoc, dest, discounts)
-  //   compute(item, qty, chosen, extLedger, extInvLoc, dest, discounts, refineDest)
-  //   compute(items[], chosen, extLedger, extInvLoc, dest, discounts, refineDest)
+  //   compute(item, qty, chosen, extLedger, extInvLoc, dest, refineDest)
+  //   compute(items[], chosen, extLedger, extInvLoc, dest, refineDest)
   let items;
   let chosen;
   if (typeof itemOrItems === 'string') {
@@ -484,15 +475,13 @@ function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest
   } else {
     items = itemOrItems;
     chosen = qtyOrChosen || {};
-    refineDest = arguments.length >= 7 ? discounts : undefined;
-    discounts = dest;
+    refineDest = arguments.length >= 6 ? dest : undefined;
     dest = extInvLoc;
     extInvLoc = extLedger;
     extLedger = chosenOpt;
   }
   dest = dest || DESTINATION;
   refineDest = refineDest || dest;
-  discounts = discounts || { prod: 0, mine: 0, trans: 0 };
 
   // use external ledger or build one from current inventory
   const ledger = extLedger || {};

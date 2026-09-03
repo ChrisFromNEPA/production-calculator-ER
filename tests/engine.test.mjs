@@ -68,7 +68,6 @@ describe('separate refinement and production destinations', () => {
       1,
       {}, {}, {},
       'Paris',
-      { prod: 0, mine: 0, trans: 0 },
       "DeMorgan's Castle",
     );
     assert.equal(result.plan.destination, 'Paris');
@@ -98,7 +97,6 @@ describe('separate refinement and production destinations', () => {
       1,
       {}, {}, {},
       'Paris',
-      { prod: 0, mine: 0, trans: 0 },
       "DeMorgan's Castle",
     );
     applyPlan(result, 'Paris');
@@ -131,7 +129,6 @@ describe('separate refinement and production destinations', () => {
       ],
       {}, null, null,
       'Paris',
-      { prod: 0, mine: 0, trans: 0 },
       "DeMorgan's Castle",
     );
     const log = applyPlan(result, 'Paris');
@@ -156,7 +153,6 @@ describe('separate refinement and production destinations', () => {
       { 'titanium syntactic foam': 2 },
       { 'titanium syntactic foam': [{ location: 'Manhattan', qty: 2 }] },
       'Paris',
-      { prod: 0, mine: 0, trans: 0 },
       "DeMorgan's Castle",
     );
     const moved = result.plan.transport['titanium syntactic foam'];
@@ -273,7 +269,7 @@ describe('T1d — shared ledger across tray items', () => {
 });
 
 // ---- T1f: multi-item compute() with explicit ledger (regression) ----
-// app.js calls compute(items, chosen, extLedger, extInvLoc, dest, discounts);
+// app.js calls compute(items, chosen, extLedger, extInvLoc, dest);
 // a past bug shifted these args by one so the ledger landed in an ignored slot.
 describe('T1f — array-form compute honours an explicit external ledger', () => {
   it('uses the passed ledger, not the global inventory', () => {
@@ -284,25 +280,13 @@ describe('T1f — array-form compute honours an explicit external ledger', () =>
     const invLoc = { 'metal alloy': [{ location: 'apartment', qty: 5 }] };
     const result = compute(
       [{ item: 'Aurelian Technologies Bio Rounds', qty: 4 }],
-      {}, ledger, invLoc, 'Berlin', { prod: 0, mine: 0, trans: 0 }
+      {}, ledger, invLoc, 'Berlin'
     );
     // Need 5 metal alloy total → all covered by the ledger → transported, none produced
     assert.equal(result.plan.transport['metal alloy']?.qty, 5, 'metal alloy transported from ledger');
     assert.deepEqual(result.plan.transport['metal alloy']?.from, ['apartment'], 'sourced from apartment');
     const alloySteps = result.plan.steps.filter(s => s.item === 'metal alloy');
     assert.equal(alloySteps.length, 0, 'no metal alloy production step needed');
-  });
-});
-
-describe('mining discount quantity safety', () => {
-  it('never reduces raw material acquisition quantities', () => {
-    reset();
-    setPlayerInv([]);
-    const baseline = compute('Aurelian Technologies Bio Rounds', 4, {}, {}, {}, 'Berlin', { prod: 0, mine: 0, trans: 0 });
-    const discounted = compute('Aurelian Technologies Bio Rounds', 4, {}, {}, {}, 'Berlin', { prod: 0, mine: 0.5, trans: 0 });
-    const quantities = plan => Object.fromEntries(Object.entries(plan.plan.acquire).map(([item, info]) => [item, info.qty]));
-    assert.deepEqual(quantities(discounted), quantities(baseline));
-    assert.deepEqual(quantities(discounted), { iron: 3, chrome: 3, 'Chemical Substances': 2 });
   });
 });
 

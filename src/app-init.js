@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = decodeURIComponent(btn.dataset.apply);
     const qty = parseInt(btn.dataset.qty, 10);
     snapshotInv();
-    const result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, getDiscounts(), REFINE_DESTINATION);
+    const result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, REFINE_DESTINATION);
     const log = applyPlan(result);
 
     // Inventory is updated before the calculator returns to a clean new-plan state.
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scratch = document.getElementById('calc-scratch')?.checked;
     let result;
     if (CALC_TRAY.length) {
-      result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, Object.assign({}, INV_TOTAL), null, DESTINATION, getDiscounts(), REFINE_DESTINATION).plan;
+      result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, Object.assign({}, INV_TOTAL), null, DESTINATION, REFINE_DESTINATION).plan;
     } else {
       const item = document.getElementById('calc-item').value.trim();
       const qty = Math.max(1, parseInt(document.getElementById('calc-qty').value, 10) || 1);
@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const tmpLocs = scratch ? STORE.INV_LOCATIONS : null;
       if (scratch) { STORE.INV_TOTAL = {}; STORE.INV_LOCATIONS = {}; }
       try {
-        result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, getDiscounts(), REFINE_DESTINATION).plan;
+        result = compute(item, qty, ALTERNATIVE_CHOICES, null, null, DESTINATION, REFINE_DESTINATION).plan;
       } finally {
         if (scratch) { STORE.INV_TOTAL = tmpTotal; STORE.INV_LOCATIONS = tmpLocs; }
       }
@@ -578,8 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ledger = Object.assign({}, INV_TOTAL);
     const invLoc = {};
     for (const k in INV_LOCATIONS) invLoc[k] = INV_LOCATIONS[k].map(l => ({ ...l }));
-    const discounts = getDiscounts();
-  const result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, discounts, REFINE_DESTINATION);
+  const result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, REFINE_DESTINATION);
     applyPlan(result);
 
     // Inventory is updated before the combined calculator is cleared for a new tray.

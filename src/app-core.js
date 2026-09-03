@@ -5,7 +5,7 @@
  * Loaded BEFORE app.js and all view files. All declarations are top-level.
  *
  * Provides: DATA, tooltipEl, engine aliases (esc, fmt, displayName, iconFor, …),
- *           PLAYERS, DESTINATION, REFINE_DESTINATION, INV_TOTAL, INV_LOCATIONS, getDiscounts,
+ *           PLAYERS, DESTINATION, REFINE_DESTINATION, INV_TOTAL, INV_LOCATIONS,
  *           applyPlan, renderItemOptions, refreshAll, populateDestinations
  */
 'use strict';
@@ -142,13 +142,6 @@ const INV_LOCATIONS = new Proxy({}, {
   has(_, prop) { return prop in S.INV_LOCATIONS; }
 });
 
-// Read discount values from the UI panel
-function getDiscounts() {
-  const prod = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-prod')?.value, 10) || 0));
-  const mine = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-mine')?.value, 10) || 0));
-  const trans = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-trans')?.value, 10) || 0));
-  return { prod: prod / 100, mine: mine / 100, trans: trans / 100 };
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // § DESTINATION — configurable production colony
@@ -1719,12 +1712,12 @@ function decisionSummary(plan) {
 // ═══════════════════════════════════════════════════════════════════════════
 // A lightweight "what if this ran elsewhere?" comparison. Each candidate
 // destination is fed through the ENGINE'S OWN compute()/planCost() with the
-// plan's real inputs (stock, chosen paths, discounts) — only the destination
+// plan's real inputs (stock and chosen paths) — only the destination
 // changes, so colony tax, ownership rebates, mine sites and transport all
 // follow the candidate exactly as the calculator would price it. Nothing is
 // ranked that the data cannot back: rows with unpriced items show n/a, and
 // ★ cheapest is awarded only to a UNIQUE cheapest fully-priced colony.
-// spec = { items: [{item, qty}], chosen, ledger, invLoc, discounts, dest, refineDest }
+// spec = { items: [{item, qty}], chosen, ledger, invLoc, dest, refineDest }
 function colonyCompareRows(spec) {
   const dest = (spec && spec.dest) || DESTINATION;
   const refineDest = (spec && spec.refineDest) || REFINE_DESTINATION || dest;
@@ -1733,12 +1726,12 @@ function colonyCompareRows(spec) {
   const chosen = (spec && spec.chosen) || {};
   const ledger = (spec && spec.ledger) || {};
   const invLoc = (spec && spec.invLoc) || null;
-  const discounts = (spec && spec.discounts) || { prod: 0, mine: 0, trans: 0 };
+
 
   const computed = colonyList().map(colony => {
     let res, cost;
     try {
-      res = compute(items, chosen, Object.assign({}, ledger), invLoc, colony, discounts, refineDest);
+      res = compute(items, chosen, Object.assign({}, ledger), invLoc, colony, refineDest);
       cost = planCost(res.plan, colony);
     } catch (e) {
       return {

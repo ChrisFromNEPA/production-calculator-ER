@@ -130,7 +130,7 @@ describe('safe sample-plan path', () => {
     assert.ok(nameMatch, 'sample loader must name the item');
     const sampleItem = nameMatch[1] || nameMatch[2] || nameMatch[3];
     assert.ok(engine.FINAL_ITEMS.includes(sampleItem), `"${sampleItem}" must be a final item`);
-    const plan = engine.compute(sampleItem, 10, engine.ALTERNATIVE_CHOICES, null, null, 'Berlin', { prod: 0, mine: 0, trans: 0 });
+    const plan = engine.compute(sampleItem, 10, engine.ALTERNATIVE_CHOICES, null, null, 'Berlin');
     assert.ok(plan && plan.plan && plan.plan.steps.length > 0, 'sample item must produce a computable plan');
   });
 });

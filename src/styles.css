@@ -2664,16 +2664,6 @@ tr td:first-child { white-space: nowrap; }
   opacity: .7;
 }
 
-/* ---- Production discount panel ---- */
-.discount-panel {
-  display: flex; gap: 0.625rem; flex-wrap: wrap; align-items: center;
-  background: var(--panel2); border: 1px solid var(--line);
-  border-radius: 6px; padding: 0.5rem 0.75rem; margin-bottom: 0.875rem;
-  font-size: 0.6875rem;
-}
-.discount-panel label { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--muted); }
-.discount-panel input[type="number"] { width: 3.5rem; background: var(--bg); color: var(--cyan); border: 1px solid var(--line); border-radius: 3px; padding: 0.25rem; font-size: 0.6875rem; text-align: right; }
-.discount-title { font-weight: 700; color: var(--accent-bright); text-transform: uppercase; letter-spacing: 1px; font-size: 0.625rem; margin-right: 0.5rem; }
 
 /* =====================================================================
    ALL ITEMS

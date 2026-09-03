@@ -18,9 +18,14 @@ Audit of `main` at `c754cf572c7ac1fcc1393773bf4df3889d9a0365`, cloned locally at
 
 ## Findings and prioritized backlog
 
-### P0 — Validate mining discounts before changing behavior
+### Resolved — Remove unsupported production, mining, and transport discount inputs
 
-`src/engine.js:656-666` applies `discounts.mine` to the required raw-material quantity before planning. A mining discount normally models lower currency cost, not fewer material units. This can under-plan acquisition quantities and produce an apparently complete plan that lacks the required material. Reproduce with a non-zero mining discount and compare required quantities, transport, and Apply behavior. Add a regression test before changing the formula; verify the intended game rule and distinguish quantity modifiers from cost modifiers.
+The calculator never exposed these controls in its shipped UI, and the engine did
+not use their parsed values. The dormant parser, calculation parameters, caller
+arguments, comparison-spec field, and stylesheet were removed. Physical material
+requirements remain recipe-driven; colony tax and the existing cost model are
+unchanged. `tests/discount-plumbing.test.mjs` guards the public calculation API
+and shipped source against reintroducing these unsupported inputs.
 
 ### P0 — Protect startup and imports from malformed player data
 

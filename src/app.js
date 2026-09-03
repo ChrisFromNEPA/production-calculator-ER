@@ -1762,7 +1762,6 @@ function renderPlan(item, qty, targetEl) {
   const planSig = planSignature(item, qty);
   const planApplied = syncPlanIdentity(planSig);
   const altChoices = Object.assign({}, ALTERNATIVE_CHOICES);
-  const discounts = getDiscounts();
   // The SAME starting stock the plan below is computed from. compute() mutates
   // the ledger it is handed (owned stock is deducted as the plan is built), so
   // the what-if comparison gets its own untouched copy — otherwise its "here"
@@ -1771,7 +1770,7 @@ function renderPlan(item, qty, targetEl) {
   const planLedger = Object.assign({}, INV_TOTAL);
   let result, plan;
   try {
-    result = compute(item, qty, altChoices, Object.assign({}, planLedger), INV_LOCATIONS, DESTINATION, discounts, REFINE_DESTINATION);
+    result = compute(item, qty, altChoices, Object.assign({}, planLedger), INV_LOCATIONS, DESTINATION, REFINE_DESTINATION);
     plan = result.plan;
     if (targetEl && targetEl.id) LAST_PLANS[targetEl.id] = plan;
   } catch (e) {
@@ -1999,14 +1998,13 @@ function runMultiPlan(options) {
     for (const k in INV_LOCATIONS) invLoc[k] = INV_LOCATIONS[k].map(l => ({ ...l }));
   }
   // Compute all items against the shared ledger
-  const discounts = getDiscounts();
   let result, plan;
   const STORE = window.STORE;
   const tmpTotal = scratch ? STORE.INV_TOTAL : null;
   const tmpLocs = scratch ? STORE.INV_LOCATIONS : null;
   if (scratch) { STORE.INV_TOTAL = {}; STORE.INV_LOCATIONS = {}; }
   try {
-    result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, discounts, REFINE_DESTINATION);
+    result = compute(CALC_TRAY, ALTERNATIVE_CHOICES, ledger, invLoc, DESTINATION, REFINE_DESTINATION);
     plan = result.plan;
     LAST_PLANS['calc-multi'] = plan;
   } catch (e) {

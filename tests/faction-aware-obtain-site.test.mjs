@@ -25,7 +25,7 @@ describe('faction-aware missing-material colony defaults', () => {
       owners: { Andromeda: ['CMG'], Paris: ['CMG'], Brooklyn: ['FDC'] },
     });
     setPlayerInv([]);
-    const result = compute('carbon', 1, {}, {}, {}, 'Paris', { prod: 0, mine: 0, trans: 0 });
+    const result = compute('carbon', 1, {}, {}, {}, 'Paris');
     assert.equal(result.plan.acquire.coal.preferred, 'Andromeda');
   });
 
@@ -36,7 +36,7 @@ describe('faction-aware missing-material colony defaults', () => {
     });
     window.OBTAIN_SITE = { coal: "DeMorgan's Castle" };
     setPlayerInv([]);
-    const result = compute('carbon', 1, {}, {}, {}, 'Paris', { prod: 0, mine: 0, trans: 0 });
+    const result = compute('carbon', 1, {}, {}, {}, 'Paris');
     assert.equal(result.plan.acquire.coal.preferred, "DeMorgan's Castle");
   });
 });

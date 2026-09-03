@@ -249,7 +249,7 @@ function computeGearPlan() {
   });
   // One tray compute for the whole set — the SAME call the Calculator's
   // multi-item tray makes (compute(items[], chosen, ledger, invLoc, dest,
-  // discounts)). Sharing the ledger aggregates demand across the pieces, so
+  // destination)). Sharing the ledger aggregates demand across the pieces, so
   // the set's batches, total and CMG rebate match the Calculator exactly —
   // summing per-piece plans over-counts surplus batches and can even pick
   // different mine sites, which is why the panel used to disagree with Craft Set.
