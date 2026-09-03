@@ -72,4 +72,5 @@ test('browser transfer budgets wait for settled responses and fail on network er
 
   const ci = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.equal((ci.match(/CHROMIUM_BIN:\s*\/usr\/bin\/chromium/g) || []).length, 2);
+  assert.match(ci, /gitleaks\/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e/);
 });

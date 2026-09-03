@@ -4,7 +4,7 @@
 
 [**Open the live calculator →**](https://chrisfromnepa.github.io/production-calculator-ER/)
 
-[**Latest release: v1.3.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0) · **v1.4.0 candidate:** [PR #22](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/22)
+[**Latest release: v1.4.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.4.0)
 
 [![CI](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml)

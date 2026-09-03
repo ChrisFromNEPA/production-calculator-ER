@@ -4,8 +4,9 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
-> Planned release: **v1.4.0**. Candidate verification and production deployment
-> are tracked in PR #22 and `docs/release-qa.md`.
+No unreleased changes.
+
+## [1.4.0] — 2026-09-02
 
 ### Fixed
 
@@ -38,6 +39,8 @@ All notable public releases are documented here.
   preserved caches belonging to other projects on the same origin.
 - Added fail-closed Chromium calculator coverage, Python tests, generated-file
   drift checks, full dependency auditing, and synchronized CodeQL updates to CI.
+- Updated the pinned Gitleaks action to v3.0.0's verified commit so CI uses its
+  Node 24 runtime instead of the deprecated Node 20 action runtime.
 - Added static syntax/accessibility checks, module-scoped coverage enforcement,
   measured browser request/byte/DOM budgets with settled/failure-aware network
   accounting, lazy hidden-view rendering, and a bounded calculator picker.
