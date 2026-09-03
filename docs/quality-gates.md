@@ -1,0 +1,8 @@
+# Quality gates
+
+`npm run check` runs the no-browser gates and the built-shell baseline. The browser UX job is kept separate because it needs Chromium; it is fail-closed by default (`BROWSER_TEST_OPTIONAL=1` is the explicit opt-out for exploratory local work), so a missing browser cannot turn that job green by skipping tests.
+
+- `npm run check:quality` uses Node's built-in parser on every non-vendor, non-generated browser script under `src/` and rejects `debugger` statements. It intentionally does not run `no-undef`: the application is a legacy ordered-script bundle whose globals are provided by neighboring scripts.
+- `npm run check:a11y` statically checks `index.html` for duplicate IDs, image alternatives, labels/names for controls, and valid ARIA ID references. It is deliberately dependency-free and complements runtime browser checks.
+- `npm run test:coverage` writes `coverage/summary.json` and reports V8 function coverage for `src/engine.js`, the genuinely instrumented runtime module exercised by `tests/engine.test.mjs` and `tests/cmg-net-path.test.mjs`. The threshold is **60%** (current baseline: 61.88%, 112/181 functions). This is a module-scoped regression floor, not a claim about uninstrumented DOM scripts or global project coverage.
+- The existing `npm run test:browser-ux` job also measures initial same-origin load budgets at 1280×900 and 390×844: at most **1,200 DOM elements**, **30 requests**, and **5 MiB transferred bytes**, with **zero console errors and zero page exceptions**. The budget test is in the existing calculator UX suite, avoiding a duplicate Chromium job.

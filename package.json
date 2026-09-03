@@ -10,6 +10,9 @@
     "test": "node scripts/guard-test-count.mjs",
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py'",
     "test:baseline": "node scripts/check-baseline.mjs",
+    "test:coverage": "node scripts/check-coverage.mjs",
+    "check:quality": "node scripts/check-quality.mjs",
+    "check:a11y": "node scripts/check-a11y.mjs",
     "test:sw-update": "npm run build && node --test tests/browser/service-worker-update.spec.mjs",
     "test:browser-ux": "npm run build && node --test tests/browser/calculator-ux.spec.mjs",
     "generate": "node scripts/build-data.mjs && node scripts/build-balance.mjs",
@@ -21,8 +24,8 @@
     "assets:hygiene": "node scripts/check-binary-hygiene.mjs",
     "assets:report": "node scripts/check-assets.mjs --report-only",
     "build:pages": "node scripts/build-pages.mjs",
-    "build": "node scripts/build-pages.mjs",
-    "check": "npm test && npm run test:python && npm run check:generated && npm run build && npm run test:baseline"
+    "build": "npm run build:pages",
+    "check": "npm test && npm run test:python && npm run check:quality && npm run check:a11y && npm run check:generated && npm run build && npm run test:baseline && npm run test:coverage"
   },
   "repository": {
     "type": "git",

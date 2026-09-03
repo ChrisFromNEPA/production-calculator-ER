@@ -88,7 +88,4 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes chromium
       - name: Run calculator browser UX tests
-        env:
-          BROWSER_TEST_REQUIRED: '1'
-          CHROMIUM_BIN: /usr/bin/chromium
         run: npm run test:browser-ux

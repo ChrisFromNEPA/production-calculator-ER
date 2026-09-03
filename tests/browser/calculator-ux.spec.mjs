@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dist = join(root, 'dist');
 const externalBase = process.env.SMOKE_URL?.replace(/\/$/, '');
-const browserRequired = process.env.BROWSER_TEST_REQUIRED === '1' || process.env.CI === 'true';
+const browserRequired = process.env.BROWSER_TEST_OPTIONAL !== '1';
 
 function findChromium() {
   if (process.env.CHROMIUM_BIN) {
@@ -145,7 +145,7 @@ const MIME = {
   '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.glb': 'model/gltf-binary',
 };
 
-const state = { server: null, port: 0, profile: null, chrome: null, browser: null, browserContextId: null, page: null, errors: [], ownsChrome: false };
+const state = { server: null, port: 0, profile: null, chrome: null, browser: null, browserContextId: null, page: null, errors: [], consoleErrors: [], requests: new Map(), ownsChrome: false };
 
 async function cleanupBrowser() {
   state.page?.close();
@@ -195,7 +195,16 @@ async function attachPage(browser, targetId, httpBase) {
   state.page = await Cdp.connect(pageUrl);
   await state.page.send('Page.enable');
   await state.page.send('Runtime.enable');
+  await state.page.send('Network.enable');
   state.page.on('Runtime.exceptionThrown', params => state.errors.push(params.exceptionDetails?.text || 'page exception'));
+  state.page.on('Runtime.consoleAPICalled', params => {
+    if (['error', 'assert'].includes(params.type)) state.consoleErrors.push(params.type);
+  });
+  state.page.on('Network.requestWillBeSent', params => state.requests.set(params.requestId, { url: params.request.url, bytes: 0 }));
+  state.page.on('Network.loadingFinished', params => {
+    const request = state.requests.get(params.requestId);
+    if (request) request.bytes = params.encodedDataLength || 0;
+  });
 }
 
 async function tryPersistentChrome() {
@@ -259,6 +268,28 @@ async function navigate(base, hash = '') {
   await waitFor(state.page, `!!document.getElementById('view-calc')`, 'fresh calculator shell');
 }
 
+async function measureInitialLoad(base, width, height) {
+  await setViewport(width, height);
+  state.requests.clear();
+  state.consoleErrors.length = 0;
+  state.errors.length = 0;
+  await evalJs(state.page, 'localStorage.clear(); sessionStorage.clear();');
+  await state.page.send('Page.navigate', { url: `${base}/#calc` });
+  await waitFor(state.page, `!!document.getElementById('view-calc')`, 'budget calculator shell');
+  await evalJs(state.page, 'document.fonts?.ready');
+  await sleep(500);
+  const origin = new URL(base).origin;
+  const sameOrigin = [...state.requests.values()].filter(request => new URL(request.url).origin === origin);
+  return {
+    viewport: `${width}x${height}`,
+    elements: await evalJs(state.page, 'document.getElementsByTagName("*").length'),
+    requests: sameOrigin.length,
+    bytes: sameOrigin.reduce((sum, request) => sum + request.bytes, 0),
+    consoleErrors: [...state.consoleErrors],
+    pageErrors: [...state.errors],
+  };
+}
+
 async function createProfile() {
   await waitFor(state.page, `(() => { const select = document.getElementById('onboarding-faction'); return !!document.getElementById('onboarding-create') && select && select.options.length > 1; })()`, 'onboarding controls');
   await evalJs(state.page, `(() => {
@@ -299,6 +330,20 @@ describe('real-browser calculator UX smoke', () => {
   });
 
   after(cleanupBrowser);
+
+  smokeIt('keeps initial-load budgets within desktop and mobile limits', async () => {
+    const desktop = await measureInitialLoad(base, 1280, 900);
+    const mobile = await measureInitialLoad(base, 390, 844);
+    for (const metrics of [desktop, mobile]) {
+      assert.ok(metrics.elements <= 1200, `${metrics.viewport} initial DOM budget exceeded: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.requests <= 30, `${metrics.viewport} same-origin request budget exceeded: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.bytes <= 5 * 1024 * 1024, `${metrics.viewport} same-origin byte budget exceeded: ${JSON.stringify(metrics)}`);
+      assert.deepEqual(metrics.consoleErrors, [], `${metrics.viewport} console errors: ${metrics.consoleErrors.join('; ')}`);
+      assert.deepEqual(metrics.pageErrors, [], `${metrics.viewport} page errors: ${metrics.pageErrors.join('; ')}`);
+    }
+    console.log(`[browser-budgets] ${JSON.stringify({ desktop, mobile })}`);
+    await createProfile();
+  });
 
   smokeIt('keeps the duplicate current-execution section removed', async () => {
     await evalJs(state.page, `document.getElementById('calc-guide-sample')?.click()`);
