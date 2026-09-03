@@ -10,9 +10,12 @@ Covers scripts/update_balance_stats.py:
 import hashlib
 import importlib.util
 import json
+import multiprocessing
+import os
 import re
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -37,6 +40,105 @@ def make_csv(rows):
 
 
 class PayloadTests(unittest.TestCase):
+    def test_archives_the_exact_ingested_csv_under_its_digest(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "2026-09-02", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            relative = ubs.archive_csv_snapshot(csv_text, payload, Path(td))
+            archived = Path(td) / relative
+            self.assertEqual(archived.read_text(), csv_text)
+            self.assertEqual(relative, f"data/source-snapshots/balance-sheet/2026-09-02-{digest[:12]}.csv")
+            self.assertEqual(ubs.archive_csv_snapshot(csv_text, payload, Path(td)), relative)
+
+    def test_archive_rejects_a_non_date_path_component(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "../../escape", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            with self.assertRaisesRegex(ValueError, "fetched date"):
+                ubs.archive_csv_snapshot(csv_text, payload, Path(td))
+
+    def test_archive_refuses_to_follow_a_preexisting_symlink(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "2026-09-02", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            archive = root / "data/source-snapshots/balance-sheet"
+            archive.mkdir(parents=True)
+            outside = root / "outside.csv"
+            target = archive / f"2026-09-02-{digest[:12]}.csv"
+            target.symlink_to(outside)
+            with self.assertRaisesRegex(ValueError, "snapshot path"):
+                ubs.archive_csv_snapshot(csv_text, payload, root)
+            self.assertFalse(outside.exists())
+
+    def test_archive_refuses_a_symlinked_parent_directory(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "2026-09-02", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "data").mkdir()
+            outside = root / "outside"
+            outside.mkdir()
+            (root / "data/source-snapshots").symlink_to(outside, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "snapshot path"):
+                ubs.archive_csv_snapshot(csv_text, payload, root)
+            self.assertEqual(list(outside.iterdir()), [])
+
+    def test_archive_rejects_a_fifo_without_blocking(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "2026-09-02", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            archive = root / "data/source-snapshots/balance-sheet"
+            archive.mkdir(parents=True)
+            os.mkfifo(archive / f"2026-09-02-{digest[:12]}.csv")
+            ctx = multiprocessing.get_context("fork")
+            result = ctx.Queue()
+
+            def attempt():
+                try:
+                    ubs.archive_csv_snapshot(csv_text, payload, root)
+                except Exception as exc:
+                    result.put(type(exc).__name__)
+
+            process = ctx.Process(target=attempt)
+            process.start()
+            process.join(0.5)
+            if process.is_alive():
+                process.terminate()
+                process.join()
+                self.fail("archive blocked while opening a FIFO")
+            self.assertEqual(result.get(timeout=0.5), "ValueError")
+
+    def test_archive_never_leaves_a_partial_final_file_after_write_failure(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "2026-09-02", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            final = root / f"data/source-snapshots/balance-sheet/2026-09-02-{digest[:12]}.csv"
+            with mock.patch.object(ubs.os, "fsync", side_effect=OSError("simulated write failure")):
+                with self.assertRaises(OSError):
+                    ubs.archive_csv_snapshot(csv_text, payload, root)
+            self.assertFalse(final.exists())
+
+    def test_archive_rolls_back_publication_when_directory_fsync_fails(self):
+        csv_text = make_csv([{"Name": "Item A", "Health": "10"}])
+        digest = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        payload = {"_meta": {"fetched": "2026-09-02", "csv_sha256": digest}}
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            final = root / f"data/source-snapshots/balance-sheet/2026-09-02-{digest[:12]}.csv"
+            with mock.patch.object(ubs.os, "fsync", side_effect=[None, OSError("directory fsync failure"), OSError("rollback fsync failure")]):
+                with self.assertRaises(OSError):
+                    ubs.archive_csv_snapshot(csv_text, payload, root)
+            self.assertFalse(final.exists())
+
     def test_build_payload_records_provenance_metadata(self):
         csv_text = make_csv([
             {"Name": "Item A", "Health": "10", "Agility": "-1"},

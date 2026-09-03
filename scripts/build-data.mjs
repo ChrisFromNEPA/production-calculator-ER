@@ -7,9 +7,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const dataPath = join(__dirname, '..', 'data', 'game_data.json');
 const outPath = join(__dirname, '..', 'src', 'game_data.js');
+const integrityPath = join(__dirname, '..', 'data', 'data-integrity.json');
 
 const data = JSON.parse(readFileSync(dataPath, 'utf8'));
+const integrity = JSON.parse(readFileSync(integrityPath, 'utf8'));
 const errors = [];
+const externalMaterials = new Map((integrity.external_materials || []).map(item => [item.name.toLowerCase(), item]));
+const iconFallbacks = new Map((integrity.icon_fallbacks || []).map(item => [item.name.toLowerCase(), item]));
 
 // Validate recipes
 const recipeNames = new Set();
@@ -27,6 +31,20 @@ data.recipes.forEach((r, i) => {
       if (!alt.length) errors.push(`recipe[${i}] (${r.output?.item}): empty alternative[${j}]`);
     });
   }
+});
+
+// Every recipe input must be traceable to a produced item, a mining yield, or
+// an explicit external-material record. This prevents silent orphan names.
+const produced = new Set(data.recipes.map(r => r.output?.item?.toLowerCase()).filter(Boolean));
+const mined = new Set(data.mining_sites.flatMap(s => s.yields || []).map(item => item.toLowerCase()));
+data.recipes.forEach((r, i) => {
+  const inputs = (r.inputs || []).concat((r.inputs_alternatives || []).flat());
+  inputs.forEach(input => {
+    const name = input.item?.toLowerCase();
+    if (name && !produced.has(name) && !mined.has(name) && !externalMaterials.has(name)) {
+      errors.push(`recipe[${i}] (${r.output?.item}): input '${input.item}' has no source or explicit external-material allowlist entry`);
+    }
+  });
 });
 
 // Validate mining sites
@@ -62,8 +80,8 @@ data.recipes.forEach(r => {
   if (r.output?.item) {
     const iconPath = join(iconDir, encodeURIComponent(r.output.item.toLowerCase()) + '.png');
     const iconPathRaw = join(iconDir, r.output.item.toLowerCase() + '.png');
-    if (!existsSync(iconPath) && !existsSync(iconPathRaw)) {
-      console.warn(`[build-data] WARNING: no icon for '${r.output.item}'`);
+    if (!existsSync(iconPath) && !existsSync(iconPathRaw) && !iconFallbacks.has(r.output.item.toLowerCase())) {
+      errors.push(`recipe output '${r.output.item}': no icon and no explicit icon-fallback allowlist entry`);
     }
   }
 });
@@ -74,6 +92,10 @@ if (errors.length) {
   process.exit(1);
 }
 
+// Runtime renderers use this policy to avoid requesting known-missing files and
+// producing avoidable 404s. It contains no inferred game facts.
+data.icon_fallbacks = [...iconFallbacks.values()].map(item => item.name);
+
 const js = `// GENERATED — edit data/game_data.json and run node scripts/build-data.mjs
 window.GAME_DATA = ${JSON.stringify(data, null, 2)};
 `;
@@ -81,3 +103,4 @@ window.GAME_DATA = ${JSON.stringify(data, null, 2)};
 writeFileSync(outPath, js);
 console.log(`[build-data] Generated ${outPath} (${js.length} bytes) from ${dataPath}`);
 console.log(`  ${data.recipes.length} recipes, ${data.mining_sites.length} mining sites, ${data.colony_lore.length} colony lore records`);
+console.log(`[build-data] integrity validation passed (${externalMaterials.size} external materials, ${iconFallbacks.size} icon fallbacks)`);

@@ -117,22 +117,22 @@
     {
       "path": "fonts/jetbrains-mono-latin.woff2",
       "class": "third-party-font",
-      "origin": "Bundled webfont; verify upstream package/license record.",
-      "rights_holder": "JetBrains / upstream font authors",
-      "license_or_permission": "Pending upstream license evidence in repository notices.",
+      "origin": "JetBrains Mono Latin webfont; upstream project https://github.com/JetBrains/JetBrainsMono.",
+      "rights_holder": "The JetBrains Mono Project Authors",
+      "license_or_permission": "SIL Open Font License 1.1",
       "transformation": "Webfont packaging.",
       "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain upstream font attribution and license notices."
+      "evidence": "fonts/OFL-JetBrains-Mono.txt; https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt"
     },
     {
       "path": "fonts/orbitron-latin.woff2",
       "class": "third-party-font",
-      "origin": "Bundled webfont; verify upstream package/license record.",
-      "rights_holder": "Upstream font authors",
-      "license_or_permission": "Pending upstream license evidence in repository notices.",
+      "origin": "Orbitron Latin webfont; upstream project https://github.com/googlefonts/orbitron-vf.",
+      "rights_holder": "The Orbitron Project Authors",
+      "license_or_permission": "SIL Open Font License 1.1; Reserved Font Name: Orbitron",
       "transformation": "Webfont packaging.",
       "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain upstream font attribution and license notices."
+      "evidence": "fonts/OFL-Orbitron.txt; https://github.com/google/fonts/blob/main/ofl/orbitron/OFL.txt"
     },
     {
       "path": "docs/assets/calculator-sample.png",

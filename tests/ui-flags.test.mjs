@@ -36,12 +36,10 @@ describe('progressive UI rollout flags', () => {
     assert.deepEqual(JSON.parse(JSON.stringify(context.window.CMG_FEATURE_FLAGS)), {
       layout_v2: false,
       motion_v2: false,
-      r3f_v1: false,
     });
     assert.deepEqual(rootElement.dataset, {
       cmgLayoutV2: 'off',
       cmgMotionV2: 'off',
-      cmgR3fV1: 'off',
     });
   });
 
@@ -52,22 +50,19 @@ describe('progressive UI rollout flags', () => {
     assert.deepEqual(JSON.parse(JSON.stringify(context.window.CMG_FEATURE_FLAGS)), {
       layout_v2: true,
       motion_v2: false,
-      r3f_v1: false,
     });
     assert.equal(rootElement.dataset.cmgLayoutV2, 'on');
     assert.equal(rootElement.dataset.cmgMotionV2, 'off');
-    assert.equal(rootElement.dataset.cmgR3fV1, 'off');
+
   });
 
   it('ignores malformed storage and supports a persisted single-flag override', () => {
     const { context, rootElement, store } = loadFlags({ cmg_feature_flags_v1: '{bad json' });
-    assert.equal(context.setCMGFeatureFlag('r3f_v1', true), true);
-    assert.equal(context.window.CMG_FEATURE_FLAGS.r3f_v1, true);
-    assert.equal(rootElement.dataset.cmgR3fV1, 'on');
+    assert.equal(context.setCMGFeatureFlag('motion_v2', true), true);
+    assert.equal(context.window.CMG_FEATURE_FLAGS.motion_v2, true);
     assert.deepEqual(JSON.parse(store.get('cmg_feature_flags_v1')), {
       layout_v2: false,
-      motion_v2: false,
-      r3f_v1: true,
+      motion_v2: true,
     });
     assert.equal(context.setCMGFeatureFlag('not_a_flag', true), false);
   });

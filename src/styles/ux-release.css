@@ -8,7 +8,7 @@ body.profile-gated #view-calc > :not(.public-notice):not(#first-run) { display: 
 body.profile-gated .nav-bar [data-view]:disabled,
 body.profile-gated .nav-bar [data-nav-view]:disabled,
 body.profile-gated .nav-bar [data-nav-toggle="drawer"]:disabled,
-body.profile-gated .nav-more-btn:disabled { opacity: .42; cursor: not-allowed; }
+body.profile-gated .nav-more-btn:disabled { opacity: 1; color: var(--text); cursor: not-allowed; }
 body.profile-gated #profile-gate-notice { border-left: 3px solid var(--accent); padding-left: .65rem; }
 .settings-menu { position: relative; z-index: 140; margin-left: auto; }
 .settings-menu[open] { z-index: 260; }

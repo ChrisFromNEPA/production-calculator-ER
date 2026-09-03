@@ -7,8 +7,9 @@ with the sheet's complete row (including explicit zeroes); stale recipe-only
 keys are not retained when the sheet has a canonical row.
 
 Provenance: every refresh records a UTC retrieval timestamp, the SHA-256 of
-the ingested CSV text, source/schema identity, raw/unique row counts, and the
-duplicate-conflict behavior alongside a deterministic changed-item summary.
+the ingested CSV text, an immutable CSV snapshot, source/schema identity,
+raw/unique row counts, and duplicate-conflict behavior alongside a
+deterministic changed-item summary.
 
 Run:  python3 scripts/update_balance_stats.py [--csv-file PATH]
 
@@ -17,7 +18,7 @@ the CSV is read from disk (offline/fixture regeneration; provenance still
 records the file's own digest and the current UTC time, and clearly reflects
 the local-file origin).
 """
-import csv, hashlib, json, re, sys, urllib.request
+import csv, hashlib, json, os, re, secrets, stat, sys, urllib.request
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -200,6 +201,87 @@ def fetch_csv_text():
     req = urllib.request.Request(CSV_URL, headers={'User-Agent': 'Mozilla/5.0'})
     return urllib.request.urlopen(req, timeout=30).read().decode('utf-8-sig')
 
+def archive_csv_snapshot(csv_text, payload, root=ROOT):
+    """Store the exact normalized CSV text under a date-and-digest filename."""
+    meta = payload['_meta']
+    fetched = str(meta.get('fetched', ''))
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', fetched):
+        raise ValueError('invalid balance snapshot fetched date')
+    try:
+        if date.fromisoformat(fetched).isoformat() != fetched:
+            raise ValueError
+    except ValueError as cause:
+        raise ValueError('invalid balance snapshot fetched date') from cause
+    digest = hashlib.sha256(csv_text.encode('utf-8')).hexdigest()
+    if digest != meta['csv_sha256']:
+        raise ValueError('CSV snapshot digest does not match payload provenance')
+    relative = Path('data/source-snapshots/balance-sheet') / f"{fetched}-{digest[:12]}.csv"
+    encoded = csv_text.encode('utf-8')
+    directory_flags = os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0) | getattr(os, 'O_NOFOLLOW', 0)
+    nofollow = getattr(os, 'O_NOFOLLOW', 0)
+    opened_directories = []
+    try:
+        try:
+            directory_fd = os.open(Path(root), directory_flags)
+        except OSError as cause:
+            raise ValueError('unsafe balance snapshot path: repository root') from cause
+        opened_directories.append(directory_fd)
+        for component in ('data', 'source-snapshots', 'balance-sheet'):
+            try:
+                os.mkdir(component, mode=0o755, dir_fd=directory_fd)
+            except FileExistsError:
+                pass
+            except OSError as cause:
+                raise ValueError(f'unsafe balance snapshot path: {relative.as_posix()}') from cause
+            try:
+                directory_fd = os.open(component, directory_flags, dir_fd=directory_fd)
+            except OSError as cause:
+                raise ValueError(f'unsafe balance snapshot path: {relative.as_posix()}') from cause
+            opened_directories.append(directory_fd)
+
+        filename = relative.name
+        temporary = f'.{filename}.{os.getpid()}.{secrets.token_hex(8)}.tmp'
+        try:
+            fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | nofollow, 0o644,
+                         dir_fd=directory_fd)
+            with os.fdopen(fd, 'wb') as created:
+                created.write(encoded)
+                created.flush()
+                os.fsync(created.fileno())
+            try:
+                os.link(temporary, filename, src_dir_fd=directory_fd, dst_dir_fd=directory_fd,
+                        follow_symlinks=False)
+                try:
+                    os.fsync(directory_fd)
+                except OSError:
+                    try:
+                        os.unlink(filename, dir_fd=directory_fd)
+                        os.fsync(directory_fd)
+                    except (FileNotFoundError, OSError):
+                        pass
+                    raise
+            except FileExistsError:
+                try:
+                    fd = os.open(filename, os.O_RDONLY | os.O_NONBLOCK | nofollow,
+                                 dir_fd=directory_fd)
+                    with os.fdopen(fd, 'rb') as existing:
+                        if not stat.S_ISREG(os.fstat(existing.fileno()).st_mode) or existing.read() != encoded:
+                            raise ValueError(f'refusing to overwrite different CSV snapshot: {relative.as_posix()}')
+                except OSError as cause:
+                    raise ValueError(f'unsafe balance snapshot path: {relative.as_posix()}') from cause
+        finally:
+            try:
+                os.unlink(temporary, dir_fd=directory_fd)
+            except FileNotFoundError:
+                pass
+    finally:
+        for fd in reversed(opened_directories):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+    return relative.as_posix()
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     csv_file = None
@@ -221,6 +303,7 @@ def main(argv=None):
         csv_text, game_path,
         source_mode='local-fixture' if csv_file else 'live-published-csv',
     )
+    payload['_meta']['csv_snapshot'] = archive_csv_snapshot(csv_text, payload)
     items = payload['items']
     print(f"[2] deduped -> {summary['rows_unique']} unique names "
           f"({summary['dupes_dropped']} identical dupes dropped; conflicting rows fail closed)")

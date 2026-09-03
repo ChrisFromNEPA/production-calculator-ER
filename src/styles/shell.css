@@ -88,6 +88,10 @@
   /* The compact navigation is the safe default on phones. The legacy strip
    * cannot fit beside the theme controls and otherwise clips labels offscreen. */
   header { padding-bottom: 4.5rem; }
+  /* The mobile navigation is fixed and therefore removed from layout flow.
+   * Reserve its footprint so the profile gate/onboarding panel can be read
+   * and scrolled without the last controls sitting behind the nav. */
+  body { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
   .nav-bar { position: static; }
   .nav-bar > #legacy-nav,
   .nav-bar > .nav-more { display: none; }
@@ -109,12 +113,19 @@
     inset: auto 0 0;
     z-index: 120;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.25rem;
     padding: 0.4rem max(0.4rem, env(safe-area-inset-right)) max(0.4rem, env(safe-area-inset-bottom)) max(0.4rem, env(safe-area-inset-left));
     background: color-mix(in srgb, var(--panel2) 94%, transparent);
     border-top: 1px solid var(--line);
     backdrop-filter: blur(12px);
+  }
+  body.profile-gated { padding-bottom: 0; }
+  body.profile-gated header { padding-bottom: 0.75rem; }
+  body.profile-gated .mobile-nav-v2 {
+    position: static;
+    inset: auto;
+    margin-top: 0.5rem;
   }
   .mobile-nav-v2 button {
     min-height: var(--component-touch-target);

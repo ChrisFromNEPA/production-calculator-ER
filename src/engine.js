@@ -3,6 +3,7 @@
 // Provides window.ENGINE and CommonJS exports for testing.
 (function() {
 const DATA = window.GAME_DATA;
+const ICON_FALLBACKS = new Set((DATA.icon_fallbacks || []).map(item => String(item).toLowerCase()));
 
 // ---- derived indexes ---------------------------------------------------
 const ALL_ITEMS = new Set();
@@ -156,23 +157,12 @@ const CRAFTABLE = new Set(Object.keys(RECIPES_BY_OUTPUT));
 
 // ---- icons ----
 function iconFor(item) {
-  const path = 'icons/' + encodeURIComponent(item.toLowerCase()) + '.png';
   const letter = item.replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase() || '?';
-  return `<span class="icon"><img src="${esc(path)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('icon-missing');this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc(letter)}',className:'icon-badge'}))"></span>`;
-}
-
-// Score an alternative path. `totalNeed` is the total demand for the output item;
-// `outQty` is the recipe's output quantity (for estimating batch count).
-// Prefers paths where the player can fully cover the total run from owned stock.
-const MODEL_MANIFEST_PROMISE = { value: null };
-function loadCMGModelManifest() {
-  if (!MODEL_MANIFEST_PROMISE.value) {
-    MODEL_MANIFEST_PROMISE.value = fetch('models/models_manifest.json').then(r => r.json()).then(data => data.models || []);
+  if (ICON_FALLBACKS.has(String(item).toLowerCase())) {
+    return `<span class="icon icon-missing"><span class="icon-badge" aria-label="Icon unavailable">${esc(letter)}</span></span>`;
   }
-  return MODEL_MANIFEST_PROMISE.value;
-}
-function normModelName(value) {
-  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const path = 'icons/' + encodeURIComponent(item.toLowerCase()) + '.png';
+  return `<span class="icon"><img src="${esc(path)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('icon-missing');this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc(letter)}',className:'icon-badge'}))"></span>`;
 }
 
 // ---- Item detail popup (modal) ----
@@ -253,7 +243,6 @@ function showItemDetail(item) {
     (have > 0 ? '<div class="ip-section"><div class="ip-label">Your inventory</div><div class="ip-inv">' +
       (INV_LOCATIONS[item] || []).map(l => '<span class="tag have">' + esc(l.location) + ': ' + fmt(l.qty) + '</span>').join(' ') + '</div></div>' : '') +
     (FINAL_ITEMS.includes(item) ? '<div class="ip-section"><button class="ip-calc primary" data-ip-calc="' + encodeURIComponent(item) + '">Calculate ' + esc(displayName(item)) + '</button></div>' : '') +
-    '<div class="ip-section ip-model-section"><button class="ip-model ghost" data-ip-model="' + encodeURIComponent(item) + '">🧊 Find 3D model</button><div class="ip-model-status muted" aria-live="polite"></div><div class="cmg-preview-slot" data-cmg-3d-preview hidden aria-label="3D item preview"></div></div>' +
     '</div>';
 
   // Every close path funnels through closePopup: it tears down the overlay,
@@ -289,30 +278,7 @@ function showItemDetail(item) {
   overlay.querySelectorAll('[data-ip-item]').forEach(btn => {
     btn.addEventListener('click', () => { const name = decodeURIComponent(btn.dataset.ipItem); closePopup(); showItemDetail(name); });
   });
-  const modelBtn = overlay.querySelector('[data-ip-model]');
-  if (modelBtn) modelBtn.addEventListener('click', async () => {
-    const status = overlay.querySelector('.ip-model-status');
-    const slot = overlay.querySelector('[data-cmg-3d-preview]');
-    modelBtn.disabled = true;
-    if (status) status.textContent = 'Checking model manifest…';
-    try {
-      const models = await loadCMGModelManifest();
-      const entry = models.find(m => normModelName(m.name) === normModelName(item));
-      if (!entry) {
-        if (status) status.textContent = 'No matching model is available for this item.';
-        return;
-      }
-      if (status) status.textContent = entry.name + ' · loading preview';
-      if (slot) {
-        slot.hidden = false;
-        const mounted = await window.mountCMGPreview?.(slot, entry);
-        if (!mounted) status.textContent = 'Enable the 3D preview rollout to inspect this model.';
-      }
-    } catch (err) {
-      if (status) status.textContent = 'Model metadata unavailable.';
-      console.error('Item model lookup failed:', err);
-    } finally { modelBtn.disabled = false; }
-  });
+
   const calcBtn = overlay.querySelector('[data-ip-calc]');
   if (calcBtn) calcBtn.addEventListener('click', () => {
     const name = decodeURIComponent(calcBtn.dataset.ipCalc);
@@ -489,14 +455,6 @@ function concreteInputs(recipe, chosen, totalNeed, dest) {
   return recipe.inputs_alternatives[pickAlternativeIndex(recipe, chosen, totalNeed, dest)];
 }
 
-// Read discount values from the UI panel
-function getDiscounts() {
-  const prod = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-prod')?.value, 10) || 0));
-  const mine = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-mine')?.value, 10) || 0));
-  const trans = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-trans')?.value, 10) || 0));
-  return { prod: prod / 100, mine: mine / 100, trans: trans / 100 };
-}
-
 let DESTINATION = 'Berlin';
 
 // item → colony the player chose to move that item FROM. Set by the UI; the
@@ -505,11 +463,10 @@ let DESTINATION = 'Berlin';
 // because compute()'s signature already juggles two call shapes.
 let TRANSPORT_SOURCE = {};
 
-function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest, discounts, refineDest) {
+function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest, refineDest) {
   // normalize args — two call shapes:
-  //   compute(item, qty, chosen, extLedger, extInvLoc, dest, discounts)
-  //   compute(item, qty, chosen, extLedger, extInvLoc, dest, discounts, refineDest)
-  //   compute(items[], chosen, extLedger, extInvLoc, dest, discounts, refineDest)
+  //   compute(item, qty, chosen, extLedger, extInvLoc, dest, refineDest)
+  //   compute(items[], chosen, extLedger, extInvLoc, dest, refineDest)
   let items;
   let chosen;
   if (typeof itemOrItems === 'string') {
@@ -518,15 +475,13 @@ function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest
   } else {
     items = itemOrItems;
     chosen = qtyOrChosen || {};
-    refineDest = arguments.length >= 7 ? discounts : undefined;
-    discounts = dest;
+    refineDest = arguments.length >= 6 ? dest : undefined;
     dest = extInvLoc;
     extInvLoc = extLedger;
     extLedger = chosenOpt;
   }
   dest = dest || DESTINATION;
   refineDest = refineDest || dest;
-  discounts = discounts || { prod: 0, mine: 0, trans: 0 };
 
   // use external ledger or build one from current inventory
   const ledger = extLedger || {};
@@ -658,7 +613,8 @@ function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest
       const fromOwn = allocOwned(it, allocatable);
       let need = demand - fromOwn;
       if (need > 0) {
-        need = Math.ceil(need * (1 - discounts.mine));
+        // A mining discount is economic context, never a material-yield modifier.
+        // Production still consumes the full recipe quantity.
         const sites = MINE_SITES[it] || [];
         acquire[it] = acquire[it] || { qty: 0, from: [] };
         acquire[it].to = transportTargetFor(it);

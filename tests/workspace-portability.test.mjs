@@ -20,13 +20,21 @@ describe('portable public workspace', () => {
   it('includes player, local settings, and all public local-storage namespaces', () => {
     assert.match(store, /players/);
     assert.match(store, /localStorage/);
-    assert.match(store, /cmg_|er_/);
+    assert.match(store, /cmg_tray_v1/);
+    assert.match(store, /er_saved_plans_v1/);
+    assert.match(store, /CMG_HYDRATE_WORKSPACE/);
   });
 
-  it('exposes workspace export/import controls in the public shell', () => {
+  it('exposes workspace import/export controls in the public shell', () => {
     assert.match(init, /workspace-export|Export workspace/i);
     assert.match(init, /workspace-import|Import workspace/i);
     assert.match(init, /S\.exportWorkspace|S\.importWorkspace/);
+  });
+
+  it('reloads after a successful workspace import so every module rehydrates from restored storage', () => {
+    const handler = init.match(/workspaceFile\.addEventListener\('change'[\s\S]*?reader\.readAsText\(file\);\n\s*}\);/)?.[0] || '';
+    assert.match(handler, /S\.importWorkspace/);
+    assert.match(handler, /location\.reload\(\)/);
   });
 
   it('exports a workspace with a player/entry summary and timestamp in the filename', () => {
@@ -38,7 +46,7 @@ describe('portable public workspace', () => {
 
   it('skips the first-run tutorial after a complete workspace import', () => {
     assert.match(init, /S\.importWorkspace\(JSON\.parse\(reader\.result\)\)/);
-    assert.match(init, /S\.importWorkspace\(JSON\.parse\(reader\.result\)\)[\s\S]*dismissCalcGuide\(\{ focus: false \}\)[\s\S]*refreshAll\(\)/);
+    assert.match(init, /S\.importWorkspace\(JSON\.parse\(reader\.result\)\)[\s\S]*dismissCalcGuide\(\{ focus: false \}\)[\s\S]*location\.reload\(\)/);
   });
 
   it('preserves legacy inventory-only imports', () => {

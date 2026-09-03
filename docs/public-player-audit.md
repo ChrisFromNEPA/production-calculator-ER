@@ -259,8 +259,7 @@ The implementation plan's code and documentation work is complete locally. This 
 
 - `npm test`: **135 tests passed**.
 - `npm run check`: passed; production build copied 5,091 files.
-- `npm run test:3d`: passed.
-- `npm run test:budgets`: passed.
+
 - `npm run assets:check`: passed for 4,430 binary assets.
 - `npm audit --omit=dev`: 0 vulnerabilities.
 - Gitleaks: no leaks found.

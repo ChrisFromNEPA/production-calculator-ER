@@ -4,7 +4,7 @@
 
 [**Open the live calculator →**](https://chrisfromnepa.github.io/production-calculator-ER/)
 
-[**Latest release: v1.3.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0)
+[**Latest release: v1.3.0 →**](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0) · **v1.4.0 candidate:** [PR #22](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/22)
 
 [![CI](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/codeql.yml)
@@ -22,12 +22,12 @@ Production planning is a chain of decisions: which materials are needed, where t
 
 ## Engineering highlights
 
-- **Static client-side application:** the public shell is served as static files; Vite builds the optional React Three Fiber workbench used by the 3D surfaces.
-- **Offline-first delivery:** `sw.js` precaches the application shell, uses network-first updates with cached fallback, and keeps large 3D/chart payloads lazy until the user requests them.
+- **Static client-side application:** the public shell is served as static files; Vite remains available for local hosting.
+- **Offline-first delivery:** `sw.js` precaches the application shell, uses network-first updates with cached fallback, and keeps the optional chart payload lazy until the user requests it.
 - **Browser-local data:** profiles, inventories, saved plans, preferences, and colony-world settings stay in browser storage unless the user explicitly exports them.
 - **Portable workspace state:** versioned player/workspace exports are validated before import, with legacy inventory-only JSON support retained.
 - **Responsive and accessible UI:** responsive layouts, mobile table containment, keyboard-operable controls, semantic regions, focus handling, and reduced-motion behavior are covered by source contracts and browser smoke tests.
-- **Automated quality gates:** Node tests, production builds, asset-provenance checks, dependency auditing, Gitleaks, a clean-profile Chromium service-worker test, GitHub Actions, and CodeQL are part of the repository workflow.
+- **Automated quality gates:** Node and Python tests, module-scoped coverage, static syntax/accessibility checks, production and artifact budgets, binary-growth policy, dependency auditing, Gitleaks, fail-closed Chromium UX/service-worker tests, GitHub Actions, and CodeQL are part of the repository workflow.
 
 ## Architecture and data flow
 
@@ -42,7 +42,7 @@ flowchart LR
   worker[Service worker] --> shell[Cached app shell]
 ```
 
-The calculator reads reviewable source data from `data/`, uses the build scripts to generate runtime consumers, and renders plans in the browser. GitHub Pages receives only the staged `dist/` artifact. There is no production API or server-side workspace database. Optional models and charts are fetched only after an explicit interaction.
+The calculator reads reviewable source data from `data/`, uses the build scripts to generate runtime consumers, and renders plans in the browser. GitHub Pages receives only the staged `dist/` artifact. There is no production API or server-side workspace database. The Pages artifact does not ship the retained source model archive; charts remain the only optional payload.
 
 ## Key features
 
@@ -54,7 +54,7 @@ The calculator reads reviewable source data from `data/`, uses the build scripts
 - Stores profiles, inventory, plans, preferences, and colony assumptions in the browser.
 - Exports and imports portable workspace backups.
 - Remains usable offline after the application has been loaded successfully.
-- Includes reference tools for drugs, battle nodes, colonies, models, the item catalog, character assets, and community notes.
+- Includes reference tools for drugs, battle nodes, colonies, and community notes.
 
 No account, password, API key, shared guild database, or installation is required to use the public site.
 
@@ -147,10 +147,9 @@ For the complete rules, see [Factions and economics](docs/factions-and-economics
 | **Colonies** | Maintain local colony ownership and tax assumptions; export or import a reproducible world snapshot. |
 | **Drugs** | Browse drug reference data. |
 | **Battle Nodes** | Review battle-node and map reference data. |
-| **Models** | Open the 3D model gallery, Character Studio, and Item Catalog from one tab. Optional model files load only when requested. |
 | **Community Notes** | Read public community reference notes included with the project. |
 
-The compact navigation may place less frequently used areas under **More**, especially on phones. **Character Studio** and **Item Catalog** are subtabs inside **Models**, not separate top-level routes.
+The compact navigation may place less frequently used areas under **More**, especially on phones.
 
 ## Profiles, inventory, and workspace backups
 
@@ -211,7 +210,7 @@ The calculator is a static Progressive Web App hosted on GitHub Pages. After a s
 Important boundaries:
 
 - Offline availability depends on the browser having cached the necessary assets.
-- Large optional 3D model files are loaded on demand rather than all being precached.
+- The retained source model archive is excluded from the Pages artifact and is not a runtime feature.
 - Market prices, colony ownership, taxes, transport assumptions, and faction context are not live feeds.
 - Local data does not synchronize automatically between browsers or devices.
 
@@ -228,7 +227,7 @@ See [Known limitations](docs/known-limitations.md) for the complete boundary lis
 
 The public application has no login, shared guild database, remote analytics endpoint, Cloudflare Worker dependency, or GitHub-token requirement.
 
-Profiles, inventory, saved plans, preferences, and world-state settings remain in browser storage unless you explicitly export or share them. The browser still requests public application assets—and optional model files when selected—from the public deployment, so “local-first” does not mean “no network requests during initial loading.”
+Profiles, inventory, saved plans, preferences, and world-state settings remain in browser storage unless you explicitly export or share them. The browser requests the public application shell and any icons, maps, audio, or chart data used by the active workflow, so “local-first” does not mean “no network requests during initial loading.”
 
 Never put passwords, tokens, private URLs, connection strings, or private player information in an issue or committed workspace fixture.
 
@@ -240,7 +239,7 @@ The project contains community-maintained game data and assumptions. Values can 
 
 - Keep canonical balance snapshots, provenance, and generated runtime consumers synchronized as source data changes.
 - Extend clean-profile browser coverage for deeper interactive flows and assistive-technology traversal when the required harness is available.
-- Continue the opt-in 3D workbench migration without making optional model payloads part of the default offline shell.
+- Keep the Pages allowlist explicit and verify that source-only archives remain excluded from deployment.
 
 ### Authoritative combat-stat source
 
@@ -318,8 +317,6 @@ That command runs the complete Node test suite and creates the production Pages 
 Additional focused gates:
 
 ```bash
-npm run test:3d        # build and verify the optional React Three Fiber bundle
-npm run test:budgets   # verify 3D size and performance contracts
 npm run test:browser-ux # real Chromium smoke coverage at desktop and mobile widths
 npm run test:sw-update # clean-profile browser test of the service-worker update lifecycle
 npm run assets:check   # enforce recorded provenance for shipped binary assets
@@ -339,8 +336,7 @@ The main scripts are:
 | Command | Result |
 | --- | --- |
 | `npm test` | Runs all `tests/*.test.mjs` contracts. |
-| `npm run build:3d` | Builds the lazy optional 3D workbench. |
-| `npm run build:pages` | Builds 3D assets and stages the GitHub Pages artifact in `dist/`. |
+| `npm run build:pages` | Stages the explicit GitHub Pages runtime allowlist in `dist/`. |
 | `npm run build` | Alias for the Pages build. |
 | `npm run check` | Runs tests and the complete production build. |
 | `npm run local:host` | Serves the editable working tree on LAN port 4173 for live local development. |
@@ -354,7 +350,7 @@ There is currently no standalone `lint` script in `package.json`; `npm run check
 | `index.html` | Static application shell and public view markup. |
 | `src/app-core.js` | Shared navigation, themes, audio, plan rendering, and application helpers. |
 | `src/app-init.js` | Startup and DOM event wiring. |
-| `src/views/` | Player, inventory, colonies, models, and other public view modules. |
+| `src/views/` | Player, inventory, colonies, reference, and other view modules. |
 | `src/styles.css` and `src/styles/` | Theme, shell, component, responsive, and view styling. |
 | `data/` | Canonical human-reviewable game and faction data. |
 | `scripts/` | Data generation, asset validation, and Pages build tooling. |

@@ -18,9 +18,14 @@ Audit of `main` at `c754cf572c7ac1fcc1393773bf4df3889d9a0365`, cloned locally at
 
 ## Findings and prioritized backlog
 
-### P0 — Validate mining discounts before changing behavior
+### Resolved — Remove unsupported production, mining, and transport discount inputs
 
-`src/engine.js:656-666` applies `discounts.mine` to the required raw-material quantity before planning. A mining discount normally models lower currency cost, not fewer material units. This can under-plan acquisition quantities and produce an apparently complete plan that lacks the required material. Reproduce with a non-zero mining discount and compare required quantities, transport, and Apply behavior. Add a regression test before changing the formula; verify the intended game rule and distinguish quantity modifiers from cost modifiers.
+The calculator never exposed these controls in its shipped UI, and the engine did
+not use their parsed values. The dormant parser, calculation parameters, caller
+arguments, comparison-spec field, and stylesheet were removed. Physical material
+requirements remain recipe-driven; colony tax and the existing cost model are
+unchanged. `tests/discount-plumbing.test.mjs` guards the public calculation API
+and shipped source against reintroducing these unsupported inputs.
 
 ### P0 — Protect startup and imports from malformed player data
 
@@ -39,33 +44,31 @@ Audit of `main` at `c754cf572c7ac1fcc1393773bf4df3889d9a0365`, cloned locally at
 The Pages exact-SHA check in `.github/workflows/pages.yml:42-45` correctly uses the workflow token `$GH_TOKEN`, confirmed by a raw-byte check of both `HEAD` and the working tree. The workflow should still be exercised by a real `workflow_run` event. `docs/release-qa.md` identifies `be48ffe` as the latest verified public application commit while current `main` and the latest successful Pages run are `c754cf5`; update the evidence after verifying the deployed SHA.
 
 
-The repository is about 2.0 GB locally. Measurements found 613 GLBs totaling about 140 MB, while the generated R3F bundle is about 1.19 MB raw / 335 KiB gzip. The current static build copies 5,094 files. Prioritize excluding source/raw extraction material from the Pages artifact where not required, then compress/quantize GLBs and web textures. Add a real deployment-size budget and verify repeated model/studio swaps for disposal and cache lifetime. The current static budget does not cover total Pages payload or browser GPU/heap behavior.
+### Resolved — Retire public 3D and reduce the deployment
 
-### P1 — Audit the legacy 3D path
-
-The legacy renderer remains the default compatibility path. Review `preserveDrawingBuffer`, its DPR cap, unconditional `requestAnimationFrame` loop, damping/auto-rotation, and per-vertex temporary allocations in helper geometry. Remove or gate expensive behavior where screenshots/export do not require it, while preserving the R3F fallback contract and reduced-motion behavior.
+The historical baseline contained 613 GLBs, a generated R3F bundle, a legacy renderer, and a 5,094-file Pages build. The v1.4.0 candidate removes every public 3D surface, viewer/runtime dependency, and deployed model path. The GLBs remain only as a provenance-tracked source archive outside the Pages allowlist. The verified local artifact is 1,787 files / 24,384,508 bytes with fail-closed limits of 2,000 files / 32 MiB, so renderer lifecycle and GPU/heap work is no longer part of the web application.
 
 ### P1 — Correct release evidence drift
 
 `docs/release-qa.md` identifies `be48ffe...` as the last verified public application commit, while the current `main` checkout and successful latest Pages run are `c754cf5...`. Update release evidence only after verifying the exact deployed SHA, and retain the historical v1.3.0 record separately.
 
-### P1 — Expand supply-chain auditing
+### Resolved — Expand supply-chain auditing
 
-CI currently runs `npm audit --omit=dev` in `.github/workflows/ci.yml`. This leaves build/test dependencies outside the vulnerability gate. Add a separate full-tree audit or an explicitly documented reason for any exclusions, and keep the result compatible with the project’s pinned/reproducible install policy.
+The historical CI omitted development dependencies. Current CI runs `npm audit --include=dev` after reproducible `npm ci`; the v1.4.0 candidate contains only Vite as a development dependency and reports zero known vulnerabilities.
 
-### P2 — Narrow service-worker cache cleanup
+### Resolved — Narrow service-worker cache cleanup
 
-`sw.js:62-69` deletes every Cache Storage cache for the origin except the current calculator cache. This is safe for a dedicated origin but can destroy caches belonging to another application sharing the origin. Restrict cleanup to a project-specific cache namespace and add a regression test for unrelated cache preservation.
+Service-worker caches now use the `er-prodcalc-` namespace, keep shell/runtime data separate, bound optional runtime entries, and delete only old project-prefixed caches. Static and real-Chromium lifecycle tests verify unrelated origin caches survive.
 
-### P2 — Add runtime coverage and observability
+### Resolved — Add runtime coverage and observability
 
-The project has extensive source-contract tests (486 Node tests) and three browser specs, but no coverage threshold, lint gate, or browser performance harness. Add focused runtime tests around mining-discount semantics, stale inventory before Apply, and source-location accounting. Add representative desktop/mobile performance checks for FPS, draw calls, heap/resource stability, and common cache sizes.
+The v1.4.0 candidate enforces static syntax/accessibility checks, a 60% function-coverage floor for the directly instrumented engine module, and fail-closed desktop/mobile Chromium budgets for DOM size, same-origin requests/bytes, network failures, console errors, and page exceptions. Apply, stale-inventory, source accounting, and removed-discount semantics have focused regressions.
 
 ### P2 — Improve UX/documentation trust lanes
 
 - Make the calculator’s refine/produce destination summary more prominent, especially around the compact “Same location” control.
 - Label screenshot scanning as assisted matching that requires user confirmation.
-- Ensure Models subtabs expose full ARIA tab semantics and stateful viewer controls.
+- Retire the Models subtabs and viewer controls rather than preserving an unused accessibility surface. Completed in the v1.4.0 candidate.
 - Add a configuration checklist linking profile, inventory, and colony-world setup.
 - Remove stale remote/Worker wording where it remains in comments or historical guidance, while preserving clearly marked historical evidence.
 
@@ -79,11 +82,6 @@ On branch `chore/maintainer-baseline`:
 
 Tracked historical Python bytecode files remain untouched; removing them should be a separate intentional cleanup because they are currently part of repository history.
 
-## Recommended next sequence
+## Completion status
 
-1. Reproduce and settle the mining-discount rule with a focused test.
-2. Update release evidence to the exact current Pages SHA.
-3. Add full dependency auditing and project-scoped service-worker cleanup tests.
-4. Measure and reduce deployed asset weight before further 3D feature work.
-5. Add browser performance/resource checks and a small runtime coverage/lint policy.
-6. Address UX/documentation trust-lane improvements in focused PRs.
+The v1.4.0 candidate resolves the actionable engineering sequence from this audit: unsupported discount plumbing is removed; release metadata is aligned; full dependency auditing and project-scoped service-worker tests are required; public 3D is retired and the Pages artifact is reduced to about 24 MB; static quality/accessibility, module coverage, and measured browser budgets are enforced; and current user-facing documentation is synchronized. Exact production SHA/run links are added to `docs/release-qa.md` only after deployment verification.

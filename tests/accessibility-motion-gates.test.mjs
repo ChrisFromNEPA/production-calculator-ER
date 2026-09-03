@@ -10,6 +10,7 @@ const motion = readFileSync(join(root, 'src', 'ui', 'motion.js'), 'utf8');
 const value = readFileSync(join(root, 'src', 'ui', 'value-transition.js'), 'utf8');
 const css = readFileSync(join(root, 'src', 'styles', 'components.css'), 'utf8');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
+const engine = readFileSync(join(root, 'src', 'engine.js'), 'utf8');
 
 describe('accessibility and motion gates', () => {
   it('short-circuits view motion under prefers-reduced-motion', () => {
@@ -24,8 +25,7 @@ describe('accessibility and motion gates', () => {
     assert.match(html, /aria-live="polite" aria-atomic="true"/);
   });
 
-  it('keeps the optional scene labeled and failure-safe', () => {
-    assert.match(html, /aria-label="3D model viewer"/);
-    assert.match(readFileSync(join(root, 'src', '3d', 'entry.jsx'), 'utf8'), /role="status"/);
+  it('keeps item details focused on production information', () => {
+    assert.doesNotMatch(engine, /3D|model|preview/i);
   });
 });

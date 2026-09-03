@@ -18,8 +18,8 @@ The initial migration audit found approximately **615 MB across 5,168 files**, i
 | Audio | `voice_extracted/` | OGG game audio | **Approved by project owner** |
 | Icons and galleries | `icons/`, `gallery/`, `logo/`, `skins_test/` | Faction, rank, item, and UI imagery | **Approved by project owner** |
 | Maps | `maps/` | Game-derived map/reference imagery | **Approved by project owner** |
-| Fonts | `fonts/` | JetBrains Mono and Orbitron webfonts | Verify upstream licenses before release |
-| Third-party libraries | `src/vendor/`, npm dependencies | Chart.js, Three.js, React, Drei, and related code | Retain upstream notices/licenses |
+| Fonts | `fonts/` | JetBrains Mono and Orbitron webfonts | SIL OFL 1.1 notices retained in `fonts/OFL-*.txt` |
+| Third-party libraries | `src/vendor/`, npm dependencies | Chart.js and related code | Retain upstream notices/licenses |
 | Original application code | `src/`, `scripts/`, `tests/` | Calculator, UI, build and test code | Project license applies where original |
 
 Sizes are informational and must be regenerated before a release. They are not evidence of permission.

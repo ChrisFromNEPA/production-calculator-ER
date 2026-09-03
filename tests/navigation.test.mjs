@@ -17,7 +17,7 @@ const groupedViews = [...groupedMarkup.matchAll(/data-nav-view="([^"]+)"/g)].map
 
 const expectedGroups = {
   workflows: ['calc', 'inventory', 'gear', 'patch-changes'],
-  operations: ['colonies', 'battle', 'models'],
+  operations: ['colonies', 'battle'],
   reference: ['drugs'],
   culture: ['community'],
 };

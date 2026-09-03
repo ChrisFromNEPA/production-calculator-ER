@@ -23,7 +23,7 @@ This document is the operating guide for the Empire Rising Production Calculator
    npm run assets:check
    ```
 
-   For deployment, service-worker, 3D, or performance changes also run the relevant focused gate from `README.md`.
+   For deployment or service-worker changes also run the relevant focused gate from `README.md`.
 5. Open a pull request with provenance, privacy impact, and browser evidence where applicable.
 6. Merge only after required CI and CodeQL checks pass. Prefer squash merges and delete the branch after merging.
 7. Verify the exact deployed commit on the live Pages site and record notable evidence in `docs/release-qa.md` or the changelog.
@@ -80,8 +80,7 @@ gh issue list -R ChrisFromNEPA/production-calculator-ER --state open
 npm run check
 npm run assets:check
 npm run test:sw-update
-npm run test:3d
-npm run test:budgets
+
 ```
 
 Never commit credentials, tokens, private inventories, Discord exports, or unsanitized workspace backups.

@@ -84,7 +84,7 @@ function usedPathDesc(item, altIndex) {
 const PLAN_SPEC = {
   items: [{ item: 'Emergency MediKit', qty: 300 }],
   chosen: {}, ledger: {}, invLoc: null,
-  discounts: { prod: 0, mine: 0, trans: 0 }, dest: 'Berlin',
+  dest: 'Berlin',
 };
 
 describe('decision summary (shipped app-core renderer)', () => {
@@ -194,7 +194,7 @@ describe('colony what-if comparison (shipped app-core renderer)', () => {
     rows.forEach(r => {
       // Recomputed independently with the same inputs: every figure must be
       // exactly what the engine's planCost reports at that destination.
-      const res = compute(PLAN_SPEC.items, PLAN_SPEC.chosen, {}, null, r.colony, PLAN_SPEC.discounts);
+      const res = compute(PLAN_SPEC.items, PLAN_SPEC.chosen, {}, null, r.colony);
       const cost = planCost(res.plan, r.colony);
       if (cost.anyUnknown) {
         assert.equal(r.investment, null, 'unknown plan must not invent investment');
@@ -238,14 +238,13 @@ describe('colony what-if comparison (shipped app-core renderer)', () => {
       bioplasma: [{ location: 'Paris', qty: 300 }],
       glass: [{ location: 'Berlin', qty: 300 }],
     };
-    const discounts = { prod: 0, mine: 0, trans: 0 };
     const consumedLedger = Object.assign({}, fullLedger);
-    const res = compute([{ item: 'Emergency MediKit', qty: 300 }], {}, consumedLedger, invLoc, 'Berlin', discounts);
+    const res = compute([{ item: 'Emergency MediKit', qty: 300 }], {}, consumedLedger, invLoc, 'Berlin');
     assert.notDeepEqual(consumedLedger, fullLedger, 'compute should consume owned stock (sanity)');
     const cost = planCost(res.plan, 'Berlin');
     const rows = colonyCompareRows({
       items: [{ item: 'Emergency MediKit', qty: 300 }], chosen: {},
-      ledger: fullLedger, invLoc, discounts, dest: 'Berlin',
+      ledger: fullLedger, invLoc, dest: 'Berlin',
     });
     const here = rows.find(r => r.here);
     assert.ok(here, 'here row should exist');
@@ -321,7 +320,7 @@ describe('colony what-if comparison (shipped app-core renderer)', () => {
     const spec = {
       items: [{ item: 'Definitely Not A Real Item', qty: 4 }],
       chosen: {}, ledger: {}, invLoc: null,
-      discounts: { prod: 0, mine: 0, trans: 0 }, dest: 'Berlin',
+      dest: 'Berlin',
     };
     const rows = colonyCompareRows(spec);
     assert.ok(rows.length > 0, 'rows are still returned per colony');

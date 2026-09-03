@@ -155,11 +155,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /** Evaluate an expression in the page and return its value. */
 async function evalJs(page, expression, awaitPromise = false) {
-  const { result } = await page.send('Runtime.evaluate', { expression, awaitPromise, returnByValue: true });
-  if (result && result.exceptionDetails) {
-    throw new Error(`page exception in ${expression}: ${result.exceptionDetails.text}`);
+  const response = await page.send('Runtime.evaluate', { expression, awaitPromise, returnByValue: true });
+  if (response.exceptionDetails) {
+    throw new Error(`page exception in ${expression}: ${response.exceptionDetails.text || 'evaluation failed'}`);
   }
-  return result && 'value' in result ? result.value : undefined;
+  return response.result && 'value' in response.result ? response.result.value : undefined;
 }
 
 /** Poll an expression until it is truthy (deterministic waits, no fixed sleeps). */
@@ -172,6 +172,17 @@ async function waitFor(page, expression, { timeout = 20000, description = expres
     await sleep(200);
   }
   throw new Error(`timed out waiting for: ${description} (last value: ${JSON.stringify(last)})`);
+}
+
+async function waitForCacheState(page, { present = [], absent = [], timeout = 20000 } = {}) {
+  const deadline = Date.now() + timeout;
+  let keys = [];
+  while (Date.now() < deadline) {
+    keys = await evalJs(page, 'caches.keys()', true) || [];
+    if (present.every(name => keys.includes(name)) && absent.every(name => !keys.includes(name))) return keys;
+    await sleep(200);
+  }
+  throw new Error(`timed out waiting for cache state; present=${JSON.stringify(present)} absent=${JSON.stringify(absent)} keys=${JSON.stringify(keys)}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -207,6 +218,7 @@ const state = {
   profile: null,
   page: null,
   swOverride: false,
+  swRevision: 0,
   shellFailure: false,
   baseCache: null,
   updateCache: null,
@@ -243,7 +255,9 @@ describe('clean-profile service-worker lifecycle', () => {
         }
         const file = join(dist, pathname);
         let body = await readFile(file);
-        if (pathname === '/sw.js' && state.swOverride) body = Buffer.from(changedSw);
+        if (pathname === '/sw.js' && state.swOverride) {
+          body = Buffer.from(`${changedSw}\n// controlled update revision ${state.swRevision}\n`);
+        }
         res.writeHead(200, {
           'Content-Type': MIME[extname(file).toLowerCase()] || 'application/octet-stream',
           'Content-Length': body.length,
@@ -350,11 +364,42 @@ describe('clean-profile service-worker lifecycle', () => {
     // The install precache landed under the versioned CACHE constant.
     const keys = await evalJs(page, `caches.keys()`, true);
     assert.ok(keys.includes(baseCache), `expected precache ${baseCache}, found ${keys.join(', ')}`);
+
+    // A separate application cache on the same origin must not be treated as
+    // stale service-worker state by this project's activation cleanup.
+    const unrelated = await evalJs(page, `(async () => {
+      const cache = await caches.open('unrelated-app-cache');
+      await cache.put('/unrelated.txt', new Response('keep me'));
+      return caches.keys();
+    })()`, true);
+    assert.ok(unrelated.includes('unrelated-app-cache'));
+  });
+
+  it('keeps optional runtime assets bounded to the declared maximum', async () => {
+    const { page } = state;
+    await evalJs(page, `(async () => {
+      await Promise.all(Array.from({ length: 40 }, (_, i) =>
+        fetch('/src/vendor/chart.min.js?cache-test=' + i)));
+      return true;
+    })()`, true);
+    const runtimeCount = await waitFor(
+      page,
+      `(async () => {
+        const names = await caches.keys();
+        const runtime = names.find(name => name.endsWith('-runtime'));
+        if (!runtime) return -1;
+        return (await (await caches.open(runtime)).keys()).length;
+      })()`,
+      { description: 'runtime cache eviction to complete', awaitPromise: true },
+    );
+    assert.ok(runtimeCount > 0 && runtimeCount <= 32,
+      `runtime cache must stay within its maximum (observed ${runtimeCount})`);
   });
 
   it('rejects a defective update install and keeps the existing worker in control', async () => {
     const { page, baseCache } = state;
     state.swOverride = true;
+    state.swRevision = 1;
     state.shellFailure = true;
     await evalJs(page, `window.__initialController = navigator.serviceWorker.controller;`);
 
@@ -390,6 +435,10 @@ describe('clean-profile service-worker lifecycle', () => {
   it('restored required shell assets allow the update to install successfully', async () => {
     const { page } = state;
     state.shellFailure = false;
+    // A failed install of one script body is not guaranteed to retry identical
+    // bytes. Serve a distinct recovery revision so this phase proves a new,
+    // successful worker rather than observing the failed attempt's partial cache.
+    state.swRevision = 2;
 
     await evalJs(
       page,
@@ -418,13 +467,22 @@ describe('clean-profile service-worker lifecycle', () => {
       { description: 'controller to be present after reload' },
     );
 
-    // The updated worker is now live: its precache exists, the old one is gone.
-    const keys = await evalJs(page, `caches.keys()`, true);
+    // Wait for activation and project-scoped cleanup to finish before inspecting
+    // CacheStorage; controller presence alone can precede the activation task.
+    const keys = await waitForCacheState(page, {
+      present: [updateCache, 'unrelated-app-cache'],
+      absent: [baseCache],
+    });
     assert.ok(keys.includes(updateCache), `expected updated cache ${updateCache}, found ${keys.join(', ')}`);
-    assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate`);
+    assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate; found ${keys.join(', ')}`);
+    assert.ok(keys.includes('unrelated-app-cache'), 'unrelated origin cache must survive activation');
 
     // With the update applied there is nothing pending: the chip is hidden again.
-    assert.equal(await evalJs(page, `document.getElementById('trust-update').hidden`), true);
+    await waitFor(
+      page,
+      `document.getElementById('trust-update')?.hidden === true`,
+      { description: 'update chip to be hidden after reload' },
+    );
   });
 
   it('offline shell/runtime behavior is preserved: reload still renders from cache with the origin down', async () => {

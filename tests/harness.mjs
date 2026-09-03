@@ -53,77 +53,9 @@ require(join(siteDir, 'src', 'game_data.js'));
 require(join(siteDir, 'src', 'store.js'));       // window.STORE (engine depends on it)
 const engine = require(join(siteDir, 'src', 'engine.js'));  // window.ENGINE
 
-// ---- applyPlan (was duplicated; now unified) ----
-// Uses STORE for inventory management, ENGINE for compute results.
-const { esc, fmt } = engine;
-
-function applyPlan(res, dest) {
-  const finalDest = dest || res.plan.destination || engine.DESTINATION || 'Berlin';
-  const refineDest = res.plan.refineDestination || finalDest;
-  const inv = window.STORE.getInv().slice();
-  const log = [];
-
-  function deductAt(item, location, qty) {
-    const idx = inv.findIndex(e => e.item === item && e.location === location);
-    if (idx < 0) return 0;
-    const take = Math.min(qty, inv[idx].quantity);
-    inv[idx].quantity -= take;
-    if (inv[idx].quantity <= 0) inv.splice(idx, 1);
-    return take;
-  }
-  function addAt(item, location, qty) {
-    const idx = inv.findIndex(e => e.item === item && e.location === location);
-    if (idx >= 0) inv[idx].quantity += qty;
-    else inv.push({ item, location, quantity: qty });
-  }
-
-  function availableAt(item, location) {
-    return inv.filter(e => e.item === item && e.location === location)
-      .reduce((sum, e) => sum + e.quantity, 0);
-  }
-
-  // 1) Transport owned stock to destination
-  Object.entries(res.plan.transport).forEach(([item, info]) => {
-    let need = info.qty;
-    const target = info.to || refineDest;
-    info.from.forEach(loc => {
-      if (need <= 0) return;
-      const take = deductAt(item, loc, need);
-      need -= take;
-    });
-    addAt(item, target, info.qty);
-    log.push(`Moved ${fmt(info.qty)} ${esc(item)} → ${esc(target)}`);
-  });
-
-  // 2) Process steps in build order (raws first — engine guarantees this)
-  let previousLocation = refineDest;
-  res.plan.steps.forEach(step => {
-    const location = step.location || finalDest;
-    const inputs = step.resolvedInputs || [];
-    const transferSource = location === refineDest ? previousLocation : refineDest;
-    if (transferSource !== location) {
-      inputs.forEach(inp => {
-        const needAtSource = Math.max(0, inp.qty - availableAt(inp.item, location));
-        const moved = deductAt(inp.item, transferSource, needAtSource);
-        if (moved > 0) addAt(inp.item, location, moved);
-      });
-    }
-    addAt(step.item, location, step.produced);
-    log.push(`${step.type === 'manufacture' ? 'Manufactured' : 'Refined'} ${fmt(step.produced)} ${esc(step.item)} at ${esc(location)}`);
-    inputs.forEach(inp => {
-      const taken = deductAt(inp.item, location, inp.qty);
-      const shortfall = inp.qty - taken;
-      if (shortfall > 0) {
-        log.push(`⚠ assumed mined: ${fmt(shortfall)}× ${esc(inp.item)} (not at ${esc(location)})`);
-      }
-    });
-    previousLocation = location;
-  });
-
-  window.STORE.setInv(inv);
-  window.STORE.recomputeInv();
-  return log;
-}
+// ---- Shared production Apply implementation ----
+require(join(siteDir, 'src', 'apply-plan.js'));
+const applyPlan = window.APPLY_PRODUCTION_PLAN;
 
 // ---- Test helpers ----
 function setTestInv(t, l) {

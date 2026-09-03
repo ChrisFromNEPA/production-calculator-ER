@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-cmg-layout-v2="off" data-cmg-motion-v2="off" data-cmg-r3f-v1="off">
+<html lang="en" data-cmg-layout-v2="off" data-cmg-motion-v2="off">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,7 +24,7 @@
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/jetbrains-mono-latin.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 </style>
 <link rel="stylesheet" href="src/styles.css?v=60" />
-<link rel="stylesheet" href="src/styles/ux-release.css?v=10" />
+<link rel="stylesheet" href="src/styles/ux-release.css?v=11" />
 <link rel="stylesheet" href="src/styles/surviving-reference.css?v=5" />
 </head>
 <body>
@@ -56,7 +56,6 @@
     <button class="tab" data-view="colonies" role="tab" aria-selected="false">Colonies</button>
     <button class="tab" data-view="drugs" role="tab" aria-selected="false">Drugs</button>
     <button class="tab" data-view="battle" role="tab" aria-selected="false">Battle Nodes</button>
-    <button class="tab" data-view="models" role="tab" aria-selected="false">Models</button>
   </nav>
   <div class="nav-more">
     <button type="button" class="nav-more-btn" aria-haspopup="true" aria-expanded="false" aria-controls="nav-more-menu">
@@ -79,7 +78,6 @@
         <h2 id="nav-v2-operations">Operations</h2>
         <button type="button" data-nav-view="colonies">Colonies</button>
         <button type="button" data-nav-view="battle">Battle Nodes</button>
-        <button type="button" data-nav-view="models">Models / Character Studio</button>
       </section>
       <section class="nav-v2-group" data-nav-group="reference" aria-labelledby="nav-v2-reference">
         <h2 id="nav-v2-reference">Reference</h2>
@@ -109,7 +107,6 @@
         <button type="button" data-nav-view="patch-changes">Gear 1.10</button>
         <button type="button" data-nav-view="colonies">Colonies</button>
         <button type="button" data-nav-view="battle">Battle Nodes</button>
-        <button type="button" data-nav-view="models">Models / Character Studio</button>
         <button type="button" data-nav-view="drugs">Drugs</button>
         <button type="button" data-nav-view="community">Community Notes</button>
       </div>
@@ -622,140 +619,6 @@
     <div id="bn-body" class="bn-body"></div>
   </section>
 
-  <!-- MODELS -->
-  <section id="view-models" class="view" role="tabpanel" aria-label="Models">
-    <h3 class="view-title">🧊 Model &amp; Texture Workbench</h3>
-    <p class="muted" style="font-size:0.75rem;max-width:760px">Interactive 3D armor/item viewer from the Empire Rising client. Drag to orbit, scroll to zoom, right-drag to pan. Select a model to inspect its pieces and skin atlases; export textures as PNG for editing, or re-import an edited texture to preview it live. <span id="models-count" class="muted"></span></p>
-    <div class="models-subtabs">
-      <button type="button" id="models-tab-3d" class="models-subtab active">🧊 3D Models</button>
-      <button type="button" id="models-tab-studio" class="models-subtab">🧍 Character Studio</button>
-      <button type="button" id="models-tab-icons" class="models-subtab">🖼️ Item Catalog <span class="models-subtab-count" id="models-icon-count"></span></button>
-    </div>
-    <div id="models-pane-3d">
-    <div class="models-layout">
-      <div class="models-sidebar">
-        <div class="models-controls">
-          <input id="models-search" type="text" placeholder="filter models…" autocomplete="off" aria-label="Filter models" />
-          <select id="models-category" aria-label="Category">
-            <option value="">All categories</option>
-          </select>
-          <label class="models-texonly"><input type="checkbox" id="models-texonly" /> 🎨 textured only</label>
-          <button id="models-close" class="models-back-btn" hidden>← Back to gallery</button>
-        </div>
-        <div id="models-gallery" class="models-gallery" aria-live="polite"></div>
-      </div>
-      <div class="models-stage">
-        <div id="models-viewer" class="models-viewer" aria-label="3D model viewer">
-          <div class="models-viewer-hint" id="models-hint">Select a model from the gallery</div>
-        </div>
-        <div class="models-stage-controls" id="models-stage-controls" hidden>
-          <div class="models-model-name" id="models-model-name"></div>
-          <div class="models-model-meta" id="models-model-meta"></div>
-          <div class="models-stage-buttons">
-            <button id="models-autorotate" class="models-stage-btn active" title="Toggle auto-rotate">🔄 Auto</button>
-            <button id="models-wireframe" class="models-stage-btn" title="Toggle wireframe">🕸️ Wire</button>
-            <button id="models-normal" class="models-stage-btn active" title="Toggle face normals">🧭 Normals</button>
-            <button id="models-grid" class="models-stage-btn" title="Toggle floor grid">📐 Grid</button>
-            <button id="models-reset" class="models-stage-btn" title="Reset camera">🎯 Reset</button>
-            <button id="models-export-glb" class="models-stage-btn" title="Download this model as GLB">⬇️ GLB</button>
-          </div>
-        </div>
-        <div class="models-workbench" id="models-workbench" hidden>
-          <div class="models-wb-panel">
-            <div class="models-wb-title">🧵 Skin atlases
-              <span class="models-wb-sub">click to enlarge · ⬇ to export for editing</span>
-            </div>
-            <div class="models-wb-textures" id="models-textures"></div>
-            <label class="models-import-zone" id="models-import-zone">
-              <input type="file" id="models-import-tex" accept="image/png,image/jpeg" hidden />
-              <span>📥 Re-import an edited texture to preview it live on the model</span>
-            </label>
-          </div>
-          <div class="models-wb-panel">
-            <div class="models-wb-title">🔩 Pieces <span class="models-wb-sub">mesh → skin mapping</span></div>
-            <div class="models-wb-pieces" id="models-pieces"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-    <div id="models-pane-icons" hidden>
-      <div class="icons-layout">
-        <div class="icons-controls">
-          <input id="icons-search" type="text" placeholder="search items… (e.g. rifle, beer, armor)" autocomplete="off" aria-label="Search items" />
-          <select id="icons-group" aria-label="Item group">
-            <option value="">All groups</option>
-          </select>
-        </div>
-        <div class="icons-grid" id="icons-grid" aria-live="polite"></div>
-        <div class="icons-detail" id="icons-detail" hidden>
-          <div class="icons-detail-top">
-            <img id="icons-detail-img" alt="" />
-            <div class="icons-detail-info">
-              <div class="icons-detail-name" id="icons-detail-name"></div>
-              <div class="icons-detail-meta" id="icons-detail-meta"></div>
-              <div class="icons-detail-stats" id="icons-detail-stats"></div>
-            </div>
-          </div>
-          <div class="icons-detail-links" id="icons-detail-links"></div>
-        </div>
-      </div>
-    </div>
-    <div id="models-pane-studio" hidden>
-      <div class="studio-layout">
-        <div class="studio-sidebar">
-          <div class="studio-controls">
-            <label class="studio-label">Gender
-              <select id="studio-gender">
-                <option value="f">Female</option>
-                <option value="m">Male</option>
-              </select>
-            </label>
-            <label class="studio-label">Faction
-              <select id="studio-faction"></select>
-            </label>
-            <label class="studio-label">Torso
-              <select id="studio-torso"></select>
-            </label>
-            <label class="studio-label">Legs
-              <select id="studio-legs"></select>
-            </label>
-            <div class="studio-gear">
-              <div class="studio-gear-title">Gear visibility</div>
-              <div class="studio-gear-grid" id="studio-gear-grid"></div>
-            </div>
-            <div class="studio-stage-buttons">
-              <button id="studio-autorotate" class="models-stage-btn active" title="Toggle auto-rotate">🔄 Auto</button>
-              <button id="studio-reset" class="models-stage-btn" title="Reset camera">🎯 Reset</button>
-              <button id="studio-export" class="models-stage-btn" title="Download current outfit as GLB">⬇️ GLB</button>
-            </div>
-            <p class="muted" style="font-size:0.72rem">Skin swaps are client-side only — the rendered outfit stays in your browser.</p>
-          </div>
-        </div>
-        <div class="studio-stage">
-          <div id="studio-viewer" class="models-viewer" aria-label="Character studio 3D viewer">
-            <div class="models-viewer-hint" id="studio-hint">Loading character…</div>
-          </div>
-          <div class="studio-model-name" id="studio-model-name"></div>
-        </div>
-      </div>
-    </div>
-    <div class="models-lightbox" id="models-lightbox" hidden>
-      <div class="models-lightbox-inner">
-        <img id="models-lightbox-img" alt="enlarged skin atlas" />
-        <div class="models-lightbox-bar">
-          <span id="models-lightbox-name"></span>
-          <span class="models-lightbox-actions">
-            <button id="models-lightbox-replace" class="models-stage-btn">🔄 Replace…</button>
-            <button id="models-lightbox-dl" class="models-stage-btn">⬇️ Export PNG</button>
-            <button id="models-lightbox-close" class="models-stage-btn">✖ Close</button>
-          </span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
   <!-- COMMUNITY NOTES -->
   <section id="view-community" class="view" role="tabpanel" aria-label="Community notes">
     <h3 class="view-title">📝 Community Notes</h3>
@@ -779,7 +642,7 @@
         <label class="colonies-search"><span>Find a colony or resource</span><input id="col-search" placeholder="Search ore, world, or faction…" aria-label="Filter colonies and resources" /></label>
         <label class="colonies-filter"><span>Show</span><select id="col-filter" aria-label="Filter colony cards"><option value="all">Production and owned worlds</option><option value="mine">My faction's worlds</option><option value="global-dominion">Global Dominion worlds</option><option value="reference">Other known worlds</option></select></label>
         <label class="checkbox-label colonies-legacy-filter"><input type="checkbox" id="col-priced-only" /> production only</label>
-        <details id="colonies-world-data" class="colonies-world-data"><summary>World data</summary><div><span id="colony-world-status" class="muted" aria-live="polite">Saved on this device</span><button id="colony-world-export" class="ghost" type="button">Export</button><button id="colony-world-import" class="ghost" type="button">Import</button><button id="colony-world-reset" class="ghost danger" type="button">Reset</button><input id="colony-world-import-file" type="file" accept="application/json,.json" hidden /></div></details>
+        <details id="colonies-world-data" class="colonies-world-data"><summary>World data</summary><div><span id="colony-world-status" class="muted" aria-live="polite">Saved on this device</span><button id="colony-world-export" class="ghost" type="button">Export</button><button id="colony-world-import" class="ghost" type="button">Import</button><button id="colony-world-reset" class="ghost danger" type="button">Reset</button><input id="colony-world-import-file" type="file" accept="application/json,.json" hidden aria-label="Import colony world data" /></div></details>
       </div>
       <section id="colonies-production" aria-labelledby="colonies-production-title"><div class="colonies-section-head"><div><span class="eyebrow">Actionable worlds</span><h4 id="colonies-production-title">Production colonies</h4></div><span id="col-count" class="muted"></span></div><div class="colonies-grid col-grid" id="col-grid"></div></section>
       <section id="colonies-reference" class="colonies-reference" aria-labelledby="colonies-reference-title"><div class="colonies-section-head"><div><span class="eyebrow">Reference</span><h4 id="colonies-reference-title">Other known worlds</h4></div></div><div id="col-reference-grid" class="colonies-reference-grid"></div></section>
@@ -795,7 +658,7 @@
      how high the overlay's own z-index went. -->
 <div id="inv-detail-overlay" class="inv-detail-overlay" hidden>
       <div class="inv-detail-panel" id="inv-detail-panel"></div>
-      <div class="cmg-preview-slot" data-cmg-3d-preview hidden aria-label="3D item preview"></div>
+
     </div>
 
 <div id="gear-picker-overlay" class="gear-picker-overlay" hidden>
@@ -805,7 +668,7 @@
           <button id="gear-picker-close" class="ghost" aria-label="Close">×</button>
         </div>
         <div class="gear-picker-toolbar">
-          <input id="gear-picker-search" type="text" placeholder="filter items…" autocomplete="off" />
+          <input id="gear-picker-search" type="text" placeholder="filter items…" autocomplete="off" aria-label="Filter gear items" />
           <select id="gear-picker-faction" aria-label="Faction"><option value="">All factions</option></select>
           <select id="gear-picker-weight" aria-label="Armour weight class">
             <option value="">Light + Heavy</option>
@@ -813,7 +676,7 @@
             <option value="Heavy">Heavy only</option>
             <option value="?">Armour with no class</option>
           </select>
-          <select id="gear-picker-sort">
+          <select id="gear-picker-sort" aria-label="Sort gear items">
             <option value="net">Lowest configured local cost</option>
             <option value="total">Cheapest to pay</option>
             <option value="">Default order</option>
@@ -845,31 +708,28 @@
   </div>
 </footer>
 
-<script src="src/game_data.js?v=29"></script>
+<script src="src/game_data.js?v=30"></script>
 <script src="src/balance_stats.js?v=1"></script>
 <script src="src/costs.js?v=13"></script>
 <script src="src/armor_classes.js?v=3"></script>
 <script src="src/factions.js?v=2"></script>
-<script src="src/store.js?v=5"></script>
-<script src="src/engine.js?v=21"></script>
+<script src="src/store.js?v=6"></script>
+<script src="src/engine.js?v=22"></script>
+<script src="src/apply-plan.js?v=2"></script>
 <script src="src/ui/motion.js?v=1"></script>
 
-<script src="src/app-core.js?v=56"></script>
+<script src="src/app-core.js?v=57"></script>
 <script src="src/ui/value-transition.js?v=2"></script>
-<script src="src/ui/r3f-loader.js?v=1"></script>
-<script src="src/ui/spatial-emphasis.js?v=1"></script>
+
 <script src="src/colony-work.js?v=1"></script>
-<script src="src/app.js?v=94"></script>
-<script src="src/ui/legacy-3d-loader.js?v=1"></script>
+<script src="src/app.js?v=95"></script>
 <script src="src/ui/chart-loader.js?v=1"></script>
-<script src="src/views/models.js?v=22"></script>
-<script src="src/views/character.js?v=2"></script>
 <script src="src/views/reference.js?v=10"></script>
 <script src="src/views/patch-changes.js?v=11"></script>
-<script src="src/views/gear.js?v=22"></script>
+<script src="src/views/gear.js?v=23"></script>
 <script src="src/views/inventory.js?v=38"></script>
 <script src="src/views/player.js?v=6"></script>
-<script src="src/app-init.js?v=55"></script>
+<script src="src/app-init.js?v=56"></script>
 <script src="src/ui/trust-indicators.js?v=1"></script>
 
 </body>

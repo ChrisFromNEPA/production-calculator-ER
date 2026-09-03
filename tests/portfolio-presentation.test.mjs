@@ -7,7 +7,7 @@ const root = join(import.meta.dirname, '..');
 const read = file => readFileSync(join(root, file), 'utf8');
 const html = read('index.html');
 const css = read('src/styles/ux-release.css');
-const buildPages = read('scripts/build-pages.mjs');
+const publicFiles = JSON.parse(read('public-files.json'));
 const readme = read('README.md');
 const authors = read('AUTHORS.md');
 const license = read('LICENSE');
@@ -41,8 +41,8 @@ describe('employer-facing public presentation', () => {
 
   it('keeps the portfolio screenshot in the Pages artifact and the service-worker version current', () => {
     assert.equal(existsSync(join(root, 'docs/assets/calculator-sample.png')), true);
-    assert.match(buildPages, /docs\/assets\/calculator-sample\.png/);
-    assert.match(sw, /const CACHE = 'er-v0\.2\.40'/);
+    assert.ok(publicFiles.runtime.includes('docs/assets/calculator-sample.png'));
+    assert.match(sw, /const CACHE = 'er-prodcalc-v0\.2\.46-shell'/);
   });
 
   it('keeps the project intro bounded and usable at mobile widths', () => {
@@ -63,6 +63,7 @@ describe('employer-facing public presentation', () => {
       '## License and asset notice',
     ]) assert.match(readme, new RegExp(`^${heading}$`, 'm'));
     assert.match(readme, /releases\/tag\/v1\.3\.0/);
+    assert.match(readme, /v1\.4\.0 candidate/);
     assert.match(readme, /docs\/assets\/calculator-sample\.png/);
     assert.match(readme, /npm run check/);
     assert.match(readme, /npm run test:browser-ux/);

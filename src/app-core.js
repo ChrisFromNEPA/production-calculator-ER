@@ -5,7 +5,7 @@
  * Loaded BEFORE app.js and all view files. All declarations are top-level.
  *
  * Provides: DATA, tooltipEl, engine aliases (esc, fmt, displayName, iconFor, …),
- *           PLAYERS, DESTINATION, REFINE_DESTINATION, INV_TOTAL, INV_LOCATIONS, getDiscounts,
+ *           PLAYERS, DESTINATION, REFINE_DESTINATION, INV_TOTAL, INV_LOCATIONS,
  *           applyPlan, renderItemOptions, refreshAll, populateDestinations
  */
 'use strict';
@@ -142,13 +142,6 @@ const INV_LOCATIONS = new Proxy({}, {
   has(_, prop) { return prop in S.INV_LOCATIONS; }
 });
 
-// Read discount values from the UI panel
-function getDiscounts() {
-  const prod = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-prod')?.value, 10) || 0));
-  const mine = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-mine')?.value, 10) || 0));
-  const trans = Math.max(0, Math.min(100, parseInt(document.getElementById('disc-trans')?.value, 10) || 0));
-  return { prod: prod / 100, mine: mine / 100, trans: trans / 100 };
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // § DESTINATION — configurable production colony
@@ -368,84 +361,8 @@ function saveDestination() {
 }
 loadDestination();
 
-function applyPlan(res, dest) {
-  const finalDest = dest || res.plan.destination || DESTINATION;
-  const refineDest = res.plan.refineDestination || finalDest;
-  const inv = getInv().slice();
-  const log = [];
-
-  // helper: deduct qty of item at location, return actual amount taken
-  function deductAt(item, location, qty) {
-    const idx = inv.findIndex(e => e.item === item && e.location === location);
-    if (idx < 0) return 0;
-    const take = Math.min(qty, inv[idx].quantity);
-    inv[idx].quantity -= take;
-    if (inv[idx].quantity <= 0) inv.splice(idx, 1);
-    return take;
-  }
-
-  // helper: add qty of item at location
-  function addAt(item, location, qty) {
-    const idx = inv.findIndex(e => e.item === item && e.location === location);
-    if (idx >= 0) inv[idx].quantity += qty;
-    else inv.push({ item, location, quantity: qty });
-  }
-
-  function availableAt(item, location) {
-    return inv.filter(e => e.item === item && e.location === location)
-      .reduce((sum, e) => sum + e.quantity, 0);
-  }
-
-  // 1) Transport: deduct from source colonies, add to destination
-  Object.entries(res.plan.transport).forEach(([item, info]) => {
-    let need = info.qty;
-    const target = info.to || refineDest;
-    info.from.forEach(loc => {
-      if (need <= 0) return;
-      const take = deductAt(item, loc, need);
-      need -= take;
-    });
-    addAt(item, target, info.qty);
-    log.push(`Moved ${fmt(info.qty)} ${esc(item)} → ${esc(target)}`);
-  });
-
-  // 2) Process steps in build order (raws first, finals last).
-  // The engine now returns steps in correct build order.
-  let previousLocation = refineDest;
-  res.plan.steps.forEach(step => {
-    const location = step.location || finalDest;
-    const inputs = step.resolvedInputs || [];
-
-    // Refinements happen at refineDest, then the intermediate outputs and any
-    // direct inputs travel to the final production colony before manufacture.
-    const transferSource = location === refineDest ? previousLocation : refineDest;
-    if (transferSource !== location) {
-      inputs.forEach(inp => {
-        const needAtSource = Math.max(0, inp.qty - availableAt(inp.item, location));
-        const moved = deductAt(inp.item, transferSource, needAtSource);
-        if (moved > 0) addAt(inp.item, location, moved);
-      });
-    }
-
-    // Add the produced output
-    addAt(step.item, location, step.produced);
-    log.push(`${step.type === 'manufacture' ? 'Manufactured' : 'Refined'} ${fmt(step.produced)} ${esc(step.item)} at ${esc(location)}`);
-
-    // Deduct inputs using resolvedInputs (respects the chosen refinement path)
-    inputs.forEach(inp => {
-      const taken = deductAt(inp.item, location, inp.qty);
-      const shortfall = inp.qty - taken;
-      if (shortfall > 0) {
-        log.push(`⚠ assumed mined: ${fmt(shortfall)}× ${esc(inp.item)} (not at ${esc(location)})`);
-      }
-    });
-    previousLocation = location;
-  });
-
-  setInv(inv);
-  recomputeInv();
-  refreshAll();
-  return log;
+function applyPlan(res, dest, options) {
+  return window.APPLY_PRODUCTION_PLAN(res, dest, options);
 }
 
 // =========================================================================
@@ -498,6 +415,7 @@ function siteColor(site) {
   return SITE_COLORS[Math.abs(h) % SITE_COLORS.length];
 }
 
+const PICKER_RENDER_LIMIT = 48;
 function renderPicker() {
   const q = normalizeSearchText(document.getElementById('picker-search').value);
   const cat = document.getElementById('picker-cat').value;
@@ -506,9 +424,10 @@ function renderPicker() {
     if (q && !normalizeSearchText(name).includes(q)) return false;
     return true;
   });
+  const visibleMatches = matches.slice(0, PICKER_RENDER_LIMIT);
   const grid = document.getElementById('picker-grid');
   if (!grid) return;
-  grid.innerHTML = matches.map(name => {
+  grid.innerHTML = visibleMatches.map(name => {
     const have = INV_TOTAL[name] || 0;
     const cat = catOf(name);
     const typeLabel = itemTypeLabel(name);
@@ -519,7 +438,9 @@ function renderPicker() {
         <span class="pick-have${have > 0 ? ' have' : ''}" aria-label="${have > 0 ? fmt(have) + ' owned' : 'none owned'}">${have > 0 ? fmt(have) : '—'}</span>
       </button>`;
   }).join('') || `<div class="muted" style="padding:20px;text-align:center">No items match${q ? ' for “' + esc(document.getElementById('picker-search').value.trim()) + '”' : ''}. Try a shorter term, another spelling, or clear the category filter.</div>`;
-  document.getElementById('picker-count').textContent = `${matches.length} final items`;
+  document.getElementById('picker-count').textContent = matches.length > visibleMatches.length
+    ? `${matches.length} final items · showing first ${visibleMatches.length}; refine the search to narrow the list`
+    : `${matches.length} final items`;
 }
 
 // ---- Step card (recipe-flow visual) ----
@@ -1795,12 +1716,12 @@ function decisionSummary(plan) {
 // ═══════════════════════════════════════════════════════════════════════════
 // A lightweight "what if this ran elsewhere?" comparison. Each candidate
 // destination is fed through the ENGINE'S OWN compute()/planCost() with the
-// plan's real inputs (stock, chosen paths, discounts) — only the destination
+// plan's real inputs (stock and chosen paths) — only the destination
 // changes, so colony tax, ownership rebates, mine sites and transport all
 // follow the candidate exactly as the calculator would price it. Nothing is
 // ranked that the data cannot back: rows with unpriced items show n/a, and
 // ★ cheapest is awarded only to a UNIQUE cheapest fully-priced colony.
-// spec = { items: [{item, qty}], chosen, ledger, invLoc, discounts, dest, refineDest }
+// spec = { items: [{item, qty}], chosen, ledger, invLoc, dest, refineDest }
 function colonyCompareRows(spec) {
   const dest = (spec && spec.dest) || DESTINATION;
   const refineDest = (spec && spec.refineDest) || REFINE_DESTINATION || dest;
@@ -1809,12 +1730,12 @@ function colonyCompareRows(spec) {
   const chosen = (spec && spec.chosen) || {};
   const ledger = (spec && spec.ledger) || {};
   const invLoc = (spec && spec.invLoc) || null;
-  const discounts = (spec && spec.discounts) || { prod: 0, mine: 0, trans: 0 };
+
 
   const computed = colonyList().map(colony => {
     let res, cost;
     try {
-      res = compute(items, chosen, Object.assign({}, ledger), invLoc, colony, discounts, refineDest);
+      res = compute(items, chosen, Object.assign({}, ledger), invLoc, colony, refineDest);
       cost = planCost(res.plan, colony);
     } catch (e) {
       return {
@@ -1932,7 +1853,7 @@ function renderColonyCompare(spec) {
 const CMG_FEATURE_FLAG_DEFAULTS = Object.freeze({
   layout_v2: false,
   motion_v2: false,
-  r3f_v1: false,
+
 });
 const CMG_FEATURE_FLAG_STORAGE = 'cmg_feature_flags_v1';
 
@@ -1953,7 +1874,7 @@ function reflectCMGFeatureFlags(flags) {
   const root = document.documentElement;
   root.dataset.cmgLayoutV2 = flags.layout_v2 ? 'on' : 'off';
   root.dataset.cmgMotionV2 = flags.motion_v2 ? 'on' : 'off';
-  root.dataset.cmgR3fV1 = flags.r3f_v1 ? 'on' : 'off';
+
   window.CMG_FEATURE_FLAGS = Object.freeze({ ...flags });
   return window.CMG_FEATURE_FLAGS;
 }
@@ -1976,7 +1897,7 @@ window.setCMGFeatureFlag = setCMGFeatureFlag;
 // ---- Navigation manifest ----
 const CMG_NAV_GROUPS = Object.freeze({
   workflows: Object.freeze(['calc', 'inventory', 'gear', 'patch-changes']),
-  operations: Object.freeze(['colonies', 'battle', 'models']),
+  operations: Object.freeze(['colonies', 'battle']),
   reference: Object.freeze(['drugs']),
   culture: Object.freeze(['community']),
 });
@@ -2322,7 +2243,6 @@ const TERMINAL_AUDIO = {
   colonies: 'voice_extracted/MiningTerminal.ogg',
   drugs: 'voice_extracted/MedicalService.ogg',
   battle: 'voice_extracted/SecurityPad.ogg',
-  models: 'voice_extracted/ApartmentEntry.ogg',
   community: 'voice_extracted/MarketTerminal.ogg',
 };
 const SOUND_MODE_KEY = 'er_sound_mode_v1';
@@ -2375,4 +2295,35 @@ function playTerminalAudio(tab) {
   var src = TERMINAL_AUDIO[tab];
   if (src) playAudio(src, 0.3);
 }
+
+// Workspace imports replace storage after module initialization. Rehydrate every
+// live module mirror immediately so the next calculation uses imported choices,
+// slot levels, destinations, colony settings, gear, and checklist state.
+function hydrateWorkspaceRuntime() {
+  loadDestination();
+  try {
+    const raw = JSON.parse(localStorage.getItem('cmg_slot_levels_v1') || '{}');
+    ENERGY_LEVEL = clampEnergy(raw.energy);
+    COOLING_LEVEL = clampCooling(raw.cooling);
+  } catch (e) {}
+  try {
+    const raw = JSON.parse(localStorage.getItem('er_colony_world_v2') || localStorage.getItem('cmg_colony_tax_v1') || '{}');
+    if (raw && raw.owner) {
+      COLONY_OWNER = Object.fromEntries(Object.entries(raw.owner).flatMap(([colony, value]) => {
+        const owners = normalizeColonyWorldOwner(value, colony);
+        return owners.length ? [[colony, owners]] : [];
+      }));
+      COLONY_TAX = raw.tax || {};
+    }
+  } catch (e) {}
+  if (typeof refreshGear === 'function') refreshGear();
+  if (typeof window.ENGINE !== 'undefined') {
+    window.ENGINE.DESTINATION = DESTINATION;
+    window.ENGINE.REFINE_DESTINATION = REFINE_DESTINATION;
+    window.ENGINE.TRANSPORT_SOURCE = JSON.parse(localStorage.getItem('cmg_transport_source_v1') || '{}');
+  }
+  if (typeof window.CMG_HYDRATE_CALCULATOR === 'function') window.CMG_HYDRATE_CALCULATOR();
+  if (typeof window.refreshAll === 'function') window.refreshAll();
+}
+window.CMG_HYDRATE_WORKSPACE = hydrateWorkspaceRuntime;
 

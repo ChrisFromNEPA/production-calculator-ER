@@ -1,6 +1,6 @@
 // tests/browser/calculator-ux.spec.mjs
 // Real-browser smoke coverage for the calculator, inventory rapid entry,
-// Item Catalog keyboard access, and Gear picker/reference separation.
+// retired-surface routing, and Gear picker/reference separation.
 //
 // Run: npm run test:browser-ux
 // Or against an already-running server:
@@ -122,9 +122,9 @@ class Cdp {
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function evalJs(page, expression, awaitPromise = false) {
-  const result = await page.send('Runtime.evaluate', { expression, awaitPromise, returnByValue: true });
-  if (result.result?.exceptionDetails) throw new Error(result.result.exceptionDetails.text);
-  return result.result?.value;
+  const response = await page.send('Runtime.evaluate', { expression, awaitPromise, returnByValue: true });
+  if (response.exceptionDetails) throw new Error(response.exceptionDetails.text || 'page evaluation failed');
+  return response.result?.value;
 }
 
 async function waitFor(page, expression, description, timeout = 20000) {
@@ -144,7 +144,7 @@ const MIME = {
   '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.glb': 'model/gltf-binary',
 };
 
-const state = { server: null, port: 0, profile: null, chrome: null, browser: null, browserContextId: null, page: null, errors: [], ownsChrome: false };
+const state = { server: null, port: 0, profile: null, chrome: null, browser: null, browserContextId: null, page: null, errors: [], consoleErrors: [], requests: new Map(), redirects: [], ownsChrome: false };
 
 async function cleanupBrowser() {
   state.page?.close();
@@ -194,7 +194,44 @@ async function attachPage(browser, targetId, httpBase) {
   state.page = await Cdp.connect(pageUrl);
   await state.page.send('Page.enable');
   await state.page.send('Runtime.enable');
+  await state.page.send('Network.enable');
   state.page.on('Runtime.exceptionThrown', params => state.errors.push(params.exceptionDetails?.text || 'page exception'));
+  state.page.on('Runtime.consoleAPICalled', params => {
+    if (['error', 'assert'].includes(params.type)) state.consoleErrors.push(params.type);
+  });
+  state.page.on('Network.requestWillBeSent', params => {
+    if (params.redirectResponse) {
+      const prior = state.requests.get(params.requestId);
+      state.redirects.push({
+        url: prior?.url || params.redirectResponse.url,
+        bytes: params.redirectResponse.encodedDataLength || prior?.bytes || 0,
+        status: params.redirectResponse.status,
+        finished: true,
+        failed: null,
+      });
+    }
+    state.requests.set(params.requestId, {
+      url: params.request.url, bytes: 0, status: null, finished: false, failed: null,
+    });
+  });
+  state.page.on('Network.responseReceived', params => {
+    const request = state.requests.get(params.requestId);
+    if (request) request.status = params.response.status;
+  });
+  state.page.on('Network.loadingFinished', params => {
+    const request = state.requests.get(params.requestId);
+    if (request) {
+      request.bytes = params.encodedDataLength || 0;
+      request.finished = true;
+    }
+  });
+  state.page.on('Network.loadingFailed', params => {
+    const request = state.requests.get(params.requestId);
+    if (request) {
+      request.failed = params.errorText || 'network request failed';
+      request.finished = true;
+    }
+  });
 }
 
 async function tryPersistentChrome() {
@@ -258,6 +295,59 @@ async function navigate(base, hash = '') {
   await waitFor(state.page, `!!document.getElementById('view-calc')`, 'fresh calculator shell');
 }
 
+function isHttpRequest(request) {
+  try { return ['http:', 'https:'].includes(new URL(request.url).protocol); }
+  catch { return false; }
+}
+
+async function waitForNetworkIdle(timeout = 15000) {
+  const deadline = Date.now() + timeout;
+  let idleSince = 0;
+  while (Date.now() < deadline) {
+    const relevant = [...state.requests.values()].filter(isHttpRequest);
+    const pending = relevant.filter(request => !request.finished);
+    if (relevant.length && pending.length === 0) {
+      if (!idleSince) idleSince = Date.now();
+      if (Date.now() - idleSince >= 1000) return relevant;
+    } else {
+      idleSince = 0;
+    }
+    await sleep(50);
+  }
+  const pending = [...state.requests.values()].filter(request =>
+    isHttpRequest(request) && !request.finished).map(request => request.url);
+  throw new Error(`Timed out waiting for network idle; pending=${JSON.stringify(pending)}`);
+}
+
+async function measureInitialLoad(base, width, height) {
+  await setViewport(width, height);
+  await state.page.send('Network.setCacheDisabled', { cacheDisabled: true });
+  await state.page.send('Network.setBypassServiceWorker', { bypass: true });
+  state.requests.clear();
+  state.redirects.length = 0;
+  state.consoleErrors.length = 0;
+  state.errors.length = 0;
+  const marker = `${width}-${height}-${Date.now()}`;
+  await state.page.send('Page.navigate', { url: `${base}/?budget=${marker}#calc` });
+  await waitFor(state.page, `document.readyState === 'complete' && !!document.getElementById('view-calc')`, 'budget calculator shell');
+  await evalJs(state.page, 'document.fonts?.ready');
+  const settled = await waitForNetworkIdle();
+  const networkRequests = [...state.redirects, ...settled].filter(isHttpRequest);
+  const networkFailures = networkRequests
+    .filter(request => request.failed || request.status == null || request.status >= 400)
+    .map(request => `${request.url}: ${request.failed || `HTTP ${request.status}`}`);
+  return {
+    viewport: `${width}x${height}`,
+    elements: await evalJs(state.page, 'document.getElementsByTagName("*").length'),
+    viewElements: await evalJs(state.page, 'Object.fromEntries([...document.querySelectorAll(".view")].map(view => [view.id, view.getElementsByTagName("*").length]).sort((a, b) => b[1] - a[1]))'),
+    requests: networkRequests.length,
+    bytes: networkRequests.reduce((sum, request) => sum + request.bytes, 0),
+    networkFailures,
+    consoleErrors: [...state.consoleErrors],
+    pageErrors: [...state.errors],
+  };
+}
+
 async function createProfile() {
   await waitFor(state.page, `(() => { const select = document.getElementById('onboarding-faction'); return !!document.getElementById('onboarding-create') && select && select.options.length > 1; })()`, 'onboarding controls');
   await evalJs(state.page, `(() => {
@@ -277,26 +367,44 @@ async function activateTab(view) {
 
 describe('real-browser calculator UX smoke', () => {
   let base;
-  let setupError = null;
-  const smokeIt = (name, fn) => it(name, async t => {
-    if (setupError) return t.skip(`browser setup unavailable: ${setupError.message}`);
-    return fn();
-  });
+  const smokeIt = it;
 
   before(async () => {
-    try {
-      base = await createStaticServer();
-      await launchBrowser();
-      await setViewport(1280, 900);
-      await navigate(base, '#calc');
-      await createProfile();
-    } catch (error) {
-      setupError = error instanceof Error ? error : new Error(String(error));
-      await cleanupBrowser();
-    }
+    base = await createStaticServer();
+    await launchBrowser();
+    await setViewport(1280, 900);
+    await navigate(base, '#calc');
+    await createProfile();
   });
 
   after(cleanupBrowser);
+
+  smokeIt('keeps initial-load budgets within desktop and mobile limits', async () => {
+    const desktop = await measureInitialLoad(base, 1280, 900);
+    const mobile = await measureInitialLoad(base, 390, 844);
+    for (const metrics of [desktop, mobile]) {
+      assert.ok(metrics.elements <= 1250, `${metrics.viewport} initial DOM budget exceeded: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.elements >= 400, `${metrics.viewport} shell is unexpectedly empty: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.requests <= 90, `${metrics.viewport} request budget exceeded: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.requests >= 20, `${metrics.viewport} request measurement is unexpectedly empty: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.bytes <= 2 * 1024 * 1024, `${metrics.viewport} byte budget exceeded: ${JSON.stringify(metrics)}`);
+      assert.ok(metrics.bytes >= 512 * 1024, `${metrics.viewport} byte measurement is unexpectedly empty: ${JSON.stringify(metrics)}`);
+      assert.deepEqual(metrics.networkFailures, [], `${metrics.viewport} network failures: ${metrics.networkFailures.join('; ')}`);
+      assert.deepEqual(metrics.consoleErrors, [], `${metrics.viewport} console errors: ${metrics.consoleErrors.join('; ')}`);
+      assert.deepEqual(metrics.pageErrors, [], `${metrics.viewport} page errors: ${metrics.pageErrors.join('; ')}`);
+    }
+    console.log(`[browser-budgets] ${JSON.stringify({ desktop, mobile })}`);
+  });
+
+  smokeIt('lazy-renders data-heavy views when they are opened', async () => {
+    await activateTab('colonies');
+    await waitFor(state.page, `document.querySelectorAll('#col-grid > *').length > 0`, 'colony cards');
+    await activateTab('drugs');
+    await waitFor(state.page, `document.querySelectorAll('#drug-table tr').length > 1`, 'drug rows');
+    await activateTab('battle');
+    await waitFor(state.page, `document.querySelectorAll('#bn-colony-chips > *').length > 0 && document.querySelectorAll('#bn-body > *').length > 0`, 'battle map controls');
+    await activateTab('calc');
+  });
 
   smokeIt('keeps the duplicate current-execution section removed', async () => {
     await evalJs(state.page, `document.getElementById('calc-guide-sample')?.click()`);
@@ -407,23 +515,24 @@ describe('real-browser calculator UX smoke', () => {
     await waitFor(state.page, `document.getElementById('inv-table').textContent.includes('Bauxite')`, 'inventory row');
   });
 
-  smokeIt('opens Item Catalog details from a focused card with Enter', async () => {
+  smokeIt('does not expose the retired Models area and safely redirects its old hash', async () => {
     await setViewport(1280, 900);
-    await activateTab('models');
-    await evalJs(state.page, `document.getElementById('models-tab-icons').click()`);
-    await waitFor(state.page, `document.querySelector('#icons-grid .icon-card')`, 'item catalog card');
-    const card = await evalJs(state.page, `(() => {
-      const item = document.querySelector('#icons-grid .icon-card');
-      item.focus();
-      return { role: item.getAttribute('role'), tabindex: item.getAttribute('tabindex'), pressed: item.getAttribute('aria-pressed') };
+    const retired = await evalJs(state.page, `(() => {
+      location.hash = '#models';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+      return {
+        legacyNav: !!document.querySelector('[data-view="models"]'),
+        groupedNav: !!document.querySelector('[data-nav-view="models"]'),
+        view: !!document.getElementById('view-models'),
+        calculatorActive: document.getElementById('view-calc')?.classList.contains('active'),
+      };
     })()`);
-    assert.equal(card.role, 'button');
-    assert.equal(card.tabindex, '0');
-    assert.equal(card.pressed, 'false');
-    await state.page.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
-    await state.page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
-    await waitFor(state.page, `!document.getElementById('icons-detail').hidden`, 'item detail panel');
-    assert.ok(await evalJs(state.page, `document.getElementById('icons-detail-name').textContent.length > 0`));
+    assert.deepEqual(retired, {
+      legacyNav: false,
+      groupedNav: false,
+      view: false,
+      calculatorActive: true,
+    });
   });
 
   smokeIt('makes Gear picker intent distinct from the combat reference list', async () => {

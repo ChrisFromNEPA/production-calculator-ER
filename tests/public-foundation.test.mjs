@@ -28,11 +28,12 @@ test('public staging tree excludes private and Cloudflare-only material', () => 
 
 test('public allowlist exists and excludes deployment/private paths', () => {
   const allowlist = JSON.parse(readFileSync(join(root, 'public-files.json'), 'utf8'));
-  assert.ok(Array.isArray(allowlist.files));
-  assert.ok(allowlist.files.includes('src'));
-  assert.ok(allowlist.files.includes('data'));
+  assert.ok(Array.isArray(allowlist.runtime));
+  assert.ok(allowlist.runtime.includes('src/**/*.js'));
+  assert.ok(allowlist.runtime.includes('src/**/*.css'));
+  assert.ok(allowlist.runtime.includes('data/*.json'));
   for (const forbidden of ['cloudflare-worker', 'wrangler.toml', '.hermes', 'empire-rising-scraper']) {
-    assert.equal(allowlist.files.includes(forbidden), false, `allowlist contains ${forbidden}`);
+    assert.equal(allowlist.runtime.includes(forbidden), false, `allowlist contains ${forbidden}`);
   }
 });
 
@@ -47,7 +48,7 @@ test('public asset provenance manifest exists and is fail-closed', () => {
 test('Pages build contract and neutral public shell metadata exist', () => {
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
-  assert.equal(pkg.scripts['build:pages'], 'npm run build:3d && node scripts/build-pages.mjs');
+  assert.equal(pkg.scripts['build:pages'], 'node scripts/build-pages.mjs');
   assert.equal(manifest.name, 'Empire Rising Production Calculator');
   assert.equal(manifest.start_url, './');
   assert.equal(manifest.scope, './');

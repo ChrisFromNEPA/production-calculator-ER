@@ -66,6 +66,16 @@ function binaryFilesToCheck() {
 
 const binaryFiles = binaryFilesToCheck();
 
+// Approval is a release assertion. It cannot coexist with an unresolved
+// license/permission claim, even when the asset path is otherwise covered.
+for (const record of manifest.records || []) {
+  const status = String(record.status || '').toLowerCase();
+  const evidence = `${record.license_or_permission || ''} ${record.evidence || ''}`.toLowerCase();
+  if (['approved', 'approved_for_code_review'].includes(status) && /pending|unresolved|review required/.test(evidence)) {
+    failures.push(`${record.path}: approved status has pending license evidence`);
+  }
+}
+
 for (const file of binaryFiles) {
   const record = manifest.records.find(r => {
     const prefix = r.path.replace('/**', '').split(',')[0].trim();
