@@ -62,8 +62,8 @@ describe('employer-facing public presentation', () => {
       '## Known limitations and roadmap',
       '## License and asset notice',
     ]) assert.match(readme, new RegExp(`^${heading}$`, 'm'));
-    assert.match(readme, /releases\/tag\/v1\.4\.0/);
-    assert.doesNotMatch(readme, /v1\.4\.0 candidate/);
+    assert.match(readme, /releases\/tag\/v1\.4\.1/);
+    assert.doesNotMatch(readme, /v1\.4\.1 candidate/);
     assert.match(readme, /docs\/assets\/calculator-sample\.png/);
     assert.match(readme, /npm run check/);
     assert.match(readme, /npm run test:browser-ux/);
