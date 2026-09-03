@@ -33,6 +33,9 @@ unreleased until their exact commit is merged and deployed.
 - Added fail-closed Chromium calculator coverage, Python tests, generated-file
   drift checks, full dependency auditing, and synchronized CodeQL updates to CI.
 - Added upstream OFL notices for the bundled JetBrains Mono and Orbitron fonts.
+- Made future balance-sheet refreshes retain the exact ingested CSV under a
+  date-and-digest snapshot path; the unavailable 2026-08-24 raw response remains
+  explicitly documented rather than reconstructed.
 - Documented that npm package metadata still reports `0.1.0`; it is not valid
   release evidence and needs an explicit alignment policy before the next tag.
 

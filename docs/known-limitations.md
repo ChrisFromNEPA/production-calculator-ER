@@ -13,7 +13,7 @@ This public release is intentionally local-first. The following limitations are 
 - The service worker can retain an older static asset until the browser completes an update cycle. Reload with network access after a release if behavior appears stale.
 - The real-browser fallback verifies rendered production artifacts, but the Hermes interactive browser harness was unavailable during this audit. Full interactive assistive-technology traversal remains a follow-up QA item when that harness is available.
 - Game-derived names, data, and assets retain separate rights-holder status. They are not automatically covered by the MIT license for application code.
-- The bundled balance sheet is an immutable local snapshot, but this repository does not yet carry a separately retrieved, hash-verified upstream response artifact. Re-fetching and hashing the published source remains an unresolved provenance task; no replacement balance values are inferred here.
+- The 2026-08-24 balance snapshot retains its upstream CSV digest, but the exact historical CSV response was not committed and cannot be reconstructed: the live source had a different digest when checked on 2026-09-02. Future `update_balance_stats.py` refreshes archive the exact ingested CSV under `data/source-snapshots/balance-sheet/` before updating generated consumers; no historical or replacement values are inferred.
 - `pythica sustained gloves` is retained only as the documented balance-sheet alias for `Pythica Sustained Battle Gloves`; no separate item or stats are fabricated.
 - Public data can be corrected as authoritative game information changes. Include source, date, and a minimal reproducible example when reporting an issue.
 
