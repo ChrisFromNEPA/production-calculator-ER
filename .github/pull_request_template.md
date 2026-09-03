@@ -20,7 +20,7 @@ surface is affected.
 
 - [ ] `npm run check` (required release gate)
 - [ ] `npm run assets:check` (when assets or provenance are affected)
-- [ ] Relevant focused gates run (`test:sw-update`, `test:3d`, or `test:budgets` when applicable)
+- [ ] Relevant focused gates run (`test:sw-update`, `test:browser-ux`, or `assets:check` when applicable)
 - [ ] Browser verification performed for UI changes, including affected viewport sizes
 - [ ] Generated files were rebuilt rather than hand-edited
 - [ ] Data sources/provenance included for data changes

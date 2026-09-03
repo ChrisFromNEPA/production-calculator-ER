@@ -1,7 +1,6 @@
 // Served layout baseline contract.
-// This deliberately uses only Node's built-in test/fetch APIs so the existing
-// zero-dependency project can verify its served shell before Playwright is
-// introduced. Interactive view traversal is recorded in docs/design/ux-baseline.md.
+// This deliberately uses only Node's built-in test/fetch APIs so the project
+// can verify its served shell without a browser dependency.
 //
 // Run against a served build: `npm run check` (builds, serves dist/ via
 // scripts/check-baseline.mjs, then runs this spec) or, with the site already
@@ -43,16 +42,6 @@ describe('served layout baseline', () => {
 
     for (const asset of assets) {
       await get(`/${asset.split('?')[0].replace(/^\//, '')}`);
-    }
-  });
-
-  it('keeps the legacy two-view WebGL baseline explicit for migration tracking', async () => {
-    const { body: models } = await get('/src/views/models.js');
-    const { body: character } = await get('/src/views/character.js');
-    for (const source of [models, character]) {
-      assert.match(source, /new THREE\.WebGLRenderer/);
-      assert.match(source, /requestAnimationFrame/);
-      assert.match(source, /preserveDrawingBuffer\s*:\s*true/);
     }
   });
 });

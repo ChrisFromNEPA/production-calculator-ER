@@ -25,8 +25,7 @@ describe('accessibility and motion gates', () => {
     assert.match(html, /aria-live="polite" aria-atomic="true"/);
   });
 
-  it('keeps the remaining optional item-preview scene labeled and failure-safe', () => {
-    assert.match(engine, /aria-label="3D item preview"/);
-    assert.match(readFileSync(join(root, 'src', '3d', 'entry.jsx'), 'utf8'), /role="status"/);
+  it('keeps item details focused on production information', () => {
+    assert.doesNotMatch(engine, /3D|model|preview/i);
   });
 });

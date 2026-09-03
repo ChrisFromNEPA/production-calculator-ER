@@ -1,19 +1,16 @@
 const CACHE_PREFIX = 'er-prodcalc-';
-const CACHE = 'er-prodcalc-v0.2.44-shell';
-const RUNTIME_CACHE = 'er-prodcalc-v0.2.44-runtime';
+const CACHE = 'er-prodcalc-v0.2.45-shell';
+const RUNTIME_CACHE = 'er-prodcalc-v0.2.45-runtime';
 const MAX_RUNTIME_ENTRIES = 32;
 const OPTIONAL_RUNTIME_DIRECTORIES = [
-  'src/generated/', 'src/vendor/', 'models/', 'maps/', 'icons/',
+  'src/vendor/', 'maps/', 'icons/',
   'gear_textures/', 'voice_extracted/',
 ];
 const OPTIONAL_PATH_PREFIXES = OPTIONAL_RUNTIME_DIRECTORIES.map(directory =>
   new URL(directory, self.registration.scope).pathname
 );
 
-// SHELL is the install-time precache: only assets the app needs immediately
-// to render and calculate. Optional 3D/chart payloads (three.js, the R3F
-// workbench bundle, Chart.js, and the model manifest) are fetched on demand
-// and kept in the separately bounded runtime cache.
+// Install-time precache: only assets the app needs immediately to render and calculate.
 const SHELL = [
   './',
   './index.html',
@@ -38,9 +35,7 @@ const SHELL = [
   './src/colony-work.js',
   './src/ui/motion.js',
   './src/ui/value-transition.js',
-  './src/ui/r3f-loader.js',
-  './src/ui/spatial-emphasis.js',
-  './src/ui/legacy-3d-loader.js',
+
   './src/ui/chart-loader.js',
   './src/app.js',
   './src/apply-plan.js',

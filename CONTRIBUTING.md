@@ -34,8 +34,7 @@ Focused checks are available when relevant:
 ```bash
 npm run test:sw-update   # clean-profile service-worker lifecycle
 npm run test:browser-ux  # optional locally; requires Chromium when BROWSER_TEST_REQUIRED=1
-npm run test:3d          # optional React Three Fiber build
-npm run test:budgets     # 3D transfer/performance budgets
+
 ```
 
 ## Pull requests

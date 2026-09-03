@@ -48,10 +48,6 @@ test('icon policy deliberately records fallback for assets without verified imag
   assert.match(fallback.reason, /verified|provenance/i);
 });
 
-test('icon catalog renders an allowlisted missing icon as a deliberate fallback', () => {
-  const models = readFileSync(join(root, 'src/views/models.js'), 'utf8');
-  assert.match(models, /has_icon[\s\S]*icon-badge|iconFallback/i);
-});
 
 test('runtime icon rendering avoids 404 requests for deliberate fallbacks', () => {
   for (const item of ['Portable Vortex Particle Emitter', 'ultra resilient mineral', 'Pythica Sustained Gloves']) {

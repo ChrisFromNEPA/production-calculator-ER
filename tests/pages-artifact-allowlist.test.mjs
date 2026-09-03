@@ -20,7 +20,7 @@ test('Pages build uses an explicit runtime allowlist rather than whole directori
   for (const sourcePattern of ['src/**/*.js', 'src/**/*.css']) {
     assert.ok(allowlist.runtime.includes(sourcePattern), `missing runtime source pattern: ${sourcePattern}`);
   }
-  for (const required of ['models/**/*.glb', 'models/models_manifest.json', 'models/character_skins.json', 'models/skins/**/*.webp', 'maps/*.png', 'icons/*.png', 'gear_textures/**/*.png', 'voice_extracted/*.ogg', 'fonts/*.woff2']) {
+  for (const required of ['maps/*.png', 'icons/*.png', 'gear_textures/**/*.png', 'voice_extracted/*.ogg', 'fonts/*.woff2']) {
     assert.ok(allowlist.runtime.includes(required), `missing runtime entry: ${required}`);
   }
   for (const representative of ['gear_textures/CMG/TorsoArmour.png', 'gear_textures/EC/Helmet.png', 'gear_textures/BOS/LegPads.png']) {

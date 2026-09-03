@@ -5,7 +5,7 @@
 // defer>` in every page load (~200 KB raw / ~60 KB gzip) even though the only
 // consumer is the Inventory "📊 Inventory Charts" <details> panel. Chart.js is
 // now fetched on demand by a tiny loader stub (src/ui/chart-loader.js), the
-// same pattern as the 3D payloads, and runtime-cached by the service worker.
+// and runtime-cached by the service worker.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';

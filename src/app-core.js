@@ -1856,7 +1856,7 @@ function renderColonyCompare(spec) {
 const CMG_FEATURE_FLAG_DEFAULTS = Object.freeze({
   layout_v2: false,
   motion_v2: false,
-  r3f_v1: false,
+
 });
 const CMG_FEATURE_FLAG_STORAGE = 'cmg_feature_flags_v1';
 
@@ -1877,7 +1877,7 @@ function reflectCMGFeatureFlags(flags) {
   const root = document.documentElement;
   root.dataset.cmgLayoutV2 = flags.layout_v2 ? 'on' : 'off';
   root.dataset.cmgMotionV2 = flags.motion_v2 ? 'on' : 'off';
-  root.dataset.cmgR3fV1 = flags.r3f_v1 ? 'on' : 'off';
+
   window.CMG_FEATURE_FLAGS = Object.freeze({ ...flags });
   return window.CMG_FEATURE_FLAGS;
 }

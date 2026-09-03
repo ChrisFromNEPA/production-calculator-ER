@@ -48,7 +48,7 @@ test('public asset provenance manifest exists and is fail-closed', () => {
 test('Pages build contract and neutral public shell metadata exist', () => {
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
-  assert.equal(pkg.scripts['build:pages'], 'npm run build:3d && node scripts/build-pages.mjs');
+  assert.equal(pkg.scripts['build:pages'], 'node scripts/build-pages.mjs');
   assert.equal(manifest.name, 'Empire Rising Production Calculator');
   assert.equal(manifest.start_url, './');
   assert.equal(manifest.scope, './');

@@ -165,20 +165,6 @@ function iconFor(item) {
   return `<span class="icon"><img src="${esc(path)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('icon-missing');this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc(letter)}',className:'icon-badge'}))"></span>`;
 }
 
-// Score an alternative path. `totalNeed` is the total demand for the output item;
-// `outQty` is the recipe's output quantity (for estimating batch count).
-// Prefers paths where the player can fully cover the total run from owned stock.
-const MODEL_MANIFEST_PROMISE = { value: null };
-function loadCMGModelManifest() {
-  if (!MODEL_MANIFEST_PROMISE.value) {
-    MODEL_MANIFEST_PROMISE.value = fetch('models/models_manifest.json').then(r => r.json()).then(data => data.models || []);
-  }
-  return MODEL_MANIFEST_PROMISE.value;
-}
-function normModelName(value) {
-  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-}
-
 // ---- Item detail popup (modal) ----
 function showItemDetail(item) {
   const old = document.querySelector('.item-popup-overlay');
@@ -257,7 +243,6 @@ function showItemDetail(item) {
     (have > 0 ? '<div class="ip-section"><div class="ip-label">Your inventory</div><div class="ip-inv">' +
       (INV_LOCATIONS[item] || []).map(l => '<span class="tag have">' + esc(l.location) + ': ' + fmt(l.qty) + '</span>').join(' ') + '</div></div>' : '') +
     (FINAL_ITEMS.includes(item) ? '<div class="ip-section"><button class="ip-calc primary" data-ip-calc="' + encodeURIComponent(item) + '">Calculate ' + esc(displayName(item)) + '</button></div>' : '') +
-    '<div class="ip-section ip-model-section"><button class="ip-model ghost" data-ip-model="' + encodeURIComponent(item) + '">🧊 Find 3D model</button><div class="ip-model-status muted" aria-live="polite"></div><div class="cmg-preview-slot" data-cmg-3d-preview hidden aria-label="3D item preview"></div></div>' +
     '</div>';
 
   // Every close path funnels through closePopup: it tears down the overlay,
@@ -293,30 +278,7 @@ function showItemDetail(item) {
   overlay.querySelectorAll('[data-ip-item]').forEach(btn => {
     btn.addEventListener('click', () => { const name = decodeURIComponent(btn.dataset.ipItem); closePopup(); showItemDetail(name); });
   });
-  const modelBtn = overlay.querySelector('[data-ip-model]');
-  if (modelBtn) modelBtn.addEventListener('click', async () => {
-    const status = overlay.querySelector('.ip-model-status');
-    const slot = overlay.querySelector('[data-cmg-3d-preview]');
-    modelBtn.disabled = true;
-    if (status) status.textContent = 'Checking model manifest…';
-    try {
-      const models = await loadCMGModelManifest();
-      const entry = models.find(m => normModelName(m.name) === normModelName(item));
-      if (!entry) {
-        if (status) status.textContent = 'No matching model is available for this item.';
-        return;
-      }
-      if (status) status.textContent = entry.name + ' · loading preview';
-      if (slot) {
-        slot.hidden = false;
-        const mounted = await window.mountCMGPreview?.(slot, entry);
-        if (!mounted) status.textContent = 'Enable the 3D preview rollout to inspect this model.';
-      }
-    } catch (err) {
-      if (status) status.textContent = 'Model metadata unavailable.';
-      console.error('Item model lookup failed:', err);
-    } finally { modelBtn.disabled = false; }
-  });
+
   const calcBtn = overlay.querySelector('[data-ip-calc]');
   if (calcBtn) calcBtn.addEventListener('click', () => {
     const name = decodeURIComponent(calcBtn.dataset.ipCalc);

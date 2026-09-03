@@ -12,17 +12,15 @@
     "test:baseline": "node scripts/check-baseline.mjs",
     "test:sw-update": "npm run build && node --test tests/browser/service-worker-update.spec.mjs",
     "test:browser-ux": "npm run build && node --test tests/browser/calculator-ux.spec.mjs",
-    "generate": "node scripts/build-data.mjs && node scripts/build-balance.mjs && npm run build:3d",
-    "check:generated": "npm run generate && git diff --exit-code -- src/game_data.js src/balance_stats.js src/generated/er-3d-workbench.js",
+    "generate": "node scripts/build-data.mjs && node scripts/build-balance.mjs",
+    "check:generated": "npm run generate && git diff --exit-code -- src/game_data.js src/balance_stats.js",
     "stats:update": "python3 scripts/update_balance_stats.py && node scripts/build-balance.mjs && node scripts/build-data.mjs",
     "local:host": "vite --host 0.0.0.0 --port 4173 --strictPort",
-    "build:3d": "vite build --config vite.config.mjs",
-    "test:3d": "npm run build:3d && node --test tests/r3f-build.test.mjs",
-    "test:budgets": "npm run build:3d && node --test tests/performance-budgets.test.mjs",
+
     "assets:check": "node scripts/check-assets.mjs",
     "assets:report": "node scripts/check-assets.mjs --report-only",
-    "build:pages": "npm run build:3d && node scripts/build-pages.mjs",
-    "build": "npm run build:pages",
+    "build:pages": "node scripts/build-pages.mjs",
+    "build": "node scripts/build-pages.mjs",
     "check": "npm test && npm run test:python && npm run check:generated && npm run build && npm run test:baseline"
   },
   "repository": {
@@ -43,11 +41,6 @@
   },
   "homepage": "https://chrisfromnepa.github.io/production-calculator-ER/",
   "dependencies": {
-    "@react-three/drei": "^10.7.8",
-    "@react-three/fiber": "^9.7.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "three": "^0.185.1",
     "vite": "^8.2.2"
   },
   "devDependencies": {

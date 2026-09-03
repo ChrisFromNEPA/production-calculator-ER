@@ -16,8 +16,8 @@
  *   src/views/player.js    — Player bar, toast, import/export, share
  *
  * LOAD ORDER: game_data → store → engine → app-core → app.js → views/* → app-init
- *             (Chart.js and the 3D payloads are NOT part of the entry — they
- *              load on demand via the src/ui/*-loader.js stubs)
+ *             (Chart.js is NOT part of the entry — it loads on demand via
+ *              the src/ui/chart-loader.js stub)
  */
 'use strict';
 

@@ -16,10 +16,7 @@
     "icons/*.png",
     "icons/*.json",
     "maps/*.png",
-    "models/**/*.glb",
-    "models/models_manifest.json",
-    "models/character_skins.json",
-    "models/skins/**/*.webp",
+
     "voice_extracted/*.ogg"
   ],
   "budgets": {
