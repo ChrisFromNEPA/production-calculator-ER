@@ -32,6 +32,12 @@ test('static accessibility gate rejects unlabeled controls and unnamed buttons',
   } finally { rmSync(fixture, { recursive: true, force: true }); }
 });
 
+test('static accessibility parsing does not rely on incomplete regex sanitization', () => {
+  const source = readFileSync(join(root, 'scripts', 'check-a11y.mjs'), 'utf8');
+  assert.doesNotMatch(source, /\.replace\(\/<!--/);
+  assert.doesNotMatch(source, /\.replace\(\/<script/);
+});
+
 test('quality gate scripts are wired into check and coverage names an instrumented module', async () => {
   const pkg = JSON.parse(await (await import('node:fs/promises')).readFile(join(root, 'package.json'), 'utf8'));
   assert.match(pkg.scripts.check, /check:quality/);
@@ -61,4 +67,9 @@ test('browser transfer budgets wait for settled responses and fail on network er
   assert.match(serviceWorkerSource, /response\.exceptionDetails/);
   assert.doesNotMatch(source, /BROWSER_TEST_OPTIONAL/);
   assert.match(source, /redirectResponse/);
+  assert.match(serviceWorkerSource, /waitForCacheState/);
+  assert.doesNotMatch(serviceWorkerSource, /keys\.includes\(\$\{/);
+
+  const ci = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
+  assert.equal((ci.match(/CHROMIUM_BIN:\s*\/usr\/bin\/chromium/g) || []).length, 2);
 });

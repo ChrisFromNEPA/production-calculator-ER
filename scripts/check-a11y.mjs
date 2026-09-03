@@ -6,7 +6,53 @@ const root = resolve(process.argv[2] || new URL('..', import.meta.url).pathname)
 const htmlPath = join(root, 'index.html');
 let html;
 try { html = readFileSync(htmlPath, 'utf8'); } catch (error) { console.error(`[check-a11y] ${error.message}`); process.exit(1); }
-const source = html.replace(/<!--[\s\S]*?-->/g, '');
+
+function omitDelimited(input, open, close) {
+  let output = '';
+  let cursor = 0;
+  while (cursor < input.length) {
+    const start = input.indexOf(open, cursor);
+    if (start < 0) return output + input.slice(cursor);
+    output += input.slice(cursor, start);
+    const end = input.indexOf(close, start + open.length);
+    if (end < 0) throw new Error(`unterminated ${open} block`);
+    cursor = end + close.length;
+  }
+  return output;
+}
+
+function omitElementBlocks(input, tagName) {
+  const lower = input.toLowerCase();
+  const open = `<${tagName.toLowerCase()}`;
+  const close = `</${tagName.toLowerCase()}>`;
+  let output = '';
+  let cursor = 0;
+  while (cursor < input.length) {
+    const start = lower.indexOf(open, cursor);
+    if (start < 0) return output + input.slice(cursor);
+    output += input.slice(cursor, start);
+    const end = lower.indexOf(close, start + open.length);
+    if (end < 0) throw new Error(`unterminated ${tagName} element`);
+    cursor = end + close.length;
+  }
+  return output;
+}
+
+function hasAccessibleText(fragment) {
+  for (const image of fragment.matchAll(/<img\b[^>]*>/gi)) {
+    const alt = image[0].match(/\balt\s*=\s*["']([^"']*)["']/i)?.[1];
+    if (alt && alt.trim()) return true;
+  }
+  let inTag = false;
+  for (const character of fragment) {
+    if (character === '<') { inTag = true; continue; }
+    if (character === '>') { inTag = false; continue; }
+    if (!inTag && !/\s/.test(character)) return true;
+  }
+  return false;
+}
+
+const source = omitElementBlocks(omitDelimited(html, '<!--', '-->'), 'script');
 const errors = [];
 const ids = new Map();
 for (const match of source.matchAll(/\bid\s*=\s*["']([^"']+)["']/gi)) {
@@ -31,8 +77,7 @@ for (const match of source.matchAll(/<([a-z][\w-]*)(\s[\s\S]*?)?>/gi)) {
 for (const match of source.matchAll(/<(button|a)\b([^>]*)>([\s\S]*?)<\/\1>/gi)) {
   const [, name, rawAttrs, inner] = match;
   const a = attrs(`<${name}${rawAttrs}>`);
-  const text = inner.replace(/<img\b[^>]*\balt=["']([^"']*)["'][^>]*>/gi, '$1').replace(/<[^>]*>/g, '').trim();
-  if (!text && !a['aria-label'] && !a['aria-labelledby'] && !a.title) errors.push(`${name} is missing an accessible name`);
+  if (!hasAccessibleText(inner) && !a['aria-label'] && !a['aria-labelledby'] && !a.title) errors.push(`${name} is missing an accessible name`);
 }
 for (const match of source.matchAll(/\baria-(?:labelledby|describedby)\s*=\s*["']([^"']+)["']/gi)) {
   for (const id of match[1].split(/\s+/)) if (!ids.has(id)) errors.push(`ARIA reference targets missing id: ${id}`);

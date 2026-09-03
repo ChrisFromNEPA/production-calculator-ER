@@ -174,6 +174,17 @@ async function waitFor(page, expression, { timeout = 20000, description = expres
   throw new Error(`timed out waiting for: ${description} (last value: ${JSON.stringify(last)})`);
 }
 
+async function waitForCacheState(page, { present = [], absent = [], timeout = 20000 } = {}) {
+  const deadline = Date.now() + timeout;
+  let keys = [];
+  while (Date.now() < deadline) {
+    keys = await evalJs(page, 'caches.keys()', true) || [];
+    if (present.every(name => keys.includes(name)) && absent.every(name => !keys.includes(name))) return keys;
+    await sleep(200);
+  }
+  throw new Error(`timed out waiting for cache state; present=${JSON.stringify(present)} absent=${JSON.stringify(absent)} keys=${JSON.stringify(keys)}`);
+}
+
 // ---------------------------------------------------------------------------
 // Static server over dist/ — no-store so service-worker update checks always
 // see the latest bytes, and a swOverride flag that flips the served sw.js to
@@ -207,6 +218,7 @@ const state = {
   profile: null,
   page: null,
   swOverride: false,
+  swRevision: 0,
   shellFailure: false,
   baseCache: null,
   updateCache: null,
@@ -243,7 +255,9 @@ describe('clean-profile service-worker lifecycle', () => {
         }
         const file = join(dist, pathname);
         let body = await readFile(file);
-        if (pathname === '/sw.js' && state.swOverride) body = Buffer.from(changedSw);
+        if (pathname === '/sw.js' && state.swOverride) {
+          body = Buffer.from(`${changedSw}\n// controlled update revision ${state.swRevision}\n`);
+        }
         res.writeHead(200, {
           'Content-Type': MIME[extname(file).toLowerCase()] || 'application/octet-stream',
           'Content-Length': body.length,
@@ -385,6 +399,7 @@ describe('clean-profile service-worker lifecycle', () => {
   it('rejects a defective update install and keeps the existing worker in control', async () => {
     const { page, baseCache } = state;
     state.swOverride = true;
+    state.swRevision = 1;
     state.shellFailure = true;
     await evalJs(page, `window.__initialController = navigator.serviceWorker.controller;`);
 
@@ -420,6 +435,10 @@ describe('clean-profile service-worker lifecycle', () => {
   it('restored required shell assets allow the update to install successfully', async () => {
     const { page } = state;
     state.shellFailure = false;
+    // A failed install of one script body is not guaranteed to retry identical
+    // bytes. Serve a distinct recovery revision so this phase proves a new,
+    // successful worker rather than observing the failed attempt's partial cache.
+    state.swRevision = 2;
 
     await evalJs(
       page,
@@ -450,11 +469,10 @@ describe('clean-profile service-worker lifecycle', () => {
 
     // Wait for activation and project-scoped cleanup to finish before inspecting
     // CacheStorage; controller presence alone can precede the activation task.
-    const keys = await waitFor(
-      page,
-      `(async () => { const keys = await caches.keys(); return keys.includes(${JSON.stringify(updateCache)}) && !keys.includes(${JSON.stringify(baseCache)}) && keys.includes('unrelated-app-cache') ? keys : null; })()`,
-      { description: 'updated cache activation and old-cache cleanup', awaitPromise: true },
-    );
+    const keys = await waitForCacheState(page, {
+      present: [updateCache, 'unrelated-app-cache'],
+      absent: [baseCache],
+    });
     assert.ok(keys.includes(updateCache), `expected updated cache ${updateCache}, found ${keys.join(', ')}`);
     assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate; found ${keys.join(', ')}`);
     assert.ok(keys.includes('unrelated-app-cache'), 'unrelated origin cache must survive activation');
