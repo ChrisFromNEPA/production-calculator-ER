@@ -6,6 +6,33 @@ All notable public releases are documented here.
 
 No unreleased changes.
 
+## [1.4.2] — 2026-09-03
+
+### Fixed
+
+- Removed horizontal page overflow and text clipping across the Calculator, Gear
+  1.10, and patch-comparison layouts at phone, tablet, 720p, 1080p, 2K, and 4K
+  sizes, including the supported 75–150% text-size range.
+- Kept the tablet More menu above the player toolbar and moved post-onboarding
+  focus into the requested gated route instead of a hidden Calculator control.
+- Made transient notifications single-instance, dismissible, and clear of the
+  mobile bottom navigation.
+- Raised light and trans-theme semantic text colors to WCAG AA contrast.
+
+### Improved
+
+- Expanded phone and tablet controls to touch-friendly 44×44 pixel targets,
+  including modal close controls, and wrapped Battle Nodes colony choices on
+  tablet layouts.
+- Let picker names, material labels, cost labels, and patch stat chips wrap in
+  full; shortened the search placeholder while keeping live counts in status
+  text.
+- Used more of 2K and 4K displays for the main workspace and Gear picker without
+  changing compact-screen reading widths.
+- Added real-Chromium regression coverage for every public view across the six
+  requested display classes, every theme, all supported text sizes, overlays,
+  touch targets, focus, clipping, and horizontal overflow.
+
 ## [1.4.1] — 2026-09-03
 
 ### Fixed

@@ -17,7 +17,7 @@ describe('service-worker cache safety contract', () => {
   });
 
   it('precaches every eagerly loaded local script in the application shell', () => {
-    assert.match(sw, /er-prodcalc-v0\.2\.47-shell/);
+    assert.match(sw, /er-prodcalc-v0\.2\.48-shell/);
     const eagerScripts = [...index.matchAll(/<script[^>]+src="([^"]+)"/g)]
       .map(match => match[1].split('?')[0])
       .filter(src => !/^https?:/.test(src));

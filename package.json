@@ -1,6 +1,6 @@
 {
   "name": "production-calculator-er",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Offline-first Empire Rising production, inventory, gear, and economy calculator for every player.",
   "main": "sw.js",
   "directories": {

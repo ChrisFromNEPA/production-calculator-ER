@@ -386,10 +386,10 @@ function initPickerFilters() {
     const o = document.createElement('option'); o.value = c; o.textContent = c;
     sel.appendChild(o);
   });
-  // The placeholder count must track the live item catalog, not a stale
-  // hardcoded number (the catalog grows as recipes are added).
+  // Keep the compact placeholder readable at phone and 720p widths. The live
+  // result count is exposed by the picker status immediately below the field.
   const search = document.getElementById('picker-search');
-  if (search) search.placeholder = `Search ${FINAL_ITEMS.length} final items…`;
+  if (search) search.placeholder = 'Search final items…';
 }
 
 function catOf(item) {
@@ -2010,6 +2010,7 @@ function applyFontScale(pct) {
   const increase = document.getElementById('size-increase');
   if (decrease) decrease.disabled = n <= min;
   if (increase) increase.disabled = n >= max;
+  requestAnimationFrame(() => window.fitNavigationTabs?.());
 }
 
 function adjustFontScale(delta) {

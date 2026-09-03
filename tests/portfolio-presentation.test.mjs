@@ -42,7 +42,7 @@ describe('employer-facing public presentation', () => {
   it('keeps the portfolio screenshot in the Pages artifact and the service-worker version current', () => {
     assert.equal(existsSync(join(root, 'docs/assets/calculator-sample.png')), true);
     assert.ok(publicFiles.runtime.includes('docs/assets/calculator-sample.png'));
-    assert.match(sw, /const CACHE = 'er-prodcalc-v0\.2\.47-shell'/);
+    assert.match(sw, /const CACHE = 'er-prodcalc-v0\.2\.48-shell'/);
   });
 
   it('keeps the project intro bounded and usable at mobile widths', () => {
@@ -62,7 +62,7 @@ describe('employer-facing public presentation', () => {
       '## Known limitations and roadmap',
       '## License and asset notice',
     ]) assert.match(readme, new RegExp(`^${heading}$`, 'm'));
-    assert.match(readme, /releases\/tag\/v1\.4\.1/);
+    assert.match(readme, /releases\/tag\/v1\.4\.2/);
     assert.doesNotMatch(readme, /v1\.4\.1 candidate/);
     assert.match(readme, /docs\/assets\/calculator-sample\.png/);
     assert.match(readme, /npm run check/);

@@ -517,10 +517,10 @@ main {
   margin: 0 auto;
 }
 @media (min-width: 1800px) {
-  main { max-width: 1360px; padding: 1.5rem; }
+  main { max-width: 1600px; padding: 1.5rem; }
 }
 @media (min-width: 3000px) {
-  main { max-width: 1680px; padding: 2rem; }
+  main { max-width: 2200px; padding: 2rem; }
 }
 /* Gear 1.10 is a wide explorer on high-resolution displays. Keep the wider
    canvas opt-in to its active view so compact tabs retain their proportions. */
@@ -827,7 +827,7 @@ tr td:first-child { white-space: nowrap; }
   min-width: 0;
   display: flex; align-items: center; gap: 0.3rem;
 }
-.mat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mat-name { min-width: 0; overflow-wrap: anywhere; }
 .mat-label .icon { width: 1rem; height: 1rem; flex: 0 0 auto; }
 .mat-label .icon img { width: 1rem; height: 1rem; }
 .mat-bar-track {
@@ -2118,7 +2118,7 @@ tr td:first-child { white-space: nowrap; }
   gap: 0.5rem; align-items: baseline;
   font-size: 0.75rem; line-height: 1.5;
 }
-.cb-label { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb-label { min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
 .cb-val   { font-variant-numeric: tabular-nums; font-weight: 600; }
 /* fixed width so the percentages line up into a readable column */
 .cb-pct   { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 3.8rem; text-align: right; }
@@ -2138,6 +2138,13 @@ tr td:first-child { white-space: nowrap; }
   border-top: 1px dashed var(--border); margin-top: 0.15rem; padding-top: 0.2rem;
 }
 .cb-net .cb-label { color: var(--fg); font-weight: 600; }
+
+/* At phone widths, especially at the supported 150% text size, the value and
+   percentage columns must not squeeze the descriptive label to zero width. */
+@media (max-width: 520px) {
+  .cb-row { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .cb-pct { grid-column: 2; grid-row: 2; min-width: 0; }
+}
 
 /* ---- Colonies tab ---- */
 .col-toolbar {
@@ -2646,8 +2653,7 @@ tr td:first-child { white-space: nowrap; }
 .pick-card .pick-icon .icon img { width: 1.5rem; height: 1.5rem; background: var(--panel); }
 .pick-card .pick-name {
   font-size: 0.6875rem; line-height: 1.2; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
   flex: 1 1 auto;
 }
 .pick-card .pick-have {
@@ -3695,6 +3701,7 @@ button.x:hover { color: #ff5577; }
   display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;
 }
 .toast {
+  display: flex; align-items: center; gap: 0.75rem;
   background: var(--panel); border: 1px solid var(--line-bright);
   border-left: 3px solid var(--accent); border-radius: 4px;
   padding: 0.625rem 1rem; font-size: 0.75rem; color: var(--text);
@@ -3702,9 +3709,21 @@ button.x:hover { color: #ff5577; }
   opacity: 0; transform: translateX(1.25rem);
   transition: opacity .25s, transform .25s; max-width: 380px;
 }
+.toast > span { min-width: 0; overflow-wrap: anywhere; }
+.toast-close {
+  flex: 0 0 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+  display: inline-grid; place-items: center; padding: 0;
+  background: transparent; border: 1px solid var(--line-bright); color: var(--text);
+  box-shadow: none; font-size: 1.1rem; line-height: 1;
+}
+.toast-close:hover { border-color: var(--accent); box-shadow: none; }
 .toast.show { opacity: 1; transform: translateX(0); }
 .toast.success { border-left-color: var(--cyan); box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 0 10px #00f0ff22; }
 .toast.error   { border-left-color: var(--bad); box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 0 10px #ff225522; }
+@media (max-width: 767px) {
+  #toast-area { left: 0.75rem; right: 0.75rem; bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  .toast { width: 100%; max-width: none; }
+}
 
 .empty-state {
   text-align: center; padding: 2.5rem 1.25rem;
@@ -3726,10 +3745,10 @@ button.x:hover { color: #ff5577; }
    ===================================================================== */
 [data-theme="light"] {
   --bg: #e8e6f0; --bg2: #f0eef5; --panel: #ffffff; --panel2: #f5f4fa;
-  --line: #c8c6d8; --line-bright: #a8a6c0; --text: #1a1830; --muted: #6a6880;
-  --accent: #c01860; --accent-bright: #d41b6a; --accent-dim: #a01050;
-  --cyan: #0070a0; --cyan-dim: #005880; --purple: #5520aa; --purple-dim: #401880;
-  --warn: #c01860; --bad: #cc0044; --good: #0070a0; --surplus: #b45309;
+  --line: #c8c6d8; --line-bright: #a8a6c0; --text: #1a1830; --muted: #57556d;
+  --accent: #c01860; --accent-bright: #b01255; --accent-dim: #a01050;
+  --cyan: #00658f; --cyan-dim: #005880; --purple: #5520aa; --purple-dim: #401880;
+  --warn: #c01860; --bad: #cc0044; --good: #00658f; --surplus: #8f5400;
   --glow-pink: 0 0 8px #c0186044, 0 0 20px #c0186022;
   --glow-cyan: 0 0 8px #0070a044, 0 0 20px #0070a022;
   --glow-purple: 0 0 8px #5520aa44, 0 0 20px #5520aa22;
@@ -3781,12 +3800,12 @@ button.x:hover { color: #ff5577; }
    ═══════════════════════════════════════════════════════════════════════ */
 [data-theme="trans"] {
   --bg: #eef2ff; --bg2: #e4eafc; --panel: #ffffff; --panel2: #f5f2fa;
-  --line: #c8d4f0; --line-bright: #a0b0e0; --text: #1a1a30; --muted: #7a7aaa;
+  --line: #c8d4f0; --line-bright: #a0b0e0; --text: #1a1a30; --muted: #626284;
   --accent: #0070a0; --accent-bright: #00658f; --accent-dim: #005880;
   --cyan: #b01855; --cyan-dim: #8b123f;
-  --purple: #d0b0f0; --purple-dim: #b090d0;
-  --warn: #f598b0; --bad: #e04060; --good: #4dc8f0;
-  --surplus: #e0a030;
+  --purple: #704090; --purple-dim: #653780;
+  --warn: #a3154b; --bad: #b32647; --good: #00658f;
+  --surplus: #8f5400;
   --glow-pink: 0 0 12px #f598b044, 0 0 30px #f598b822;
   --glow-cyan: 0 0 12px #4dc8f044, 0 0 30px #4dc8f022;
   --glow-purple: 0 0 12px #d0b0f044, 0 0 30px #d0b0f022;
@@ -4369,12 +4388,22 @@ button.x:hover { color: #ff5577; }
   display: flex; flex-direction: column; overflow: hidden;
   box-shadow: 0 4px 32px rgba(0,0,0,.5);
 }
+@media (min-width: 2200px) {
+  .gear-picker-modal { max-width: 800px; }
+}
+@media (min-width: 3200px) {
+  .gear-picker-modal { max-width: 960px; }
+}
 .gear-picker-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--line);
   font-family: "Orbitron", monospace; font-size: 0.8125rem; color: var(--accent);
 }
-.gear-picker-head .ghost { padding: 0 0.4rem; font-size: 1rem; line-height: 1; }
+.gear-picker-head .ghost {
+  width: 44px; min-width: 44px; height: 44px; min-height: 44px;
+  display: inline-grid; place-items: center; padding: 0;
+  font-size: 1rem; line-height: 1;
+}
 .gear-picker-body { padding: 0.4rem 0.5rem 0.6rem; overflow-y: auto; flex: 1 1 auto; }
 .gear-picker-item { cursor: pointer; transition: background .15s, border-color .15s; }
 .gear-picker-item:hover { background: var(--panel); border-color: var(--line-bright); }
