@@ -31,6 +31,10 @@ jobs:
         run: npm run check
       - name: Enforce asset provenance
         run: npm run assets:check
+      - name: Enforce binary growth policy
+        env:
+          BINARY_HYGIENE_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: npm run assets:hygiene -- --base "$BINARY_HYGIENE_BASE_SHA"
       - name: Audit all dependencies for known vulnerabilities
         run: npm audit --include=dev
       - name: Scan repository for secrets

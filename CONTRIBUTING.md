@@ -22,6 +22,7 @@ npm ci
 npm run local:host       # working-tree server on port 4173
 npm run check            # tests, Pages build, and baseline verification
 npm run assets:check     # required after asset/provenance changes
+npm run assets:hygiene   # new binary size, aggregate growth, and duplicate gate
 npm run test:python      # all Python unittest cases
 npm run check:generated  # regenerate committed sources and require a clean diff
 ```
@@ -63,3 +64,22 @@ Do not paste private account data or credentials.
   the Pages `dist/` artifact.
 - Keep game-derived assets distinct from MIT application code and update their
   provenance records when required.
+
+## Binary and deployment hygiene
+
+`data/asset-provenance.json` is the authority for whether a binary may be
+redistributed. `npm run assets:check` enforces that every tracked binary is
+covered by an approved record; `npm run assets:hygiene` protects future
+changes. It rejects any newly added binary over **10 MiB**, more than **25 MiB
+total new binary content** in one change, or an exact duplicate of a binary
+already in the base tree. These are review thresholds, not permission to add
+an asset: provenance and licensing evidence remain required.
+
+The repository is a source archive. It may retain approved source/raw assets
+needed for provenance, maintenance, or future generation, even when those
+files are not deployed. The Pages runtime is a separate positive allowlist in
+`public-files.json`; only files selected by that allowlist belong in the
+runtime artifact. Do not add `dist/`, caches, dependency trees, probes, or
+temporary exports to the source archive or runtime deployment. Generated
+runtime files are rebuilt from canonical sources and must not be used to
+justify retaining unrelated build debris.
