@@ -5,16 +5,29 @@
 - URL: <https://chrisfromnepa.github.io/production-calculator-ER/>
 - Source branch: `main`
 - Release pull request: [#22](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/22)
+- Release: [v1.4.0 — Production hardening and runtime simplification](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.4.0)
+- Release commit: [`7fb5aee2bf83afc6c15778755a36545fff054dfe`](https://github.com/ChrisFromNEPA/production-calculator-ER/commit/7fb5aee2bf83afc6c15778755a36545fff054dfe)
 - Package and lockfile version: `1.4.0`
 - Service-worker caches: `er-prodcalc-v0.2.46-shell` and `er-prodcalc-v0.2.46-runtime`
-- Deployment workflow: [GitHub Pages Actions](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
+- Required CI: [run 33710551442](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33710551442) — validation, Chromium calculator UX, and Chromium service-worker lifecycle passed.
+- CodeQL: [run 33710551377](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33710551377) — passed.
+- Pages: [run 33710781867](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33710781867) — build and deployment passed for the exact release commit.
+- Pages deployment: `6236251523` — status `success`; environment URL matches the live URL above.
 
-The public site is a static GitHub Pages application. The v1.4.0 release is
-considered verified only after the exact merge commit passes required CI and
-CodeQL, the Pages workflow builds and deploys that SHA, the live manifest and
-service worker match the candidate, and the GitHub release tag targets that
-verified commit. Exact run, commit, artifact, and release links are recorded
-here after those conditions pass.
+The v1.4.0 Pages artifact was downloaded from run `33710781867` and verified
+against its generated manifest: **24,384,360 bytes across 1,787 files**, base
+path `/production-calculator-ER/`, with zero deployed files under `models/`.
+The live root, `sw.js`, and `build-manifest.json` returned HTTP 200 over HTTPS;
+the root has no Models navigation, Models view, or 3D preview action; and the
+retired model bundle, Models controller, and sample GLB paths returned HTTP 404.
+The GitHub release is published (not a draft or prerelease), marked Latest, and
+its `v1.4.0` tag targets the exact release commit above.
+
+Local release-candidate verification passed **532/532 Node tests**, **14/14
+Python tests**, **11/11 real-Chromium UX tests**, **6/6 real-Chromium
+service-worker lifecycle tests**, all **4,433** asset-provenance checks, Pages
+and served-layout builds, binary-growth policy, generated-data freshness, and
+`npm audit --include=dev` with zero vulnerabilities.
 
 ## Historical post-v1.3.0 deployment
 
