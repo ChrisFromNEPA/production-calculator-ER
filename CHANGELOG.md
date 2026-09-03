@@ -4,7 +4,13 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
-No unreleased changes.
+### Fixed
+
+- Made copied shopping lists and colony work queues use the selected valid mining
+  site shown by the active plan, falling back to a valid source rather than
+  listing every possible source or retaining an invalid/stale default.
+- Made the update prompt activate an installed waiting service worker before
+  reloading, and isolated failed-install recovery fixtures in lifecycle tests.
 
 ## [1.4.0] — 2026-09-02
 

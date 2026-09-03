@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'er-prodcalc-';
-const CACHE = 'er-prodcalc-v0.2.46-shell';
-const RUNTIME_CACHE = 'er-prodcalc-v0.2.46-runtime';
+const CACHE = 'er-prodcalc-v0.2.47-shell';
+const RUNTIME_CACHE = 'er-prodcalc-v0.2.47-runtime';
 const MAX_RUNTIME_ENTRIES = 32;
 const OPTIONAL_RUNTIME_DIRECTORIES = [
   'src/vendor/', 'maps/', 'icons/',
@@ -59,6 +59,10 @@ self.addEventListener('install', e => {
       .then(cache => cache.addAll(SHELL))
       .then(() => self.skipWaiting())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
 });
 
 const cleanupOldCaches = async () => {

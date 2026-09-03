@@ -137,8 +137,14 @@ describe('shell contract for the indicators', () => {
   });
 
   it('keeps the shell precache honest about its own version', () => {
-    assert.match(sw, /const CACHE\s*=\s*['"]er-prodcalc-v0\.2\.46-shell['"]/);
+    assert.match(sw, /const CACHE\s*=\s*['"]er-prodcalc-v0\.2\.47-shell['"]/);
     assert.match(sw, /'\.\/src\/ui\/trust-indicators\.js'/);
+    const installStart = sw.indexOf("self.addEventListener('install'");
+    const messageStart = sw.indexOf("self.addEventListener('message'", installStart);
+    assert.match(sw.slice(installStart, messageStart), /self\.skipWaiting\(\)/);
+    assert.match(sw, /addEventListener\('message'[\s\S]*SKIP_WAITING[\s\S]*event\.waitUntil\(self\.skipWaiting\(\)\)/);
+    assert.match(moduleSrc, /waiting\.postMessage\('SKIP_WAITING'\)/);
+    assert.match(moduleSrc, /setTimeout\(reloadPage, 100\)/);
   });
 
   it('does not claim the balance sheet is live — it is a fetched snapshot', () => {

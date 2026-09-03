@@ -64,6 +64,25 @@ describe('security and apply data safety', () => {
     assert.match(init, /copyShoppingList[\s\S]*LAST_RESULTS/);
   });
 
+  it('copies the selected obtain site shown by the active plan', () => {
+    const helper = app.match(/function selectedObtainSite\(name, info\) \{[\s\S]*?\n\}/)?.[0];
+    assert.ok(helper, 'selected obtain-site helper must exist');
+    const context = { OBTAIN_SITE: { coal: 'Brooklyn' } };
+    vm.createContext(context);
+    vm.runInContext(`${helper}\nthis.choose = selectedObtainSite;`, context);
+    const info = { from: ['Andromeda', 'Brooklyn'], preferred: 'Andromeda' };
+    assert.equal(context.choose('coal', info), 'Brooklyn');
+    context.OBTAIN_SITE.coal = 'not-a-real-site';
+    assert.equal(context.choose('coal', info), 'Andromeda');
+    assert.equal(context.choose('unknown', { from: [] }), 'No mine site');
+
+    const copyStart = init.indexOf('function copyShoppingList(');
+    const copyEnd = init.indexOf('function sharePlanLink(', copyStart);
+    const copy = init.slice(copyStart, copyEnd);
+    assert.match(copy, /selectedObtainSite\(n, info\)/);
+    assert.doesNotMatch(copy, /\.join\(', '\)/);
+  });
+
   it('publishes an Apply result only after its plan markup renders successfully', () => {
     const app = readFileSync(join(root, 'src', 'app.js'), 'utf8');
     const start = app.indexOf('function renderPlan(');
