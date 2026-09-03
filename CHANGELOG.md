@@ -4,6 +4,10 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
+No unreleased changes.
+
+## [1.4.1] — 2026-09-03
+
 ### Fixed
 
 - Made copied shopping lists and colony work queues use the selected valid mining

@@ -1,5 +1,33 @@
 # Release QA and deployment evidence
 
+## v1.4.1 release verification
+
+- URL: <https://chrisfromnepa.github.io/production-calculator-ER/>
+- Source branch: `main`
+- Release pull request: [#25](https://github.com/ChrisFromNEPA/production-calculator-ER/pull/25)
+- Release: [v1.4.1](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.4.1)
+- Release commit: [`e8b19939553f05e1ac8e046c8cee72a13187c912`](https://github.com/ChrisFromNEPA/production-calculator-ER/commit/e8b19939553f05e1ac8e046c8cee72a13187c912)
+- Package and lockfile version: `1.4.1`
+- Service-worker caches: `er-prodcalc-v0.2.47-shell` and `er-prodcalc-v0.2.47-runtime`
+- Required CI: [run 33715587900](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33715587900) — validation, Chromium calculator UX, and Chromium service-worker lifecycle passed.
+- CodeQL: [run 33715587892](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33715587892) — passed.
+- Pages: [run 33715859278](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33715859278) — build and deployment passed for the exact release commit.
+- Pages deployment: `6237068183` — status `success`; environment URL matches the live URL above.
+
+The exact v1.4.1 Pages artifact was downloaded from run `33715859278` and
+verified against its generated manifest: **24,385,529 bytes across 1,787
+files**, payload size **24,325,797 bytes**, base path
+`/production-calculator-ER/`, and zero deployed model files. Cache-busted live
+requests confirmed the application shell, `er-prodcalc-v0.2.47-shell`, route
+copy helper, and colony-work preferred-site validation in production.
+
+Local release-candidate verification passed **534/534 Node tests**, **14/14
+Python tests**, **11/11 real-Chromium UX tests**, **6/6 real-Chromium
+service-worker lifecycle tests**, all **4,433** asset-provenance checks, Pages
+and served-layout builds, binary-growth policy, generated-data freshness, and
+`npm audit --include=dev` with zero vulnerabilities. Independent final review
+reported no security, correctness, test, documentation, or metadata blocker.
+
 ## v1.4.0 release verification
 
 - URL: <https://chrisfromnepa.github.io/production-calculator-ER/>
