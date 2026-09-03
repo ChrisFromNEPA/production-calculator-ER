@@ -1,8 +1,8 @@
 # Production Calculator ER — Responsive UX QA
 
 **Date:** 2026-09-03
-**Candidate:** v1.4.2, branch `qa/responsive-audit-2026-09-03`
-**Application:** <http://192.168.1.129:4173/> and locally built Pages artifact
+**Candidate:** v1.4.2 at commit `7b04913af94ed546c337d82976cf7dd1c4d7e438`
+**Application:** local Vite server and locally built Pages artifact
 
 ## Executive summary
 
@@ -54,15 +54,15 @@ A long dynamic picker placeholder was also shortened to `Search final items…`;
 ## Verification evidence
 
 - `npm run check`: **passed**
-  - Node: **536/536**
+  - Node: **541/541**
   - Python: **14/14**
   - syntax/quality, static accessibility, generated-data drift, Pages build, served baseline, and engine coverage: passed
-- `CHROMIUM_BIN=/snap/bin/chromium npm run test:browser-ux`: **20/20 passed**
+- Playwright Chromium headless shell, `npm run test:browser-ux`: **20/20 passed**
 - Service-worker lifecycle with isolated Chromium headless shell: **6/6 passed**
-- Asset provenance: **4,433/4,433 binary files passed**
-- Binary-growth hygiene: **0 new binaries**, passed
+- Asset provenance after repository cleanup: **1,741/1,741 binary files passed**
+- Binary-growth hygiene: **1 new 0.12 MiB documentation image**, passed
 - `npm audit --include=dev`: **0 vulnerabilities**
-- Pages build: **1,787 files, 24,389,350 bytes**
+- Pages build: **1,787 files, 24,071,509 bytes**
 
 ## Representative screenshots
 

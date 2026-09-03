@@ -17,7 +17,7 @@ const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const REPOSITORY_URL = 'https://github.com/ChrisFromNEPA/production-calculator-ER';
 const PAGES_URL = 'https://chrisfromnepa.github.io/production-calculator-ER/';
-const SCREENSHOT_URL = `${PAGES_URL}docs/assets/calculator-sample.png`;
+const SCREENSHOT_URL = `${PAGES_URL}docs/assets/calculator-overview.png`;
 
 describe('employer-facing public presentation', () => {
   it('introduces the calculator and links back to its source', () => {
@@ -32,16 +32,19 @@ describe('employer-facing public presentation', () => {
     assert.match(html, /<meta property="og:type" content="website" \/>/);
     assert.match(html, /<meta property="og:title" content="Empire Rising Production Calculator" \/>/);
     assert.match(html, new RegExp(`<meta property="og:url" content="${escapeRegExp(PAGES_URL)}" \/>`));
+    assert.match(html, new RegExp(`<link rel="canonical" href="${escapeRegExp(PAGES_URL)}" \/>`));
     assert.match(html, new RegExp(`<meta property="og:image" content="${escapeRegExp(SCREENSHOT_URL)}" \/>`));
-    assert.match(html, /<meta property="og:image:alt" content="Fictional sample production plan for an Emergency Medikit" \/>/);
+    assert.match(html, /<meta property="og:image:width" content="1270" \/>/);
+    assert.match(html, /<meta property="og:image:height" content="635" \/>/);
+    assert.match(html, /<meta property="og:image:alt" content="Empire Rising Production Calculator interface with a fictional Demo Operator profile" \/>/);
     assert.match(html, /<meta name="twitter:card" content="summary_large_image" \/>/);
     assert.match(html, new RegExp(`<meta name="twitter:image" content="${escapeRegExp(SCREENSHOT_URL)}" \/>`));
     assert.match(html, /<link rel="icon" type="image\/svg\+xml" sizes="any" href="favicon\.svg" \/>/);
   });
 
   it('keeps the portfolio screenshot in the Pages artifact and the service-worker version current', () => {
-    assert.equal(existsSync(join(root, 'docs/assets/calculator-sample.png')), true);
-    assert.ok(publicFiles.runtime.includes('docs/assets/calculator-sample.png'));
+    assert.equal(existsSync(join(root, 'docs/assets/calculator-overview.png')), true);
+    assert.ok(publicFiles.runtime.includes('docs/assets/calculator-overview.png'));
     assert.match(sw, /const CACHE = 'er-prodcalc-v0\.2\.48-shell'/);
   });
 
@@ -53,25 +56,31 @@ describe('employer-facing public presentation', () => {
 
   it('front-loads verified portfolio information without unsupported claims', () => {
     for (const heading of [
-      '## Why it exists',
-      '## Engineering highlights',
-      '## Architecture and data flow',
-      '## Install and run',
-      '## Usage',
-      '## Privacy and data storage',
-      '## Known limitations and roadmap',
-      '## License and asset notice',
+      '## What it does',
+      '## How to use it',
+      '## Technical overview',
+      '## Local development',
+      '## Verification',
+      '## Project documentation',
+      '## Contributing',
+      '## License and attribution',
     ]) assert.match(readme, new RegExp(`^${heading}$`, 'm'));
-    assert.match(readme, /releases\/tag\/v1\.4\.2/);
+    assert.match(readme, /releases\/latest/);
     assert.doesNotMatch(readme, /v1\.4\.1 candidate/);
-    assert.match(readme, /docs\/assets\/calculator-sample\.png/);
+    assert.match(readme, /docs\/assets\/calculator-overview\.png/);
+    assert.match(readme, /docs\/README\.md/);
     assert.match(readme, /npm run check/);
     assert.match(readme, /npm run test:browser-ux/);
+    assert.ok(readme.split('\n').length <= 240, 'README should remain easy to scan');
     assert.doesNotMatch(readme, /user adoption|performance guarantee/i);
   });
 
   it('uses only the authorized public identity in current-tree attribution', () => {
     assert.equal(pkg.author, 'ChrisFromNEPA and community contributors');
+    assert.equal(pkg.description, 'Browser-local Empire Rising production, inventory, gear, colony, and economy planner.');
+    for (const keyword of ['inventory-planner', 'vanilla-javascript', 'accessibility']) {
+      assert.ok(pkg.keywords.includes(keyword), `missing public package keyword: ${keyword}`);
+    }
     assert.match(authors, /ChrisFromNEPA/);
     assert.match(license, /Copyright \(c\) 2026 ChrisFromNEPA and community contributors/);
   });

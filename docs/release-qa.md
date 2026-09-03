@@ -146,4 +146,4 @@ The evidence below was collected for the all-factions candidate that preceded th
 
 ### Acceptance mapping
 
-See [`docs/public-player-audit.md`](public-player-audit.md) for the implementation slices, baseline evidence, test results, browser method, and known limitations. See [`docs/factions-and-economics.md`](factions-and-economics.md) and [`docs/public-player-guide.md`](public-player-guide.md) for the public methodology and usage guide.
+The historical implementation slices, baseline evidence, browser method, and known limitations are preserved in the [`v1.4.1` public-player audit](https://github.com/ChrisFromNEPA/production-calculator-ER/blob/v1.4.1/docs/public-player-audit.md). See [`docs/factions-and-economics.md`](factions-and-economics.md) and [`docs/public-player-guide.md`](public-player-guide.md) for the current public methodology and usage guide.

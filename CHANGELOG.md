@@ -21,6 +21,14 @@ No unreleased changes.
 
 ### Improved
 
+- Reworked the README around the player workflow, technical architecture, and
+  reproducible verification path; added a documentation index and a legible
+  landscape social/README preview.
+- Removed retired model, texture-extraction, gallery, skin-test, and branding
+  workspaces from the current checkout without rewriting history. The final
+  v1.4.1 snapshot remains available through its tag.
+- Added a repository-hygiene regression that keeps the current source tree under
+  2,000 tracked files and 40 MiB while preserving the separate Pages allowlist.
 - Expanded phone and tablet controls to touch-friendly 44×44 pixel targets,
   including modal close controls, and wrapped Battle Nodes colony choices on
   tablet layouts.
