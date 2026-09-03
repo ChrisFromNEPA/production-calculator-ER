@@ -5,7 +5,7 @@ These are enforced as static/build budgets first; browser FPS and GPU-memory che
 | Budget | Gate |
 |---|---|
 | Generated R3F bundle | < 2.1 MiB raw and < 600 KiB gzip |
-| 3D startup | No generated-bundle request before explicit Models/preview intent |
+| 3D startup | No generated-bundle request before explicit item-preview intent |
 | WebGL ownership | One R3F Canvas/root at a time |
 | Idle stage | `frameloop="demand"`; no custom RAF loop in the island |
 | DPR | `[1, 1.75]`, with renderer cap at 1.75 |
@@ -24,4 +24,5 @@ Automated enforcement lives in `tests/performance-budgets.test.mjs` and runs via
 npm run test:budgets
 ```
 
-Manual follow-up remains required for representative desktop/mobile FPS, renderer draw calls, and resource stability across 20 repeated model/studio swaps.
+Manual follow-up remains required for representative desktop/mobile FPS, renderer
+draw calls, and resource stability across repeated item-preview open/close cycles.

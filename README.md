@@ -42,7 +42,7 @@ flowchart LR
   worker[Service worker] --> shell[Cached app shell]
 ```
 
-The calculator reads reviewable source data from `data/`, uses the build scripts to generate runtime consumers, and renders plans in the browser. GitHub Pages receives only the staged `dist/` artifact. There is no production API or server-side workspace database. Optional models and charts are fetched only after an explicit interaction.
+The calculator reads reviewable source data from `data/`, uses the build scripts to generate runtime consumers, and renders plans in the browser. GitHub Pages receives only the staged `dist/` artifact. There is no production API or server-side workspace database. Optional contextual item-preview models and charts are fetched only after an explicit interaction.
 
 ## Key features
 
@@ -54,7 +54,7 @@ The calculator reads reviewable source data from `data/`, uses the build scripts
 - Stores profiles, inventory, plans, preferences, and colony assumptions in the browser.
 - Exports and imports portable workspace backups.
 - Remains usable offline after the application has been loaded successfully.
-- Includes reference tools for drugs, battle nodes, colonies, models, the item catalog, character assets, and community notes.
+- Includes reference tools for drugs, battle nodes, colonies, and community notes.
 
 No account, password, API key, shared guild database, or installation is required to use the public site.
 
@@ -147,10 +147,9 @@ For the complete rules, see [Factions and economics](docs/factions-and-economics
 | **Colonies** | Maintain local colony ownership and tax assumptions; export or import a reproducible world snapshot. |
 | **Drugs** | Browse drug reference data. |
 | **Battle Nodes** | Review battle-node and map reference data. |
-| **Models** | Open the 3D model gallery, Character Studio, and Item Catalog from one tab. Optional model files load only when requested. |
 | **Community Notes** | Read public community reference notes included with the project. |
 
-The compact navigation may place less frequently used areas under **More**, especially on phones. **Character Studio** and **Item Catalog** are subtabs inside **Models**, not separate top-level routes.
+The compact navigation may place less frequently used areas under **More**, especially on phones.
 
 ## Profiles, inventory, and workspace backups
 
@@ -354,7 +353,7 @@ There is currently no standalone `lint` script in `package.json`; `npm run check
 | `index.html` | Static application shell and public view markup. |
 | `src/app-core.js` | Shared navigation, themes, audio, plan rendering, and application helpers. |
 | `src/app-init.js` | Startup and DOM event wiring. |
-| `src/views/` | Player, inventory, colonies, models, and other public view modules. |
+| `src/views/` | Player, inventory, colonies, reference, and other view modules. |
 | `src/styles.css` and `src/styles/` | Theme, shell, component, responsive, and view styling. |
 | `data/` | Canonical human-reviewable game and faction data. |
 | `scripts/` | Data generation, asset validation, and Pages build tooling. |

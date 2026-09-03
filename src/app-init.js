@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const DIRECT_HASH_ROUTES = new Set(['calc', 'inventory', 'gear', 'colonies', 'battle', 'models', 'drugs', 'patch-changes', 'community']);
+const DIRECT_HASH_ROUTES = new Set(['calc', 'inventory', 'gear', 'colonies', 'battle', 'drugs', 'patch-changes', 'community']);
 
 function parsePublicHashRoute() {
   const raw = String(location.hash || '').slice(1).split('?')[0].trim().toLowerCase();
@@ -40,8 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPickerFilters();
   refreshAll();
   renderPicker();
-  wireModelsEvents();
-  wireCharacterStudioEvents();
+
   try {
     if (sessionStorage.getItem('er_workspace_imported_once') === '1') {
       sessionStorage.removeItem('er_workspace_imported_once');
@@ -1185,13 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (location.hash === '#patch-changes' && S.isProfileComplete?.(PLAYERS.active, PLAYERS.profiles?.[PLAYERS.active]?.faction)) initPatchChanges();
   // Inventory tab: refresh on enter (handles player switches)
   registerViewHook({ view: 'inventory', enter: refreshInventoryUI });
-  // Models tab: load manifest + init viewer on first visit
-  let modelsInit = false;
-  registerViewHook({
-    view: 'models', once: true,
-    fn: function() { if (!modelsInit) { modelsInit = true; initModelsView(); } }
-  });
- // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
   // moved to src/app-core.js (global audio + terminal audio)
   // ═══════════════════════════════════════════════════════════════════════════
   // moved to src/views/reference.js (part 2)

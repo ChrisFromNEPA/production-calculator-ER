@@ -21,6 +21,9 @@ unreleased until their exact commit is merged and deployed.
 
 ### Improved
 
+- Removed the complete public Models area, including its 3D Models, Character
+  Studio, and Item Catalog subtabs; existing `#models` links now fall back safely
+  to the calculator.
 - Rebuilt the Gear 1.10 patch view and refined calculator presentation and
   narrow-screen layouts.
 - Restored meaningful quality-gate coverage and removed stale communication

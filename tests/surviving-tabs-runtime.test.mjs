@@ -9,7 +9,6 @@ const read = file => readFileSync(join(root, file), 'utf8');
 const html = read('index.html');
 const sw = read('sw.js');
 const reference = read('src/views/reference.js');
-const styles = read('src/styles.css');
 
 describe('surviving tab runtime dependencies', () => {
   it('ships the renderer module required by Drugs and Battle Nodes', () => {
@@ -36,13 +35,5 @@ describe('surviving tab runtime dependencies', () => {
 
   it('bumps the offline shell whenever runtime dependencies change', () => {
     assert.doesNotMatch(sw, /const CACHE = 'er-v0\.1\.0'/);
-  });
-
-  it('retains the visual layout for Models, Character Studio, and Item Catalog', () => {
-    assert.match(styles, /\.models-layout\s*\{/);
-    assert.match(styles, /\.models-viewer\s*\{[^}]*min-height:\s*480px/s);
-    assert.match(styles, /\.studio-layout\s*\{/);
-    assert.match(styles, /\.icons-grid\s*\{/);
-    assert.match(styles, /\.icon-card img\s*\{/);
   });
 });

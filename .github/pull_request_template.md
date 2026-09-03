@@ -11,7 +11,7 @@ surface is affected.
 - [ ] Inventory / add stock
 - [ ] Gear
 - [ ] Colonies / world context
-- [ ] Reference or Models
+- [ ] Reference / Battle Nodes
 - [ ] Themes/accessibility
 - [ ] Data/assets
 - [ ] Documentation/tooling only

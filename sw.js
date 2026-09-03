@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'er-prodcalc-';
-const CACHE = 'er-prodcalc-v0.2.43-shell';
-const RUNTIME_CACHE = 'er-prodcalc-v0.2.43-runtime';
+const CACHE = 'er-prodcalc-v0.2.44-shell';
+const RUNTIME_CACHE = 'er-prodcalc-v0.2.44-runtime';
 const MAX_RUNTIME_ENTRIES = 32;
 const OPTIONAL_RUNTIME_DIRECTORIES = [
   'src/generated/', 'src/vendor/', 'models/', 'maps/', 'icons/',
@@ -44,12 +44,10 @@ const SHELL = [
   './src/ui/chart-loader.js',
   './src/app.js',
   './src/apply-plan.js',
-  './src/views/models.js',
   './src/views/reference.js',
   './src/views/gear.js',
   './src/views/patch-changes.js',
   './src/views/inventory.js',
-  './src/views/character.js',
   './src/views/player.js',
   './src/app-init.js',
   './src/ui/trust-indicators.js',

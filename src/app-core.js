@@ -1900,7 +1900,7 @@ window.setCMGFeatureFlag = setCMGFeatureFlag;
 // ---- Navigation manifest ----
 const CMG_NAV_GROUPS = Object.freeze({
   workflows: Object.freeze(['calc', 'inventory', 'gear', 'patch-changes']),
-  operations: Object.freeze(['colonies', 'battle', 'models']),
+  operations: Object.freeze(['colonies', 'battle']),
   reference: Object.freeze(['drugs']),
   culture: Object.freeze(['community']),
 });
@@ -2246,7 +2246,6 @@ const TERMINAL_AUDIO = {
   colonies: 'voice_extracted/MiningTerminal.ogg',
   drugs: 'voice_extracted/MedicalService.ogg',
   battle: 'voice_extracted/SecurityPad.ogg',
-  models: 'voice_extracted/ApartmentEntry.ogg',
   community: 'voice_extracted/MarketTerminal.ogg',
 };
 const SOUND_MODE_KEY = 'er_sound_mode_v1';

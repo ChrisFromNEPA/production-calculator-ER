@@ -92,6 +92,9 @@ This contract verifies the served HTML has matching unique navigation/panel rout
 3. Measure first usable calculator and first model render timing in a repeatable browser runner.
 4. Keep the legacy 3D assertions until the R3F path passes feature and export parity checks.
 
-## Post-migration verification note
+## Historical post-migration verification note
 
-The current local implementation preserves the baseline as historical evidence and adds a progressive R3F path. A live browser probe verified default-off startup with zero eager Three/R3F loads. With `r3f_v1` explicitly enabled, opening Models and selecting `alinea` loaded the generated bundle and rendered one R3F Canvas without console messages. Legacy Three.js remains lazy-loaded as a compatibility fallback because full texture/export/Character Studio parity has not yet been signed off.
+This records the former Models implementation as historical evidence. A live browser
+probe verified default-off startup with zero eager Three/R3F loads and the former
+opt-in Models route. That public route, Character Studio, and Item Catalog were
+subsequently retired; only the optional contextual item-preview path remains.

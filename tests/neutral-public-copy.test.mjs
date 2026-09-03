@@ -14,4 +14,19 @@ describe('retired public surfaces', () => {
       assert.doesNotMatch(html, new RegExp(label));
     }
   });
+
+  it('removes the complete Models area from public navigation and startup', () => {
+    const html = read('index.html');
+    const core = read('src/app-core.js');
+    const init = read('src/app-init.js');
+    const sw = read('sw.js');
+
+    assert.doesNotMatch(html, /data-(?:nav-)?view="models"/);
+    assert.doesNotMatch(html, /id="view-models"/);
+    assert.doesNotMatch(html, /src="src\/views\/(?:models|character)\.js/);
+    assert.doesNotMatch(core, /operations:\s*Object\.freeze\(\[[^\]]*['"]models['"]/);
+    assert.doesNotMatch(init, /DIRECT_HASH_ROUTES[^\n]*['"]models['"]/);
+    assert.doesNotMatch(init, /wireModelsEvents|wireCharacterStudioEvents|initModelsView/);
+    assert.doesNotMatch(sw, /\.\/src\/views\/(?:models|character)\.js/);
+  });
 });

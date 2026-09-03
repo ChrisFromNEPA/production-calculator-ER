@@ -56,7 +56,6 @@
     <button class="tab" data-view="colonies" role="tab" aria-selected="false">Colonies</button>
     <button class="tab" data-view="drugs" role="tab" aria-selected="false">Drugs</button>
     <button class="tab" data-view="battle" role="tab" aria-selected="false">Battle Nodes</button>
-    <button class="tab" data-view="models" role="tab" aria-selected="false">Models</button>
   </nav>
   <div class="nav-more">
     <button type="button" class="nav-more-btn" aria-haspopup="true" aria-expanded="false" aria-controls="nav-more-menu">
@@ -79,7 +78,6 @@
         <h2 id="nav-v2-operations">Operations</h2>
         <button type="button" data-nav-view="colonies">Colonies</button>
         <button type="button" data-nav-view="battle">Battle Nodes</button>
-        <button type="button" data-nav-view="models">Models / Character Studio</button>
       </section>
       <section class="nav-v2-group" data-nav-group="reference" aria-labelledby="nav-v2-reference">
         <h2 id="nav-v2-reference">Reference</h2>
@@ -109,7 +107,6 @@
         <button type="button" data-nav-view="patch-changes">Gear 1.10</button>
         <button type="button" data-nav-view="colonies">Colonies</button>
         <button type="button" data-nav-view="battle">Battle Nodes</button>
-        <button type="button" data-nav-view="models">Models / Character Studio</button>
         <button type="button" data-nav-view="drugs">Drugs</button>
         <button type="button" data-nav-view="community">Community Notes</button>
       </div>
@@ -622,141 +619,6 @@
     <div id="bn-body" class="bn-body"></div>
   </section>
 
-  <!-- MODELS -->
-  <section id="view-models" class="view" role="tabpanel" aria-label="Models">
-    <h3 class="view-title">🧊 Model &amp; Texture Workbench</h3>
-    <p class="muted" style="font-size:0.75rem;max-width:760px">Interactive 3D armor/item viewer from the Empire Rising client. Drag to orbit, scroll to zoom, right-drag to pan. Select a model to inspect its pieces and skin atlases; export textures as PNG for editing, or re-import an edited texture to preview it live. <span id="models-count" class="muted"></span></p>
-    <div class="models-subtabs">
-      <button type="button" id="models-tab-3d" class="models-subtab active">🧊 3D Models</button>
-      <button type="button" id="models-tab-studio" class="models-subtab">🧍 Character Studio</button>
-      <button type="button" id="models-tab-icons" class="models-subtab">🖼️ Item Catalog <span class="models-subtab-count" id="models-icon-count"></span></button>
-    </div>
-    <div id="models-pane-3d">
-    <div class="models-layout">
-      <div class="models-sidebar">
-        <div class="models-controls">
-          <input id="models-search" type="text" placeholder="filter models…" autocomplete="off" aria-label="Filter models" />
-          <select id="models-category" aria-label="Category">
-            <option value="">All categories</option>
-          </select>
-          <label class="models-texonly"><input type="checkbox" id="models-texonly" /> 🎨 textured only</label>
-          <button id="models-close" class="models-back-btn" hidden>← Back to gallery</button>
-        </div>
-        <div id="models-gallery" class="models-gallery" aria-live="polite"></div>
-      </div>
-      <div class="models-stage">
-        <div id="models-viewer" class="models-viewer" aria-label="3D model viewer">
-          <div class="models-viewer-hint" id="models-hint">Select a model from the gallery</div>
-        </div>
-        <div class="models-stage-controls" id="models-stage-controls" hidden>
-          <div class="models-model-name" id="models-model-name"></div>
-          <div class="models-model-meta" id="models-model-meta"></div>
-          <div class="models-stage-buttons">
-            <button id="models-autorotate" class="models-stage-btn active" title="Toggle auto-rotate">🔄 Auto</button>
-            <button id="models-wireframe" class="models-stage-btn" title="Toggle wireframe">🕸️ Wire</button>
-            <button id="models-normal" class="models-stage-btn active" title="Toggle face normals">🧭 Normals</button>
-            <button id="models-grid" class="models-stage-btn" title="Toggle floor grid">📐 Grid</button>
-            <button id="models-reset" class="models-stage-btn" title="Reset camera">🎯 Reset</button>
-            <button id="models-export-glb" class="models-stage-btn" title="Download this model as GLB">⬇️ GLB</button>
-          </div>
-        </div>
-        <div class="models-workbench" id="models-workbench" hidden>
-          <div class="models-wb-panel">
-            <div class="models-wb-title">🧵 Skin atlases
-              <span class="models-wb-sub">click to enlarge · ⬇ to export for editing</span>
-            </div>
-            <div class="models-wb-textures" id="models-textures"></div>
-            <label class="models-import-zone" id="models-import-zone">
-              <input type="file" id="models-import-tex" accept="image/png,image/jpeg" hidden />
-              <span>📥 Re-import an edited texture to preview it live on the model</span>
-            </label>
-          </div>
-          <div class="models-wb-panel">
-            <div class="models-wb-title">🔩 Pieces <span class="models-wb-sub">mesh → skin mapping</span></div>
-            <div class="models-wb-pieces" id="models-pieces"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-    <div id="models-pane-icons" hidden>
-      <div class="icons-layout">
-        <div class="icons-controls">
-          <input id="icons-search" type="text" placeholder="search items… (e.g. rifle, beer, armor)" autocomplete="off" aria-label="Search items" />
-          <select id="icons-group" aria-label="Item group">
-            <option value="">All groups</option>
-          </select>
-        </div>
-        <div class="icons-grid" id="icons-grid" aria-live="polite"></div>
-        <div class="icons-detail" id="icons-detail" hidden>
-          <div class="icons-detail-top">
-            <img id="icons-detail-img" alt="" />
-            <span id="icons-detail-fallback" class="icon-badge" aria-label="Icon unavailable" hidden></span>
-            <div class="icons-detail-info">
-              <div class="icons-detail-name" id="icons-detail-name"></div>
-              <div class="icons-detail-meta" id="icons-detail-meta"></div>
-              <div class="icons-detail-stats" id="icons-detail-stats"></div>
-            </div>
-          </div>
-          <div class="icons-detail-links" id="icons-detail-links"></div>
-        </div>
-      </div>
-    </div>
-    <div id="models-pane-studio" hidden>
-      <div class="studio-layout">
-        <div class="studio-sidebar">
-          <div class="studio-controls">
-            <label class="studio-label">Gender
-              <select id="studio-gender">
-                <option value="f">Female</option>
-                <option value="m">Male</option>
-              </select>
-            </label>
-            <label class="studio-label">Faction
-              <select id="studio-faction"></select>
-            </label>
-            <label class="studio-label">Torso
-              <select id="studio-torso"></select>
-            </label>
-            <label class="studio-label">Legs
-              <select id="studio-legs"></select>
-            </label>
-            <div class="studio-gear">
-              <div class="studio-gear-title">Gear visibility</div>
-              <div class="studio-gear-grid" id="studio-gear-grid"></div>
-            </div>
-            <div class="studio-stage-buttons">
-              <button id="studio-autorotate" class="models-stage-btn active" title="Toggle auto-rotate">🔄 Auto</button>
-              <button id="studio-reset" class="models-stage-btn" title="Reset camera">🎯 Reset</button>
-              <button id="studio-export" class="models-stage-btn" title="Download current outfit as GLB">⬇️ GLB</button>
-            </div>
-            <p class="muted" style="font-size:0.72rem">Skin swaps are client-side only — the rendered outfit stays in your browser.</p>
-          </div>
-        </div>
-        <div class="studio-stage">
-          <div id="studio-viewer" class="models-viewer" aria-label="Character studio 3D viewer">
-            <div class="models-viewer-hint" id="studio-hint">Loading character…</div>
-          </div>
-          <div class="studio-model-name" id="studio-model-name"></div>
-        </div>
-      </div>
-    </div>
-    <div class="models-lightbox" id="models-lightbox" hidden>
-      <div class="models-lightbox-inner">
-        <img id="models-lightbox-img" alt="enlarged skin atlas" />
-        <div class="models-lightbox-bar">
-          <span id="models-lightbox-name"></span>
-          <span class="models-lightbox-actions">
-            <button id="models-lightbox-replace" class="models-stage-btn">🔄 Replace…</button>
-            <button id="models-lightbox-dl" class="models-stage-btn">⬇️ Export PNG</button>
-            <button id="models-lightbox-close" class="models-stage-btn">✖ Close</button>
-          </span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
   <!-- COMMUNITY NOTES -->
   <section id="view-community" class="view" role="tabpanel" aria-label="Community notes">
     <h3 class="view-title">📝 Community Notes</h3>
@@ -864,8 +726,6 @@
 <script src="src/app.js?v=95"></script>
 <script src="src/ui/legacy-3d-loader.js?v=1"></script>
 <script src="src/ui/chart-loader.js?v=1"></script>
-<script src="src/views/models.js?v=23"></script>
-<script src="src/views/character.js?v=2"></script>
 <script src="src/views/reference.js?v=10"></script>
 <script src="src/views/patch-changes.js?v=11"></script>
 <script src="src/views/gear.js?v=23"></script>

@@ -80,7 +80,7 @@ describe('intentional sound behavior', () => {
   });
 
   it('assigns all surviving tabs and invokes sound after a real view change', () => {
-    for (const tab of ['calc', 'inventory', 'gear', 'colonies', 'drugs', 'battle', 'models', 'community']) {
+    for (const tab of ['calc', 'inventory', 'gear', 'colonies', 'drugs', 'battle', 'community']) {
       assert.match(core, new RegExp(`\\b${tab}:`));
     }
     assert.match(core, /if \(prev && prev !== v\) playTerminalAudio\(v\)/);

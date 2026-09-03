@@ -1,6 +1,6 @@
 // tests/browser/calculator-ux.spec.mjs
 // Real-browser smoke coverage for the calculator, inventory rapid entry,
-// Item Catalog keyboard access, and Gear picker/reference separation.
+// retired-surface routing, and Gear picker/reference separation.
 //
 // Run: npm run test:browser-ux
 // Or against an already-running server:
@@ -409,47 +409,24 @@ describe('real-browser calculator UX smoke', () => {
     await waitFor(state.page, `document.getElementById('inv-table').textContent.includes('Bauxite')`, 'inventory row');
   });
 
-  smokeIt('opens Item Catalog details from a focused card with Enter', async () => {
+  smokeIt('does not expose the retired Models area and safely redirects its old hash', async () => {
     await setViewport(1280, 900);
-    await activateTab('models');
-    await evalJs(state.page, `document.getElementById('models-tab-icons').click()`);
-    await waitFor(state.page, `document.querySelector('#icons-grid .icon-card')`, 'item catalog card');
-    const card = await evalJs(state.page, `(() => {
-      const item = document.querySelector('#icons-grid .icon-card');
-      item.focus();
-      return { role: item.getAttribute('role'), tabindex: item.getAttribute('tabindex'), pressed: item.getAttribute('aria-pressed'), focused: document.activeElement === item };
-    })()`);
-    assert.equal(card.role, 'button');
-    assert.equal(card.tabindex, '0');
-    assert.equal(card.pressed, 'false');
-    assert.equal(card.focused, true);
-    await state.page.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
-    await state.page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
-    await waitFor(state.page, `!document.getElementById('icons-detail').hidden`, 'item detail panel');
-    assert.ok(await evalJs(state.page, `document.getElementById('icons-detail-name').textContent.length > 0`));
-  });
-
-  smokeIt('opens missing-icon details without requesting a nonexistent image', async () => {
-    await setViewport(1280, 900);
-    await activateTab('models');
-    await evalJs(state.page, `document.getElementById('models-tab-icons').click()`);
-    await waitFor(state.page, `document.querySelector('#icons-grid .icon-card .icon-badge')`, 'missing-icon catalog card');
-    const stateAfter = await evalJs(state.page, `(() => {
-      const card = document.querySelector('#icons-grid .icon-card:has(.icon-badge)');
-      card.click();
-      const img = document.getElementById('icons-detail-img');
-      const fallback = document.getElementById('icons-detail-fallback');
+    const retired = await evalJs(state.page, `(() => {
+      location.hash = '#models';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
       return {
-        detailOpen: !document.getElementById('icons-detail').hidden,
-        imageHidden: img.hidden,
-        imageSource: img.getAttribute('src'),
-        fallbackVisible: fallback && !fallback.hidden,
+        legacyNav: !!document.querySelector('[data-view="models"]'),
+        groupedNav: !!document.querySelector('[data-nav-view="models"]'),
+        view: !!document.getElementById('view-models'),
+        calculatorActive: document.getElementById('view-calc')?.classList.contains('active'),
       };
     })()`);
-    assert.equal(stateAfter.detailOpen, true);
-    assert.equal(stateAfter.imageHidden, true);
-    assert.equal(stateAfter.imageSource, null);
-    assert.equal(stateAfter.fallbackVisible, true);
+    assert.deepEqual(retired, {
+      legacyNav: false,
+      groupedNav: false,
+      view: false,
+      calculatorActive: true,
+    });
   });
 
   smokeIt('makes Gear picker intent distinct from the combat reference list', async () => {
