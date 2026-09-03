@@ -25,6 +25,11 @@
       "name": "ultra resilient mineral",
       "mode": "letter",
       "reason": "The material has no verified icon asset or canonical source; use the deliberate UI letter fallback."
+    },
+    {
+      "name": "Pythica Sustained Gloves",
+      "mode": "letter",
+      "reason": "The balance-sheet alias has no separate verified icon asset; use the deliberate UI letter fallback instead of requesting a nonexistent file."
     }
   ]
 }

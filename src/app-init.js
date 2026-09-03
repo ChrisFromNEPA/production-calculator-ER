@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPicker();
   wireModelsEvents();
   wireCharacterStudioEvents();
+  try {
+    if (sessionStorage.getItem('er_workspace_imported_once') === '1') {
+      sessionStorage.removeItem('er_workspace_imported_once');
+      toast('Imported the complete local workspace.', 3000, 'success');
+    }
+  } catch (e) {}
 
   // Tabs
   // Register on each button individually AND as a delegated handler on nav
@@ -482,6 +488,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('.apply-plan');
     if (!btn || btn.disabled || !btn.dataset.apply) return;
     if (btn.dataset.readyToApply !== 'true') { toast('Record every manufacture batch before applying this plan.', 4000, 'error'); return; }
+    if (!window.PLAN_INVENTORY_GUARD.isCurrent(btn.dataset.inventorySnapshot, window.STORE.getInv())) {
+      toast('Inventory changed since this plan was calculated. Recalculate before applying it.', 4500, 'error');
+      return;
+    }
     const item = decodeURIComponent(btn.dataset.apply);
     const qty = parseInt(btn.dataset.qty, 10);
     snapshotInv();
@@ -558,6 +568,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('#apply-multi');
     if (!btn) return;
     if (btn.dataset.readyToApply !== 'true') { toast('Record every manufacture batch before applying this plan.', 4000, 'error'); return; }
+    if (!window.PLAN_INVENTORY_GUARD.isCurrent(btn.dataset.inventorySnapshot, window.STORE.getInv())) {
+      toast('Inventory changed since this plan was calculated. Rebuild the combined plan before applying it.', 4500, 'error');
+      return;
+    }
     btn.textContent = 'Applying…';
     btn.disabled = true;
     snapshotInv();
@@ -728,8 +742,8 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         S.importWorkspace(JSON.parse(reader.result));
         dismissCalcGuide({ focus: false });
-        refreshAll();
-        toast('Imported the complete local workspace.', 3000, 'success');
+        try { sessionStorage.setItem('er_workspace_imported_once', '1'); } catch (e) {}
+        location.reload();
       }
       catch (err) { toast(err.message, 5000, 'error'); }
       finally { e.target.value = ''; }

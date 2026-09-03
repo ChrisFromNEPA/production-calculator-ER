@@ -33,9 +33,30 @@ describe('security and apply data safety', () => {
     assert.doesNotMatch(applyModule, /addAt\(item, target, info\.qty\)/);
   });
 
-  it('guards Apply with readiness and a fresh recalculation', () => {
+  it('detects inventory changes against the plan-time snapshot', () => {
+    const context = {
+      window: {
+        ENGINE: {},
+        STORE: { getInv: () => [], setInv() {}, recomputeInv() {} },
+      },
+    };
+    vm.createContext(context);
+    vm.runInContext(applyModule, context);
+    const guard = context.window.PLAN_INVENTORY_GUARD;
+    const inventory = [
+      { item: 'iron', location: 'Berlin', quantity: 2 },
+      { item: 'chrome', location: 'Warsaw', quantity: 1 },
+    ];
+    const token = guard.capture(inventory);
+    assert.equal(guard.isCurrent(token, inventory.slice().reverse()), true);
+    assert.equal(guard.isCurrent(token, [{ item: 'iron', location: 'Berlin', quantity: 1 }]), false);
+  });
+
+  it('guards Apply with readiness, a plan-time inventory snapshot, and a fresh recalculation', () => {
     assert.match(app, /data-ready-to-apply/);
+    assert.match(app, /data-inventory-snapshot/);
     assert.match(init, /btn\.dataset\.readyToApply !== 'true'/g);
+    assert.match(init, /PLAN_INVENTORY_GUARD\.isCurrent\(btn\.dataset\.inventorySnapshot/);
     assert.match(init, /compute\(item, qty/);
     assert.match(init, /applyPlan\(result\)/);
   });

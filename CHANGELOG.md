@@ -4,7 +4,20 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
-Post-v1.3.0 changes are deployed from `main` but are not a new public release.
+`main` contains deployed post-v1.3.0 work, while the entries below remain
+unreleased until their exact commit is merged and deployed.
+
+### Fixed
+
+- Regenerated imported gear-set identifiers and escaped rendered IDs to close a
+  stored DOM-injection path.
+- Made inventory imports additive by canonical item and location, and made full
+  workspace imports reload from the restored snapshot so all runtime mirrors agree.
+- Rejected incomplete or inventory-stale Apply actions, shared production Apply
+  logic with the test harness, and capped transported output to stock actually moved.
+- Stopped mining discounts from reducing physical material requirements.
+- Classified unresolved external materials explicitly and replaced missing icon
+  requests with deliberate text fallbacks.
 
 ### Improved
 
@@ -12,9 +25,16 @@ Post-v1.3.0 changes are deployed from `main` but are not a new public release.
   narrow-screen layouts.
 - Restored meaningful quality-gate coverage and removed stale communication
   code and generated Python cache artifacts from the tracked surface.
-- Kept the npm package metadata at `0.1.0` as repository metadata, not a public
-  application release version; the existing repository convention separates
-  package metadata from the published `v1.3.0` tag.
+- Replaced broad Pages copying with a runtime allowlist and fail-closed size/file
+  budgets; source-only extracted textures, test skins, galleries, and model sources
+  no longer ship in the web artifact.
+- Namespaced service-worker caches, separated a bounded optional-asset cache, and
+  preserved caches belonging to other projects on the same origin.
+- Added fail-closed Chromium calculator coverage, Python tests, generated-file
+  drift checks, full dependency auditing, and synchronized CodeQL updates to CI.
+- Added upstream OFL notices for the bundled JetBrains Mono and Orbitron fonts.
+- Documented that npm package metadata still reports `0.1.0`; it is not valid
+  release evidence and needs an explicit alignment policy before the next tag.
 
 ### Verification
 

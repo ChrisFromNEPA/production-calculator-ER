@@ -31,11 +31,13 @@ const WORKSPACE_KEYS = [
   'cmg_production_progress_v1', 'cmg_mining_progress_v1', 'cmg_transfers_done_v1', 'cmg_obtained_done_v1', 'cmg_plan_applied_v1',
   'cmg_muted_v1', 'cmg_tray_v1', 'er_saved_plans_v1', 'cmg_recent_v1', 'cmg_plan_sig_v1',
   'cmg_theme', 'cmg_size', 'cmg_feature_flags_v1', 'er_calculator_shared_v1',
+  'er_sound_mode_v1', 'er_calc_guide_dismissed_v1',
   'cmg_gear_', 'cmg_gear_sets_',
 ];
 const WORKSPACE_RAW_KEYS = [
   'cmg_destination', 'cmg_refine_destination', 'cmg_medikit_', 'cmg_medikit_toggle',
   'cmg_gearsets_migrated_v1', 'cmg_inv_migrated_v1', 'cmg_theme', 'cmg_size',
+  'er_sound_mode_v1', 'er_calc_guide_dismissed_v1',
   'cmg_gear_', 'cmg_gear_sets_',
 ];
 
@@ -299,7 +301,7 @@ function importPlayer(name, arr) {
   merged.forEach(e => {
     const loc = LOCATION_ALIASES[e.location] || String(e.location).trim();
     const item = String(e.item).trim();
-    const key = item + '\\u0000' + loc;
+    const key = JSON.stringify([item, loc]);
     const current = byKey.get(key);
     if (current) current.quantity += Math.floor(Number(e.quantity) || 0);
     else byKey.set(key, { item, location: loc, quantity: Math.floor(Number(e.quantity) || 0) });

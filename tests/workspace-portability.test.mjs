@@ -31,6 +31,12 @@ describe('portable public workspace', () => {
     assert.match(init, /S\.exportWorkspace|S\.importWorkspace/);
   });
 
+  it('reloads after a successful workspace import so every module rehydrates from restored storage', () => {
+    const handler = init.match(/workspaceFile\.addEventListener\('change'[\s\S]*?reader\.readAsText\(file\);\n\s*}\);/)?.[0] || '';
+    assert.match(handler, /S\.importWorkspace/);
+    assert.match(handler, /location\.reload\(\)/);
+  });
+
   it('exports a workspace with a player/entry summary and timestamp in the filename', () => {
     assert.match(player, /function workspaceExportFilename\(\)/);
     assert.match(init, /downloadJSON\(S\.exportWorkspace\(\), workspaceExportFilename\(\)\)/);
@@ -40,7 +46,7 @@ describe('portable public workspace', () => {
 
   it('skips the first-run tutorial after a complete workspace import', () => {
     assert.match(init, /S\.importWorkspace\(JSON\.parse\(reader\.result\)\)/);
-    assert.match(init, /S\.importWorkspace\(JSON\.parse\(reader\.result\)\)[\s\S]*dismissCalcGuide\(\{ focus: false \}\)[\s\S]*refreshAll\(\)/);
+    assert.match(init, /S\.importWorkspace\(JSON\.parse\(reader\.result\)\)[\s\S]*dismissCalcGuide\(\{ focus: false \}\)[\s\S]*location\.reload\(\)/);
   });
 
   it('preserves legacy inventory-only imports', () => {

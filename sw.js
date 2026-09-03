@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'er-prodcalc-';
-const CACHE = 'er-prodcalc-v0.2.41-shell';
-const RUNTIME_CACHE = 'er-prodcalc-v0.2.41-runtime';
+const CACHE = 'er-prodcalc-v0.2.43-shell';
+const RUNTIME_CACHE = 'er-prodcalc-v0.2.43-runtime';
 const MAX_RUNTIME_ENTRIES = 32;
 const OPTIONAL_RUNTIME_DIRECTORIES = [
   'src/generated/', 'src/vendor/', 'models/', 'maps/', 'icons/',
-  'gear_textures/', 'voice_extracted/', 'skins_test/', 'textures_extracted/', 'gallery/',
+  'gear_textures/', 'voice_extracted/',
 ];
 const OPTIONAL_PATH_PREFIXES = OPTIONAL_RUNTIME_DIRECTORIES.map(directory =>
   new URL(directory, self.registration.scope).pathname
@@ -43,11 +43,13 @@ const SHELL = [
   './src/ui/legacy-3d-loader.js',
   './src/ui/chart-loader.js',
   './src/app.js',
+  './src/apply-plan.js',
   './src/views/models.js',
   './src/views/reference.js',
   './src/views/gear.js',
   './src/views/patch-changes.js',
   './src/views/inventory.js',
+  './src/views/character.js',
   './src/views/player.js',
   './src/app-init.js',
   './src/ui/trust-indicators.js',
@@ -78,8 +80,7 @@ const cleanupOldCaches = async () => {
 // Activate only removes caches belonging to this project. Other applications
 // may share the origin (especially during local development) and must survive.
 self.addEventListener('activate', e => {
-  e.waitUntil(cleanupOldCaches());
-  self.clients.claim();
+  e.waitUntil(cleanupOldCaches().then(() => self.clients.claim()));
 });
 
 const isSameOrigin = request => new URL(request.url).origin === self.location.origin;

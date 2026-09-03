@@ -117,22 +117,22 @@
     {
       "path": "fonts/jetbrains-mono-latin.woff2",
       "class": "third-party-font",
-      "origin": "Bundled webfont; verify upstream package/license record.",
-      "rights_holder": "JetBrains / upstream font authors",
-      "license_or_permission": "Upstream package identity is recorded by the repository build context; retain the JetBrains font license notice before release.",
+      "origin": "JetBrains Mono Latin webfont; upstream project https://github.com/JetBrains/JetBrainsMono.",
+      "rights_holder": "The JetBrains Mono Project Authors",
+      "license_or_permission": "SIL Open Font License 1.1",
       "transformation": "Webfont packaging.",
-      "status": "approved_for_code_review",
-      "evidence": "Repository asset path and project migration decision; upstream notice must remain with any release."
+      "status": "approved",
+      "evidence": "fonts/OFL-JetBrains-Mono.txt; https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt"
     },
     {
       "path": "fonts/orbitron-latin.woff2",
       "class": "third-party-font",
-      "origin": "Bundled webfont; verify upstream package/license record.",
-      "rights_holder": "Upstream font authors",
-      "license_or_permission": "Upstream package identity is recorded by the repository build context; retain the Orbitron font license notice before release.",
+      "origin": "Orbitron Latin webfont; upstream project https://github.com/googlefonts/orbitron-vf.",
+      "rights_holder": "The Orbitron Project Authors",
+      "license_or_permission": "SIL Open Font License 1.1; Reserved Font Name: Orbitron",
       "transformation": "Webfont packaging.",
-      "status": "approved_for_code_review",
-      "evidence": "Repository asset path and project migration decision; upstream notice must remain with any release."
+      "status": "approved",
+      "evidence": "fonts/OFL-Orbitron.txt; https://github.com/google/fonts/blob/main/ofl/orbitron/OFL.txt"
     },
     {
       "path": "docs/assets/calculator-sample.png",

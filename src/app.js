@@ -1834,7 +1834,7 @@ function renderPlan(item, qty, targetEl) {
       <div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>
       ${planApplied
         ? `<button class="apply-plan applied" disabled title="Applied. Press Calculate again to plan another run of this.">✓ Applied to inventory</button>`
-        : `<button class="apply-plan" data-apply="${encodeURIComponent(item)}" data-qty="${qty}">Apply plan → inventory</button>`}
+        : `<button class="apply-plan" data-apply="${encodeURIComponent(item)}" data-qty="${qty}" data-inventory-snapshot="${window.PLAN_INVENTORY_GUARD.capture(window.STORE.getInv())}">Apply plan → inventory</button>`}
     </div>
     <div class="plan-actions">
       <button class="ghost copy-list">📋 Copy shopping list</button>
@@ -2044,7 +2044,7 @@ function runMultiPlan(options) {
   if (CALC_TRAY.length) {
     html += `<div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>${planApplied
       ? `<button class="apply-plan applied" disabled title="Applied. Press Build combined plan again to plan another run.">✓ Applied to inventory</button>`
-      : `<button class="apply-plan primary" id="apply-multi">Apply combined plan → inventory</button>`}
+      : `<button class="apply-plan primary" id="apply-multi" data-inventory-snapshot="${window.PLAN_INVENTORY_GUARD.capture(window.STORE.getInv())}">Apply combined plan → inventory</button>`}
     <div class="plan-actions">
       <button class="ghost copy-list">📋 Copy shopping list</button>
       <button class="ghost share-plan">🔗 Share plan link</button>

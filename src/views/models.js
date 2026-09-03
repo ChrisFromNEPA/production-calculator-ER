@@ -600,8 +600,22 @@
     iconCurrent = entry;
     detail.hidden = false;
     renderIconGrid();
-    document.getElementById('icons-detail-img').src = 'icons/' + (entry.icon || entry.png);
-    document.getElementById('icons-detail-img').alt = entry.name || entry.id;
+    var detailImg = document.getElementById('icons-detail-img');
+    var detailFallback = document.getElementById('icons-detail-fallback');
+    var detailImgSrc = entry.icon || entry.png;
+    if (entry.has_icon !== false && detailImgSrc) {
+      detailImg.hidden = false;
+      detailImg.src = 'icons/' + detailImgSrc;
+      detailImg.alt = entry.name || entry.id;
+      detailFallback.hidden = true;
+      detailFallback.textContent = '';
+    } else {
+      detailImg.removeAttribute('src');
+      detailImg.alt = '';
+      detailImg.hidden = true;
+      detailFallback.textContent = (entry.name || entry.id || '?').replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase() || '?';
+      detailFallback.hidden = false;
+    }
     document.getElementById('icons-detail-name').textContent = entry.name || entry.id;
     var metaBits = [entry.item_category || entry.category || entry.group];
     if (entry.id) metaBits.push('id: ' + entry.id);

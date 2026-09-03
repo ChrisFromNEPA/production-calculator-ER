@@ -92,6 +92,10 @@ if (errors.length) {
   process.exit(1);
 }
 
+// Runtime renderers use this policy to avoid requesting known-missing files and
+// producing avoidable 404s. It contains no inferred game facts.
+data.icon_fallbacks = [...iconFallbacks.values()].map(item => item.name);
+
 const js = `// GENERATED — edit data/game_data.json and run node scripts/build-data.mjs
 window.GAME_DATA = ${JSON.stringify(data, null, 2)};
 `;

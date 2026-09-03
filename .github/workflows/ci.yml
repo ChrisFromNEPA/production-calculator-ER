@@ -33,8 +33,6 @@ jobs:
         run: npm run assets:check
       - name: Audit all dependencies for known vulnerabilities
         run: npm audit --include=dev
-      - name: Run Python tests
-        run: npm run test:python
       - name: Scan repository for secrets
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
         env:

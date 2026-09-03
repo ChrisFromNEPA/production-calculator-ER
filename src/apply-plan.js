@@ -1,6 +1,18 @@
 /* Shared production Apply implementation. Loaded after STORE and ENGINE. */
 'use strict';
 (function () {
+  function canonicalInventory(entries) {
+    return JSON.stringify((entries || []).map(entry => [
+      String(entry.item || ''),
+      String(entry.location || ''),
+      Number(entry.quantity) || 0,
+    ]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
+  }
+  const inventoryGuard = {
+    capture(entries) { return encodeURIComponent(canonicalInventory(entries)); },
+    isCurrent(token, entries) { return token === this.capture(entries); },
+  };
+
   function applyProductionPlan(res, dest) {
     const engine = window.ENGINE;
     const store = window.STORE;
@@ -61,4 +73,5 @@
     return log;
   }
   window.APPLY_PRODUCTION_PLAN = applyProductionPlan;
+  window.PLAN_INVENTORY_GUARD = inventoryGuard;
 })();

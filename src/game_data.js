@@ -13812,5 +13812,10 @@ window.GAME_DATA = {
       "DTF/texture-script and SGT event-track semantics",
       "Live packet capture for dynamic protocol fields"
     ]
-  }
+  },
+  "icon_fallbacks": [
+    "Portable Vortex Particle Emitter",
+    "ultra resilient mineral",
+    "Pythica Sustained Gloves"
+  ]
 };

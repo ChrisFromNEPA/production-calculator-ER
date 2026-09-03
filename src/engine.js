@@ -3,6 +3,7 @@
 // Provides window.ENGINE and CommonJS exports for testing.
 (function() {
 const DATA = window.GAME_DATA;
+const ICON_FALLBACKS = new Set((DATA.icon_fallbacks || []).map(item => String(item).toLowerCase()));
 
 // ---- derived indexes ---------------------------------------------------
 const ALL_ITEMS = new Set();
@@ -156,8 +157,11 @@ const CRAFTABLE = new Set(Object.keys(RECIPES_BY_OUTPUT));
 
 // ---- icons ----
 function iconFor(item) {
-  const path = 'icons/' + encodeURIComponent(item.toLowerCase()) + '.png';
   const letter = item.replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase() || '?';
+  if (ICON_FALLBACKS.has(String(item).toLowerCase())) {
+    return `<span class="icon icon-missing"><span class="icon-badge" aria-label="Icon unavailable">${esc(letter)}</span></span>`;
+  }
+  const path = 'icons/' + encodeURIComponent(item.toLowerCase()) + '.png';
   return `<span class="icon"><img src="${esc(path)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('icon-missing');this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc(letter)}',className:'icon-badge'}))"></span>`;
 }
 
@@ -658,7 +662,8 @@ function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest
       const fromOwn = allocOwned(it, allocatable);
       let need = demand - fromOwn;
       if (need > 0) {
-        need = Math.ceil(need * (1 - discounts.mine));
+        // A mining discount is economic context, never a material-yield modifier.
+        // Production still consumes the full recipe quantity.
         const sites = MINE_SITES[it] || [];
         acquire[it] = acquire[it] || { qty: 0, from: [] };
         acquire[it].to = transportTargetFor(it);

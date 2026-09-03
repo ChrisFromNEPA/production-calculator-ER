@@ -57,6 +57,19 @@ describe('workspace snapshot runtime', () => {
     assert.deepEqual(S.getInv(), [{ item: 'coal', location: 'Andromeda', quantity: 84 }]);
   });
 
+  it('round-trips sound and calculator-guide preferences with the workspace', () => {
+    localStorage.setItem('er_sound_mode_v1', 'cues');
+    localStorage.setItem('er_calc_guide_dismissed_v1', '1');
+    const snapshot = S.exportWorkspace();
+    assert.equal(snapshot.storage.er_sound_mode_v1, 'cues');
+    assert.equal(snapshot.storage.er_calc_guide_dismissed_v1, '1');
+
+    localStorage._data = {};
+    S.importWorkspace(snapshot);
+    assert.equal(localStorage.getItem('er_sound_mode_v1'), 'cues');
+    assert.equal(localStorage.getItem('er_calc_guide_dismissed_v1'), '1');
+  });
+
   it('merges an existing player import by canonical item and location', () => {
     S.importPlayer('Chris', [
       { item: 'coal', location: 'Necars Field', quantity: 4 },
@@ -71,6 +84,17 @@ describe('workspace snapshot runtime', () => {
       { item: 'coal', location: "Necar's Field", quantity: 7 },
       { item: 'iron', location: 'Berlin', quantity: 2 },
       { item: 'chrome', location: 'Paris', quantity: 5 },
+    ]);
+  });
+
+  it('keeps adversarial item and location strings as distinct merge keys', () => {
+    S.importPlayer('Delimiter', [
+      { item: 'a\\u0000b', location: 'c', quantity: 2 },
+      { item: 'a', location: 'b\\u0000c', quantity: 3 },
+    ]);
+    assert.deepEqual(S.PLAYERS.players.Delimiter, [
+      { item: 'a\\u0000b', location: 'c', quantity: 2 },
+      { item: 'a', location: 'b\\u0000c', quantity: 3 },
     ]);
   });
 

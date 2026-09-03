@@ -6,7 +6,7 @@
 - Source branch: `main`
 - Last verified public application commit: [`75eb18ff3952fb52ee8e426700c5b6a8b303f91c`](https://github.com/ChrisFromNEPA/production-calculator-ER/commit/75eb18ff3952fb52ee8e426700c5b6a8b303f91c) (`fix: restore real signal to the quality gate (C1, H3, H6, H8) (#17)`)
 - Current public release: [v1.3.0](https://github.com/ChrisFromNEPA/production-calculator-ER/releases/tag/v1.3.0)
-- Verified deployment date: post-v1.3.0 deployment (release not created)
+- Verified deployment date: 2026-08-29 (post-v1.3.0 deployment; release not created)
 - Deployment workflow: [GitHub Pages Actions](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/workflows/pages.yml)
 - CI run: [33240656692](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656692)
 - CodeQL run: [33240656738](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656738)
@@ -26,8 +26,8 @@ it does not create or imply a v1.4 release.
 - CodeQL: [run 33240656738](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240656738)
 - Pages: [run 33240768046](https://github.com/ChrisFromNEPA/production-calculator-ER/actions/runs/33240768046)
 - Service-worker cache identifier: `er-v0.2.40`
-- Package metadata remains `0.1.0`; this is intentionally non-release metadata
-  under the repository's existing convention and is not a v1.4 version.
+- Package metadata remains `0.1.0`; it is not evidence of the deployed release
+  version. Align it with release tags or document a policy before the next release.
 
 ## Verified 2026-08-26 v1.3.0 application release
 

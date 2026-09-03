@@ -29,7 +29,8 @@ test('public staging tree excludes private and Cloudflare-only material', () => 
 test('public allowlist exists and excludes deployment/private paths', () => {
   const allowlist = JSON.parse(readFileSync(join(root, 'public-files.json'), 'utf8'));
   assert.ok(Array.isArray(allowlist.runtime));
-  assert.ok(allowlist.runtime.includes('src/**'));
+  assert.ok(allowlist.runtime.includes('src/**/*.js'));
+  assert.ok(allowlist.runtime.includes('src/**/*.css'));
   assert.ok(allowlist.runtime.includes('data/*.json'));
   for (const forbidden of ['cloudflare-worker', 'wrangler.toml', '.hermes', 'empire-rising-scraper']) {
     assert.equal(allowlist.runtime.includes(forbidden), false, `allowlist contains ${forbidden}`);

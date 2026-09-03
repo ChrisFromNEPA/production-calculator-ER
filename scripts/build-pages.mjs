@@ -7,7 +7,15 @@ const dist = path.join(root, 'dist');
 const publicManifest = JSON.parse(fs.readFileSync(path.join(root, 'public-files.json'), 'utf8'));
 const runtime = publicManifest.runtime;
 const budgets = publicManifest.budgets;
-if (!Array.isArray(runtime) || !runtime.length) throw new Error('public-files.json runtime allowlist is empty');
+if (!Array.isArray(runtime) || !runtime.length ||
+    runtime.some(pattern => typeof pattern !== 'string' || !pattern.length)) {
+  throw new Error('[build-pages] runtime allowlist must contain at least one non-empty pattern');
+}
+for (const field of ['max_bytes', 'max_files']) {
+  if (!Number.isSafeInteger(budgets?.[field]) || budgets[field] <= 0) {
+    throw new Error(`[build-pages] budget ${field} must be a positive safe integer`);
+  }
+}
 
 function patternToRegExp(pattern) {
   let escaped = '';
@@ -66,14 +74,15 @@ const manifest = {
   files: copied,
   payload_bytes: payloadBytes,
   budgets,
+  total_bytes: payloadBytes,
 };
-fs.writeFileSync(path.join(dist, 'build-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-let totalBytes = 0;
-for (let i = 0; i < 3; i++) {
-  totalBytes = payloadBytes + fs.statSync(path.join(dist, 'build-manifest.json')).size;
-  manifest.total_bytes = totalBytes;
-  fs.writeFileSync(path.join(dist, 'build-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+let manifestText;
+for (;;) {
+  manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
+  const nextTotal = payloadBytes + Buffer.byteLength(manifestText);
+  if (nextTotal === manifest.total_bytes) break;
+  manifest.total_bytes = nextTotal;
 }
-totalBytes = payloadBytes + fs.statSync(path.join(dist, 'build-manifest.json')).size;
-if (totalBytes > budgets.max_bytes) throw new Error(`Pages artifact exceeds byte budget: ${totalBytes} > ${budgets.max_bytes}`);
-console.log(`[build-pages] copied ${copied.length + 1} files (${totalBytes} bytes) into dist/`);
+fs.writeFileSync(path.join(dist, 'build-manifest.json'), manifestText);
+if (manifest.total_bytes > budgets.max_bytes) throw new Error(`Pages artifact exceeds byte budget: ${manifest.total_bytes} > ${budgets.max_bytes}`);
+console.log(`[build-pages] copied ${copied.length + 1} files (${manifest.total_bytes} bytes) into dist/`);

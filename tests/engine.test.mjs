@@ -294,6 +294,18 @@ describe('T1f — array-form compute honours an explicit external ledger', () =>
   });
 });
 
+describe('mining discount quantity safety', () => {
+  it('never reduces raw material acquisition quantities', () => {
+    reset();
+    setPlayerInv([]);
+    const baseline = compute('Aurelian Technologies Bio Rounds', 4, {}, {}, {}, 'Berlin', { prod: 0, mine: 0, trans: 0 });
+    const discounted = compute('Aurelian Technologies Bio Rounds', 4, {}, {}, {}, 'Berlin', { prod: 0, mine: 0.5, trans: 0 });
+    const quantities = plan => Object.fromEntries(Object.entries(plan.plan.acquire).map(([item, info]) => [item, info.qty]));
+    assert.deepEqual(quantities(discounted), quantities(baseline));
+    assert.deepEqual(quantities(discounted), { iron: 3, chrome: 3, 'Chemical Substances': 2 });
+  });
+});
+
 // ---- T1e: applyPlan must consume intermediates (FAILS until T3) ----
 describe('T1e — applyPlan consumes inputs correctly (fails until T3)', () => {
   it('does not add transported stock that was not deducted', () => {
