@@ -6,7 +6,7 @@
     "favicon.svg",
     "manifest.webmanifest",
     "sw.js",
-    "docs/assets/calculator-sample.png",
+    "docs/assets/calculator-overview.png",
     "src/**/*.js",
     "src/**/*.css",
     "data/*.json",
@@ -22,26 +22,5 @@
   "budgets": {
     "max_bytes": 33554432,
     "max_files": 2000
-  },
-  "excluded": [
-    ".git",
-    ".hermes",
-    "cloudflare-worker",
-    "empire-rising-scraper",
-    "comms",
-    "flyers",
-    "wrangler.toml",
-    "AGENT_HANDOFF.md",
-    "REFACTOR_PLAN.md",
-    "production_requests.json",
-    "shared_inventory.json",
-    "shared_gear_sets.json",
-    "colony_taxes.json",
-    "probe3.html",
-    "probe_closeup.html",
-    "probe_hold.html",
-    "probe_turntable.html",
-    "probe_uv.html",
-    "tmp-zed-render.html"
-  ]
+  }
 }

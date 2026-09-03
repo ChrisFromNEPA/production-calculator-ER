@@ -1,7 +1,7 @@
 {
   "name": "production-calculator-er",
-  "version": "1.4.1",
-  "description": "Offline-first Empire Rising production, inventory, gear, and economy calculator for every player.",
+  "version": "1.4.2",
+  "description": "Browser-local Empire Rising production, inventory, gear, colony, and economy planner.",
   "main": "sw.js",
   "directories": {
     "test": "tests"
@@ -35,7 +35,10 @@
     "production-calculator",
     "crafting",
     "offline-first",
-    "pwa"
+    "pwa",
+    "inventory-planner",
+    "vanilla-javascript",
+    "accessibility"
   ],
   "author": "ChrisFromNEPA and community contributors",
   "license": "MIT",

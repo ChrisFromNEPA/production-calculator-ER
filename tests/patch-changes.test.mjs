@@ -147,11 +147,12 @@ describe('proposed patch changes tab', () => {
     }), 'Aramid Basic');
   });
 
-  it('keeps stat chips on one line while constraining them to narrow rows', () => {
+  it('wraps stat chips instead of clipping them in narrow rows', () => {
     const css = readFileSync(join(root, 'src', 'styles', 'surviving-reference.css'), 'utf8');
-    assert.match(css, /\.patch-chip\s*\{[^}]*white-space:\s*nowrap;/s);
+    assert.match(css, /\.patch-chip\s*\{[^}]*white-space:\s*normal;/s);
     assert.match(css, /\.patch-chip\s*\{[^}]*max-width:\s*100%;/s);
-    assert.match(css, /\.patch-chip\s*\{[^}]*overflow:\s*hidden;/s);
+    assert.doesNotMatch(css, /\.patch-chip\s*\{[^}]*overflow:\s*hidden;/s);
+    assert.match(css, /\.patch-chip\s*\{[^}]*overflow-wrap:\s*anywhere;/s);
     assert.match(css, /\.patch-chiprow\s*\{[^}]*flex-wrap:\s*wrap;/s);
   });
 

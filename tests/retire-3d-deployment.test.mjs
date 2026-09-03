@@ -39,9 +39,8 @@ const sw = read('sw.js');
   assert.equal(packageJson.scripts['build:pages'], 'node scripts/build-pages.mjs');
 });
 
-test('source model archive stays tracked but is absent from Pages allowlist', () => {
-  assert.ok(existsSync(join(root, 'models')));
-  assert.ok(read('models/1x1_square.glb').length > 0);
+test('retired source model archive is absent from the current checkout and Pages allowlist', () => {
+  assert.equal(existsSync(join(root, 'models')), false);
   assert.equal(allowlist.runtime.some(pattern => /^models\//i.test(pattern)), false);
   assert.equal(allowlist.runtime.some(pattern => /skin/i.test(pattern)), false);
 });

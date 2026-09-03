@@ -5,32 +5,12 @@
   "policy": "Every shipped binary asset must be approved or excluded before release.",
   "records": [
     {
-      "path": "textures_extracted/**",
-      "class": "game-derived-textures",
-      "origin": "Extracted from a local game client during private research.",
-      "rights_holder": "Unknown / applicable game rights holder",
-      "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
-      "transformation": "Format extraction and filename normalization may have occurred.",
-      "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
-    },
-    {
       "path": "gear_textures/**",
       "class": "game-derived-gear-textures",
       "origin": "Derived from extracted client textures.",
       "rights_holder": "Unknown / applicable game rights holder",
       "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
       "transformation": "Texture organization and conversion for calculator previews.",
-      "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
-    },
-    {
-      "path": "models/**",
-      "class": "game-derived-models",
-      "origin": "Extracted or converted from a local game client.",
-      "rights_holder": "Unknown / applicable game rights holder",
-      "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
-      "transformation": "Conversion to GLB and metadata generation may have occurred.",
       "status": "approved",
       "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
     },
@@ -55,16 +35,6 @@
       "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
     },
     {
-      "path": "gallery/**",
-      "class": "game-derived-gallery-images",
-      "origin": "Game/client-derived faction, rank, and reference imagery.",
-      "rights_holder": "Unknown / applicable game rights holder",
-      "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
-      "transformation": "Image extraction and resizing may have occurred.",
-      "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
-    },
-    {
       "path": "maps/**",
       "class": "game-derived-maps",
       "origin": "Game/client-derived map and world reference material.",
@@ -73,36 +43,6 @@
       "transformation": "Extraction and organization.",
       "status": "approved",
       "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
-    },
-    {
-      "path": "logo/**",
-      "class": "game-derived-branding",
-      "origin": "Game/client-derived branding imagery used by the calculator shell.",
-      "rights_holder": "Unknown / applicable game rights holder",
-      "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
-      "transformation": "Image extraction and resizing may have occurred.",
-      "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
-    },
-    {
-      "path": "skins_test/**",
-      "class": "game-derived-skin-previews",
-      "origin": "Game/client-derived character skin preview imagery.",
-      "rights_holder": "Unknown / applicable game rights holder",
-      "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
-      "transformation": "Image extraction and cataloging.",
-      "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision; retain applicable game attribution and disclaimer."
-    },
-    {
-      "path": "uv_grid.png",
-      "class": "development-reference-image",
-      "origin": "Development UV/reference image retained with the asset workspace.",
-      "rights_holder": "Project contributors",
-      "license_or_permission": "Explicit project-owner authorization recorded in the migration decision log.",
-      "transformation": "Static image packaging.",
-      "status": "approved",
-      "evidence": "Explicit project-owner authorization in the project migration decision."
     },
     {
       "path": "favicon.svg",
@@ -135,12 +75,12 @@
       "evidence": "fonts/OFL-Orbitron.txt; https://github.com/google/fonts/blob/main/ofl/orbitron/OFL.txt"
     },
     {
-      "path": "docs/assets/calculator-sample.png",
+      "path": "docs/assets/calculator-overview.png",
       "class": "synthetic-qa-screenshot",
-      "origin": "Captured from the production artifact using fictional sample data.",
+      "origin": "Captured from the local v1.4.2 candidate using fictional sample data.",
       "rights_holder": "Project contributors",
       "license_or_permission": "Project-owned documentation asset.",
-      "transformation": "Cropped browser screenshot with no real user data.",
+      "transformation": "Landscape crop of a browser screenshot with no real user data.",
       "status": "approved_for_code_review",
       "evidence": "README.md; fictional Demo Operator sample profile"
     },

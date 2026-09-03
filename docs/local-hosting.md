@@ -1,72 +1,65 @@
-# Long-running local hosting
+# Local hosting
 
-This project can run directly from a stable local checkout instead of waiting for a GitHub Pages deployment. The local server uses Vite's development mode, so edits to the working tree are available immediately and do not require a commit or push.
-
-## One-time setup
-
-Use a stable checkout path for the working tree:
-
-```text
-REPOSITORY_DIRECTORY
-```
-
-Install dependencies there if needed:
-
-```bash
-cd REPOSITORY_DIRECTORY
-npm ci
-```
+The calculator can run from a local checkout without waiting for a GitHub Pages deployment. Vite serves the current working tree and reloads the browser after most edits.
 
 ## Manual session
 
-To start the LAN-bound server in a terminal:
-
 ```bash
-cd REPOSITORY_DIRECTORY
+git clone https://github.com/ChrisFromNEPA/production-calculator-ER.git
+cd production-calculator-ER
+npm ci
 npm run local:host
 ```
 
-It listens on TCP port `4173` on all local interfaces. On another machine on the trusted LAN, open:
+Open <http://localhost:4173/> on the host. The `local:host` command listens on all local interfaces, so another device on the same trusted network can use:
 
 ```text
 http://<host-address>:4173/
 ```
 
-Use the host operating system's network tools to find its LAN address. Do not record or publish that address in repository documentation.
+Do not commit or publish a private LAN address.
 
-## Persistent user service
+## Optional systemd user service
 
-The installed user-level systemd service is:
+Linux users can keep the development server running with a user service. Replace `/absolute/path/to/production-calculator-ER` with the real checkout path and replace `/usr/bin/npm` if `command -v npm` reports another location.
 
-```text
-production-calculator.service
+```ini
+# ~/.config/systemd/user/production-calculator.service
+[Unit]
+Description=Empire Rising Production Calculator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/absolute/path/to/production-calculator-ER
+ExecStart=/usr/bin/npm run local:host
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
 ```
 
-It uses the stable checkout, restarts after an unexpected exit, and starts automatically for the local user:
-
-```bash
-systemctl --user status production-calculator.service
-systemctl --user restart production-calculator.service
-systemctl --user stop production-calculator.service
-systemctl --user start production-calculator.service
-```
-
-The service is enabled and user lingering is active, so it can continue across normal terminal/session logout. After changing `package.json` or the service definition, reload it with:
+Load and start it with:
 
 ```bash
 systemctl --user daemon-reload
 systemctl --user enable --now production-calculator.service
+systemctl --user status production-calculator.service
 ```
+
+Use `systemctl --user restart production-calculator.service` after dependency or service-file changes. Enabling user lingering is an operating-system decision; it is not required for a normal terminal session.
 
 ## Editing workflow
 
-1. Edit files in `REPOSITORY_DIRECTORY`.
-2. Leave the service running.
-3. Refresh the Windows browser if Vite's hot reload does not update the page.
-4. Run `npm test` or `npm run check` before deciding whether a change is ready to commit.
+1. Edit files in the checkout.
+2. Leave the Vite server running.
+3. Refresh the browser if hot reload does not update the page.
+4. Run `npm run check` before committing.
 
-Generated data changes still need their normal local refresh commands, such as `npm run stats:update`. The server itself does not publish anything to GitHub.
+Generated data changes still need their normal refresh command, such as `npm run stats:update`. The local server never publishes changes to GitHub.
 
-## LAN safety
+## Network safety
 
-This server is intended for a trusted private LAN only. It has no authentication and must **not be exposed to the public internet**, port-forwarded from the router, or used for sensitive data. If the Windows machine cannot connect, check that both machines are on the same LAN and that the Linux host firewall allows inbound TCP `4173` from that LAN.
+The development server has no authentication. Use it only on a trusted private network. Do not expose port `4173` to the public internet or forward it through a router. If another local device cannot connect, confirm both devices are on the same network and review the host firewall rules before changing them.

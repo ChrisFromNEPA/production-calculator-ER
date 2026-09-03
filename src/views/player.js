@@ -113,9 +113,21 @@ function toast(msg, duration, type) {
     area.setAttribute('aria-live', 'polite');
     document.body.appendChild(area);
   }
+  // A single current notification avoids stacking several large overlays over
+  // calculator results on short and mobile viewports.
+  area.replaceChildren();
   const t = document.createElement('div');
   t.className = 'toast' + (type ? ' ' + type : '');
-  t.textContent = msg;
+  t.dataset.message = msg;
+  const text = document.createElement('span');
+  text.textContent = msg;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'toast-close';
+  close.setAttribute('aria-label', 'Dismiss notification');
+  close.textContent = '×';
+  close.addEventListener('click', () => t.remove());
+  t.append(text, close);
   area.appendChild(t);
   requestAnimationFrame(() => t.classList.add('show'));
   setTimeout(() => {
@@ -128,7 +140,7 @@ function dismissToast(msg) {
   const area = document.getElementById('toast-area');
   if (!area) return;
   area.querySelectorAll('.toast').forEach(t => {
-    if (t.textContent === msg) t.remove();
+    if ((t.dataset.message || t.textContent) === msg) t.remove();
   });
 }
 

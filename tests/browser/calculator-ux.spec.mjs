@@ -567,6 +567,206 @@ describe('real-browser calculator UX smoke', () => {
     }
   });
 
+  smokeIt('keeps Gear 1.10 inside a phone viewport without horizontal page overflow', async () => {
+    await setViewport(360, 640);
+    await activateTab('patch-changes');
+    await waitFor(state.page, `document.querySelectorAll('#view-patch-changes .patch-profile-card').length > 0`, 'Gear 1.10 profile cards');
+    for (const scale of [75, 100, 150]) {
+      await evalJs(state.page, `applyFontScale(${scale})`);
+      const bounds = await evalJs(state.page, `(() => ({
+        scale: document.getElementById('size-range')?.value,
+        viewport: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        bodyWidth: document.body.scrollWidth,
+        widestCard: Math.max(0, ...Array.from(document.querySelectorAll('#view-patch-changes .patch-profile-card')).map(card => card.getBoundingClientRect().right)),
+      }))()`);
+      assert.ok(bounds.documentWidth <= bounds.viewport + 1, `Gear 1.10 document overflows phone viewport: ${JSON.stringify(bounds)}`);
+      assert.ok(bounds.bodyWidth <= bounds.viewport + 1, `Gear 1.10 body overflows phone viewport: ${JSON.stringify(bounds)}`);
+      assert.ok(bounds.widestCard <= bounds.viewport + 1, `Gear 1.10 card overflows phone viewport: ${JSON.stringify(bounds)}`);
+    }
+    await evalJs(state.page, `applyFontScale(100)`);
+  });
+
+  smokeIt('keeps calculator labels and picker names unclipped at every required display size', async () => {
+    await activateTab('calc');
+    const failures = [];
+    for (const [label, width, height] of [
+      ['mobile', 390, 844], ['ipad', 768, 1024], ['720p', 1280, 720],
+      ['1080p', 1920, 1080], ['2k', 2560, 1440], ['4k', 3840, 2160],
+    ]) {
+      await setViewport(width, height);
+      for (const scale of [75, 100, 150]) {
+        await evalJs(state.page, `applyFontScale(${scale})`);
+        const clipped = await evalJs(state.page, `(() => Array.from(document.querySelectorAll('.pick-name, .cb-label, .mat-name'))
+          .filter(el => el.getClientRects().length && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1))
+          .map(el => ({ className: el.className, text: el.textContent.trim(), client: [el.clientWidth, el.clientHeight], scroll: [el.scrollWidth, el.scrollHeight] })))()`);
+        if (clipped.length) failures.push({ label, width, height, scale, clipped });
+      }
+    }
+    await evalJs(state.page, `applyFontScale(100)`);
+    assert.deepEqual(failures, [], `responsive text clipping detected: ${JSON.stringify(failures)}`);
+  });
+
+  smokeIt('keeps every public view inside every required viewport at every text size', async () => {
+    const failures = [];
+    for (const [label, width, height] of [
+      ['mobile', 390, 844], ['ipad', 768, 1024], ['720p', 1280, 720],
+      ['1080p', 1920, 1080], ['2k', 2560, 1440], ['4k', 3840, 2160],
+    ]) {
+      await setViewport(width, height);
+      for (const scale of [75, 100, 150]) {
+        await evalJs(state.page, `applyFontScale(${scale})`);
+        for (const view of ['calc', 'inventory', 'gear', 'patch-changes', 'colonies', 'drugs', 'battle', 'community']) {
+          await activateTab(view);
+          const widths = await evalJs(state.page, `(() => ({
+            viewport: innerWidth,
+            document: document.documentElement.scrollWidth,
+            body: document.body.scrollWidth,
+            offenders: Array.from(document.querySelectorAll('.view.active *, header *, .playerbar *')).filter(el => {
+              if (el.closest('[hidden], [aria-hidden="true"], details:not([open])')) return false;
+              const style = getComputedStyle(el); const rect = el.getBoundingClientRect();
+              if (style.display === 'none' || style.visibility === 'hidden' || rect.width <= 0) return false;
+              const outside = rect.left < -1 || rect.right > innerWidth + 1 || rect.width > innerWidth + 1;
+              if (!outside) return false;
+              for (let parent = el.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+                const parentStyle = getComputedStyle(parent);
+                if (/(auto|scroll|hidden|clip)/.test(parentStyle.overflowX) && parent.scrollWidth > parent.clientWidth + 1) return false;
+              }
+              return true;
+            }).map(el => { const rect = el.getBoundingClientRect(); return { tag: el.tagName, id: el.id, className: String(el.className).slice(0, 80), text: (el.innerText || '').trim().replace(/\\s+/g, ' ').slice(0, 100), left: rect.left, right: rect.right, width: rect.width }; }).slice(0, 20),
+          }))()`);
+          if (widths.document > widths.viewport + 1 || widths.body > widths.viewport + 1 || widths.offenders.length) failures.push({ label, width, height, scale, view, widths });
+        }
+      }
+    }
+    await evalJs(state.page, `applyFontScale(100)`);
+    assert.deepEqual(failures, [], `public-view horizontal overflow detected: ${JSON.stringify(failures)}`);
+  });
+
+  smokeIt('switches and persists every theme at every required viewport', async () => {
+    const failures = [];
+    for (const [label, width, height] of [
+      ['mobile', 390, 844], ['ipad', 768, 1024], ['720p', 1280, 720],
+      ['1080p', 1920, 1080], ['2k', 2560, 1440], ['4k', 3840, 2160],
+    ]) {
+      await setViewport(width, height);
+      for (const theme of ['auto', 'dark', 'light', 'trans', 'pride', 'bos', 'cmg', 'ec', 'fdc', 'gom', 'led', 'motb', 'vi']) {
+        const applied = await evalJs(state.page, `(() => { applyTheme('${theme}'); return { selected: document.getElementById('theme-select').value, saved: localStorage.getItem('cmg_theme'), resolved: document.documentElement.dataset.theme, autoResolved: resolveTheme('auto') }; })()`);
+        const expected = theme === 'auto' ? applied.autoResolved : theme;
+        if (applied.selected !== theme || applied.saved !== theme || applied.resolved !== expected) failures.push({ label, width, height, theme, expected, applied });
+      }
+    }
+    await evalJs(state.page, `applyTheme('trans')`);
+    await state.page.send('Page.reload', { ignoreCache: true });
+    await waitFor(state.page, `document.getElementById('theme-select')?.value === 'trans' && document.documentElement.dataset.theme === 'trans'`, 'persisted Trans theme');
+    assert.deepEqual(failures, [], `theme switching failed: ${JSON.stringify(failures)}`);
+  });
+
+  smokeIt('keeps transient notifications bounded, single-instance, and dismissible', async () => {
+    await setViewport(390, 844);
+    await activateTab('calc');
+    const toastState = await evalJs(state.page, `(() => {
+      document.getElementById('toast-area')?.remove();
+      toast('First test notification', 10000, 'success');
+      toast('Second test notification', 10000, 'success');
+      const area = document.getElementById('toast-area');
+      const latest = area.lastElementChild;
+      const close = latest.querySelector('button');
+      const nav = document.querySelector('.mobile-nav-v2');
+      const tr = latest.getBoundingClientRect();
+      const nr = nav.getBoundingClientRect();
+      return { count: area.children.length, hasClose: !!close, closeSize: close ? [close.getBoundingClientRect().width, close.getBoundingClientRect().height] : [0, 0], toastBottom: tr.bottom, navTop: nr.top };
+    })()`);
+    assert.equal(toastState.count, 1, `notifications stack over content: ${JSON.stringify(toastState)}`);
+    assert.equal(toastState.hasClose, true, `notification has no dismiss action: ${JSON.stringify(toastState)}`);
+    assert.ok(toastState.closeSize[0] >= 44 && toastState.closeSize[1] >= 44, `notification dismiss action is not touch sized: ${JSON.stringify(toastState)}`);
+    assert.ok(toastState.toastBottom <= toastState.navTop - 4, `notification overlaps mobile navigation: ${JSON.stringify(toastState)}`);
+    await evalJs(state.page, `document.querySelector('#toast-area .toast button').click()`);
+    await waitFor(state.page, `document.querySelectorAll('#toast-area .toast').length === 0`, 'dismissed notification');
+  });
+
+  smokeIt('keeps the iPad More menu above the player toolbar', async () => {
+    await setViewport(768, 1024);
+    await evalJs(state.page, `document.querySelector('.nav-more-btn').click()`);
+    await waitFor(state.page, `document.getElementById('nav-more-menu')?.hidden === false`, 'More menu');
+    const stacking = await evalJs(state.page, `(() => {
+      const menu = document.getElementById('nav-more-menu');
+      const player = document.querySelector('.playerbar');
+      const header = document.querySelector('header');
+      const m = menu.getBoundingClientRect();
+      const p = player.getBoundingClientRect();
+      const overlapTop = Math.max(m.top, p.top, 0);
+      const overlapBottom = Math.min(m.bottom, p.bottom, innerHeight);
+      let topInsideMenu = null;
+      if (overlapBottom > overlapTop) {
+        const x = Math.max(0, Math.min(innerWidth - 1, m.left + m.width / 2));
+        const y = overlapTop + (overlapBottom - overlapTop) / 2;
+        const top = document.elementFromPoint(x, y);
+        topInsideMenu = !!top && (top === menu || menu.contains(top));
+      }
+      return { headerZ: Number(getComputedStyle(header).zIndex), playerZ: Number(getComputedStyle(player).zIndex), menu: { top: m.top, bottom: m.bottom }, player: { top: p.top, bottom: p.bottom }, topInsideMenu };
+    })()`);
+    assert.ok(stacking.headerZ > stacking.playerZ, `More menu stacking context is below the player toolbar: ${JSON.stringify(stacking)}`);
+    if (stacking.topInsideMenu !== null) assert.equal(stacking.topInsideMenu, true, `More menu is painted behind another surface: ${JSON.stringify(stacking)}`);
+    await evalJs(state.page, `document.querySelector('.nav-more-btn').click()`);
+  });
+
+  smokeIt('keeps mobile settings and modal controls inside the viewport with touch-sized actions', async () => {
+    await setViewport(360, 640);
+    await activateTab('gear');
+    await evalJs(state.page, `(() => { document.querySelector('.settings-menu').open = true; applyFontScale(150); })()`);
+    const settings = await evalJs(state.page, `(() => ({
+      viewport: window.innerWidth,
+      panel: (() => { const r = document.querySelector('.settings-panel').getBoundingClientRect(); return { left: r.left, right: r.right }; })(),
+      controls: Array.from(document.querySelectorAll('.size-control > *')).filter(el => getComputedStyle(el).display !== 'none').map(el => { const r = el.getBoundingClientRect(); return { id: el.id, left: r.left, right: r.right }; }),
+    }))()`);
+    assert.ok(settings.panel.left >= -1 && settings.panel.right <= settings.viewport + 1, `settings panel escapes viewport: ${JSON.stringify(settings)}`);
+    for (const control of settings.controls) {
+      assert.ok(control.left >= settings.panel.left - 1 && control.right <= settings.panel.right + 1, `settings control escapes panel: ${JSON.stringify({ settings, control })}`);
+    }
+    await evalJs(state.page, `(() => { document.querySelector('.settings-menu').open = false; applyFontScale(100); document.querySelector('.gear-slot')?.click(); })()`);
+    await waitFor(state.page, `document.getElementById('gear-picker-overlay')?.hidden === false`, 'gear picker');
+    const close = await evalJs(state.page, `(() => { const r = document.getElementById('gear-picker-close').getBoundingClientRect(); return { width: r.width, height: r.height }; })()`);
+    assert.ok(close.width >= 44 && close.height >= 44, `gear picker close action is not touch sized: ${JSON.stringify(close)}`);
+    await evalJs(state.page, `document.getElementById('gear-picker-close').click()`);
+  });
+
+  smokeIt('keeps touch controls comfortably sized on phone and iPad layouts', async () => {
+    const undersized = [];
+    for (const [label, width, height] of [['mobile', 390, 844], ['ipad', 768, 1024]]) {
+      await setViewport(width, height);
+      await evalJs(state.page, `applyFontScale(100)`);
+      for (const view of ['calc', 'inventory', 'gear', 'patch-changes', 'colonies', 'drugs', 'battle', 'community']) {
+        await activateTab(view);
+        const controls = await evalJs(state.page, `(() => {
+          const roots = [document.querySelector('.view.active'), document.querySelector('header'), document.querySelector('.playerbar'), document.querySelector('.mobile-nav-v2')].filter(Boolean);
+          return roots.flatMap(root => Array.from(root.querySelectorAll('button, summary, select, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"])')))
+            .filter((el, index, all) => all.indexOf(el) === index && !el.disabled && !el.closest('[hidden]') && getComputedStyle(el).display !== 'none' && el.getClientRects().length)
+            .map(el => { const rect = el.getBoundingClientRect(); return { tag: el.tagName, id: el.id, className: String(el.className).slice(0, 60), text: (el.innerText || el.value || el.getAttribute('aria-label') || '').trim().replace(/\\s+/g, ' ').slice(0, 70), width: rect.width, height: rect.height }; })
+            .filter(item => item.height < 43.5 || item.width < 43.5);
+        })()`);
+        if (controls.length) undersized.push({ label, width, height, view, controls });
+      }
+    }
+    assert.deepEqual(undersized, [], `undersized touch controls detected: ${JSON.stringify(undersized)}`);
+  });
+
+  smokeIt('moves focus into a gated direct route after onboarding', async () => {
+    await setViewport(390, 844);
+    await evalJs(state.page, `localStorage.clear(); sessionStorage.clear(); location.hash = '#patch-changes'; location.reload();`);
+    await waitFor(state.page, `document.getElementById('onboarding-faction')?.options.length > 1`, 'gated-route onboarding');
+    await createProfile();
+    await waitFor(state.page, `document.querySelector('.view.active')?.id === 'view-patch-changes'`, 'restored Gear 1.10 route');
+    await waitFor(state.page, `document.getElementById('view-patch-changes')?.dataset.ready === 'true'`, 'Gear 1.10 initialization');
+    const focus = await evalJs(state.page, `(() => ({
+      id: document.activeElement?.id || '',
+      tag: document.activeElement?.tagName || '',
+      insideActiveView: !!document.querySelector('.view.active')?.contains(document.activeElement),
+      activeView: document.querySelector('.view.active')?.id || '',
+    }))()`);
+    assert.equal(focus.insideActiveView, true, `focus did not move into the restored route: ${JSON.stringify(focus)}`);
+  });
+
   smokeIt('finishes without page exceptions', () => {
     assert.deepEqual(state.errors, [], `browser exceptions: ${state.errors.join('; ')}`);
   });

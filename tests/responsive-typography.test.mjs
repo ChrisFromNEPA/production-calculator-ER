@@ -19,8 +19,10 @@ describe('responsive typography and content density', () => {
   });
 
   it('uses the available width on large desktop displays', () => {
-    assert.match(css, /@media \(min-width: 1800px\)[\s\S]*?main\s*\{[\s\S]*?max-width:\s*1360px/s);
-    assert.match(css, /@media \(min-width: 3000px\)[\s\S]*?main\s*\{[\s\S]*?max-width:\s*1680px/s);
+    assert.match(css, /@media \(min-width: 1800px\)[\s\S]*?main\s*\{[\s\S]*?max-width:\s*1600px/s);
+    assert.match(css, /@media \(min-width: 3000px\)[\s\S]*?main\s*\{[\s\S]*?max-width:\s*2200px/s);
+    assert.match(css, /@media \(min-width: 2200px\)[\s\S]*?\.gear-picker-modal\s*\{[\s\S]*?max-width:\s*800px/s);
+    assert.match(css, /@media \(min-width: 3200px\)[\s\S]*?\.gear-picker-modal\s*\{[\s\S]*?max-width:\s*960px/s);
     assert.match(ux, /@media \(min-width: 1800px\)[\s\S]*?\.first-run, \.calc-guide\s*\{[\s\S]*?max-width:\s*1200px/s);
     assert.match(ux, /@media \(min-width: 3000px\)[\s\S]*?\.first-run, \.calc-guide\s*\{[\s\S]*?max-width:\s*1480px/s);
   });

@@ -64,11 +64,12 @@ describe('item search normalization', () => {
     assert.match(inventory, /normalizeSearchText\(document\.getElementById\('qp-search'\)/);
   });
 
-  it('derives the picker placeholder from the live final-item count', () => {
+  it('keeps the picker placeholder concise so it does not clip', () => {
     assert.doesNotMatch(html, /placeholder="Search \d+ final items/);
     const init = appCore.match(/function initPickerFilters\(\)[\s\S]*?\n}/)[0];
     assert.match(init, /picker-search/);
-    assert.match(init, /FINAL_ITEMS\.length/);
+    assert.match(init, /search\.placeholder\s*=\s*['"]Search final items…['"]/);
+    assert.doesNotMatch(init, /FINAL_ITEMS\.length/);
   });
 
   it('explains an empty picker result instead of a bare message', () => {

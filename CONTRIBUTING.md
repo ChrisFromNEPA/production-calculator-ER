@@ -6,6 +6,19 @@ This repository ships a static, client-side, local-first calculator. It has no
 login, shared inventory service, analytics backend, or production API. Changes
 should preserve that boundary unless a design proposal explicitly changes it.
 
+## Good first contributions
+
+Small, focused changes are welcome. Useful starting points include:
+
+- correcting unclear player-facing documentation;
+- reporting a reproducible layout or keyboard-navigation problem;
+- adding a regression for a confirmed bug;
+- improving an empty, loading, or error state;
+- correcting game data when you can include dated source evidence.
+
+If you are unsure where a change belongs, open an issue with the smallest example
+that demonstrates the problem.
+
 ## Before opening a pull request
 
 1. Read the README, disclaimer, and relevant documentation.
@@ -75,11 +88,10 @@ total new binary content** in one change, or an exact duplicate of a binary
 already in the base tree. These are review thresholds, not permission to add
 an asset: provenance and licensing evidence remain required.
 
-The repository is a source archive. It may retain approved source/raw assets
-needed for provenance, maintenance, or future generation, even when those
-files are not deployed. The Pages runtime is a separate positive allowlist in
-`public-files.json`; only files selected by that allowlist belong in the
-runtime artifact. Do not add `dist/`, caches, dependency trees, probes, or
-temporary exports to the source archive or runtime deployment. Generated
-runtime files are rebuilt from canonical sources and must not be used to
-justify retaining unrelated build debris.
+The repository keeps only application sources, reproducible data inputs, tests,
+documentation, and assets used by the current product. Large historical model,
+texture, gallery, logo, and skin-extraction workspaces were retired from the
+current checkout in v1.4.2; they remain recoverable from the v1.4.1 tag and Git
+history. The Pages runtime is a separate positive allowlist in
+`public-files.json`. Do not add `dist/`, caches, dependency trees, probes,
+temporary exports, or unrelated extraction output to either surface.

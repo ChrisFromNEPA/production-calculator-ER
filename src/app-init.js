@@ -227,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       syncMoreButton();
     }
+    window.fitNavigationTabs = fitTabs;
     fitTabs();
     let raf;
     window.addEventListener('resize', () => {
@@ -731,10 +732,15 @@ document.addEventListener('DOMContentLoaded', () => {
     PLAYERS.profiles = PLAYERS.profiles || {};
     PLAYERS.profiles[name] = { faction: onboardingFaction?.value || 'UNAFFILIATED' };
     PLAYERS.active = name; savePlayers(PLAYERS); recomputeInv(); refreshAll();
-    // A gated direct route (for example #patch-changes) was held on the
-    // onboarding screen, so its once-only view hook may already have passed.
-    if (location.hash === '#patch-changes') window.initPatchChanges?.();
-    document.getElementById('picker-search')?.focus();
+    // refreshAll() replays a gated direct route and runs its registered hook.
+    // Put focus inside whichever view is now visible instead of always trying
+    // to focus the hidden Calculator picker.
+    const activeView = document.querySelector('.view.active');
+    const initialFocus = activeView?.id === 'view-calc'
+      ? document.getElementById('picker-search')
+      : activeView?.querySelector('input[type="search"]') ||
+        activeView?.querySelector('input:not([type="hidden"]), select, button, summary, [tabindex="0"]');
+    initialFocus?.focus();
     toast(`Welcome, ${name}. Choose an item to plan your first run.`, 4000, 'success');
   });
   document.getElementById('onboarding-name')?.addEventListener('keydown', e => {

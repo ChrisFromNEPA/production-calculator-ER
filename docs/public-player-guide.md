@@ -21,7 +21,7 @@ Use the Colonies tab to enter only the ownership and tax information you want to
 
 The Calculator supports single and multi-item plans. Gear can be used to build
 a plan, and the reference tabs provide item, faction, mining, battle-node,
-colony, model, drug, and community-note context. These workflows remain usable
+colony, drug, and community-note context. These workflows remain usable
 without login or a shared backend.
 
 ## Inventory and add stock

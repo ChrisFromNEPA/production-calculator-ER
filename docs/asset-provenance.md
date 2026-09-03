@@ -1,50 +1,38 @@
-# Asset provenance and redistribution status
+# Asset provenance and redistribution
 
-This repository contains two different kinds of material:
+The repository contains original project code and documentation alongside a limited set of Empire Rising / Face of Mankind-derived media. The MIT license applies to original project code. It does not relicense game names, data, maps, icons, textures, or audio.
 
-1. **Original project code and documentation**, covered by the project license where stated.
-2. **Empire Rising / Face of Mankind game-derived data and media**, which is not relicensed by this repository's MIT license.
+## Current checkout
 
-The project owner has explicitly authorized inclusion of the game-derived assets in this public migration. The repository still does not claim ownership of game-derived names, logos, sounds, models, textures, maps, or extracted client material, and the MIT license applies only to original project code and documentation where stated.
+The v1.4.2 source tree stays below **2,000 tracked files and 40 MiB** through an automated repository-hygiene test. The current asset surface is intentionally limited to files used by the calculator, its documentation, or its reproducible data pipeline.
 
-## Current audit snapshot
+| Class | Current paths | Use |
+|---|---|---|
+| Item and gear imagery | `icons/`, `gear_textures/` | Calculator and gear UI |
+| Maps | `maps/` | Battle Nodes reference |
+| Audio | `voice_extracted/` | Optional user-controlled terminal voices |
+| Documentation image | `docs/assets/calculator-overview.png` | Fictional README example |
+| Fonts | `fonts/` | Bundled JetBrains Mono and Orbitron webfonts under SIL OFL 1.1 |
+| Third-party browser code | `src/vendor/` | Vendored Chart.js payload loaded on demand |
 
-The initial migration audit found approximately **615 MB across 5,168 files**, including:
+The machine-readable review manifest is [`data/asset-provenance.json`](../data/asset-provenance.json). `npm run assets:check` fails if a tracked binary is not covered by an approved record.
 
-| Class | Representative paths | Approx. contents | Release status |
-|---|---|---:|---|
-| Extracted textures | `textures_extracted/`, `gear_textures/` | PNG/WEBP/DTX game textures | **Approved by project owner** |
-| Models | `models/` | GLB/3D client-derived models | **Approved by project owner** |
-| Audio | `voice_extracted/` | OGG game audio | **Approved by project owner** |
-| Icons and galleries | `icons/`, `gallery/`, `logo/`, `skins_test/` | Faction, rank, item, and UI imagery | **Approved by project owner** |
-| Maps | `maps/` | Game-derived map/reference imagery | **Approved by project owner** |
-| Fonts | `fonts/` | JetBrains Mono and Orbitron webfonts | SIL OFL 1.1 notices retained in `fonts/OFL-*.txt` |
-| Third-party libraries | `src/vendor/`, npm dependencies | Chart.js and related code | Retain upstream notices/licenses |
-| Original application code | `src/`, `scripts/`, `tests/` | Calculator, UI, build and test code | Project license applies where original |
+## Retired extraction workspaces
 
-Sizes are informational and must be regenerated before a release. They are not evidence of permission.
+Earlier releases retained large, non-runtime workspaces under `models/`, `textures_extracted/`, `skins_test/`, `gallery/`, `logo/`, and `uv_grid.png`. They were useful during the original client-data investigation but were unrelated to the production calculator after its 3D features were retired.
 
-## Required record for an approved asset
-
-Every distributed binary asset or asset class must have a record containing:
-
-- repository path or glob
-- asset class
-- original source or extraction method
-- copyright holder, if known
-- applicable license or written permission
-- transformation performed, if any
-- redistribution scope and restrictions
-- review date
-- reviewer or evidence link
-
-The machine-readable source of truth is [`asset-provenance.json`](../data/asset-provenance.json). Approved game-derived records retain their separate rights-holder attribution and are not covered by the project MIT license.
+Those workspaces are **not part of the current checkout** and never enter the Pages artifact. Their last complete repository snapshot is the [`v1.4.1` tag](https://github.com/ChrisFromNEPA/production-calculator-ER/tree/v1.4.1), and they remain recoverable from Git history. v1.4.2 removes them from the current tree without rewriting history.
 
 ## Release policy
 
-Do not publish this tree as a public Pages release while a shipped asset class remains `pending_permission` or `unknown`. The release process must either:
+Every distributed binary asset or asset class must record:
 
-- record permission and change the status to `approved`, retaining the evidence; or
-- exclude that asset class from the public artifact and disable/isolate the dependent feature.
+- its repository path or glob;
+- origin and applicable rights holder;
+- license or documented redistribution permission;
+- any transformation performed;
+- approval status and evidence.
 
-Do not describe game-derived files as MIT merely because the surrounding application code uses MIT. The project-owner authorization is recorded as the redistribution basis for this migration and must remain in the manifest.
+A release must not ship an asset marked `pending_permission` or `unknown`. The release process must either document approval or remove the asset and its dependent feature.
+
+The project owner authorized the game-derived assets used by this public migration. That authorization does not transfer ownership or place those assets under MIT. See [`DISCLAIMER.md`](../DISCLAIMER.md) for the project boundary.

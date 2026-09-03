@@ -19,3 +19,11 @@ __pycache__/
 # existing offline shell requires them.
 .worktrees/
 .review/
+
+# Retired extraction workspaces; recover historical copies from the v1.4.1 tag.
+models/
+textures_extracted/
+skins_test/
+gallery/
+logo/
+uv_grid.png
