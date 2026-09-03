@@ -124,6 +124,14 @@
 
     let sawUpdate = false;
     let reloadWired = false;
+    let registration = null;
+    let reloadPending = false;
+    let reloadStarted = false;
+    const reloadPage = () => {
+      if (reloadStarted) return;
+      reloadStarted = true;
+      if (w.location && typeof w.location.reload === 'function') w.location.reload();
+    };
     function showUpdate(spec) {
       if (!spec) return;
       const text = document.getElementById('trust-update-text');
@@ -132,7 +140,18 @@
       if (reload && !reloadWired) {
         reloadWired = true;
         reload.addEventListener('click', () => {
-          if (w.location && typeof w.location.reload === 'function') w.location.reload();
+          const waiting = registration && registration.waiting;
+          if (waiting) {
+            reloadPending = true;
+            reload.disabled = true;
+            waiting.postMessage('SKIP_WAITING');
+            // Reload promptly even if controllerchange is delayed by an active
+            // fetch event; navigating releases the current client so activation
+            // can complete instead of leaving the button disabled indefinitely.
+            w.setTimeout(reloadPage, 100);
+            return;
+          }
+          reloadPage();
         });
       }
       updateChip.hidden = false;
@@ -140,6 +159,7 @@
 
     if (w.navigator && 'serviceWorker' in w.navigator) {
       w.navigator.serviceWorker.register('sw.js').then(reg => {
+        registration = reg;
         reg.addEventListener('updatefound', () => {
           const worker = reg.installing;
           if (!worker) return;
@@ -152,6 +172,7 @@
       }).catch(() => {});
       w.navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (sawUpdate) showUpdate(updateStatus('activated', { hasController: true, sawUpdate: true }));
+        if (reloadPending) reloadPage();
       });
     }
   }

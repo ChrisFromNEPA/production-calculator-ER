@@ -554,8 +554,8 @@ document.addEventListener('DOMContentLoaded', () => {
       lines.push(`Move ${fmt(info.qty)} ${displayName(n)} → ${info.to || REFINE_DESTINATION || DESTINATION}`);
     });
     Object.entries(result.acquire).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,info]) => {
-      const sites = (info.from||[]).join(', ');
-      lines.push(`${fmt(info.qty)}× ${displayName(n)}${sites ? ' — ' + sites : ''}`);
+      const site = selectedObtainSite(n, info);
+      lines.push(`${fmt(info.qty)}× ${displayName(n)}${site ? ' — ' + site : ''}`);
     });
     result.steps.forEach(s => {
       lines.push(`Craft ${fmt(s.produced)} ${displayName(s.item)} at ${s.location || DESTINATION} (${s.batches} batch${s.batches>1?'es':''})`);

@@ -182,7 +182,16 @@ async function waitForCacheState(page, { present = [], absent = [], timeout = 20
     if (present.every(name => keys.includes(name)) && absent.every(name => !keys.includes(name))) return keys;
     await sleep(200);
   }
-  throw new Error(`timed out waiting for cache state; present=${JSON.stringify(present)} absent=${JSON.stringify(absent)} keys=${JSON.stringify(keys)}`);
+  const registration = await evalJs(page, `(async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    return {
+      installing: reg?.installing?.state || null,
+      waiting: reg?.waiting?.state || null,
+      active: reg?.active?.state || null,
+      controller: navigator.serviceWorker.controller?.state || null,
+    };
+  })()`, true);
+  throw new Error(`timed out waiting for cache state; present=${JSON.stringify(present)} absent=${JSON.stringify(absent)} keys=${JSON.stringify(keys)} registration=${JSON.stringify(registration)}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -221,6 +230,7 @@ const state = {
   swRevision: 0,
   shellFailure: false,
   baseCache: null,
+  failedUpdateCache: null,
   updateCache: null,
 };
 
@@ -237,10 +247,9 @@ describe('clean-profile service-worker lifecycle', () => {
     const cacheMatch = swSrc.match(/const CACHE = '([^']+)'/);
     assert.ok(cacheMatch, 'sw.js must declare a versioned CACHE constant');
     state.baseCache = cacheMatch[1];
+    state.failedUpdateCache = `${state.baseCache}-failed-update-test`;
     state.updateCache = `${state.baseCache}-update-test`;
-    const changedSw = swSrc.replace(/const CACHE = '[^']+'/, `const CACHE = '${state.updateCache}'`)
-      + '\n// deterministic service-worker update test marker\n';
-    assert.notEqual(changedSw, swSrc, 'the controlled update must change the served sw.js bytes');
+    assert.notEqual(state.failedUpdateCache, state.updateCache);
 
     // Static server for the app (no-store: SW update checks must not be cached).
     state.server = createServer(async (req, res) => {
@@ -256,7 +265,9 @@ describe('clean-profile service-worker lifecycle', () => {
         const file = join(dist, pathname);
         let body = await readFile(file);
         if (pathname === '/sw.js' && state.swOverride) {
-          body = Buffer.from(`${changedSw}\n// controlled update revision ${state.swRevision}\n`);
+          const cacheName = state.swRevision === 1 ? state.failedUpdateCache : state.updateCache;
+          const controlledSw = swSrc.replace(/const CACHE = '[^']+'/, `const CACHE = '${cacheName}'`);
+          body = Buffer.from(`${controlledSw}\n// controlled update revision ${state.swRevision}\n`);
         }
         res.writeHead(200, {
           'Content-Type': MIME[extname(file).toLowerCase()] || 'application/octet-stream',
@@ -380,6 +391,10 @@ describe('clean-profile service-worker lifecycle', () => {
     await evalJs(page, `(async () => {
       await Promise.all(Array.from({ length: 40 }, (_, i) =>
         fetch('/src/vendor/chart.min.js?cache-test=' + i)));
+      // This request is queued after all stress requests. Seeing it in Cache
+      // Storage proves the serialized runtime-write chain has fully drained,
+      // so the later activation test is not blocked by this test's fetch events.
+      await fetch('/src/vendor/chart.min.js?cache-test=sentinel');
       return true;
     })()`, true);
     const runtimeCount = await waitFor(
@@ -388,7 +403,9 @@ describe('clean-profile service-worker lifecycle', () => {
         const names = await caches.keys();
         const runtime = names.find(name => name.endsWith('-runtime'));
         if (!runtime) return -1;
-        return (await (await caches.open(runtime)).keys()).length;
+        const keys = await (await caches.open(runtime)).keys();
+        if (!keys.some(request => new URL(request.url).searchParams.get('cache-test') === 'sentinel')) return null;
+        return keys.length;
       })()`,
       { description: 'runtime cache eviction to complete', awaitPromise: true },
     );
@@ -433,11 +450,30 @@ describe('clean-profile service-worker lifecycle', () => {
   });
 
   it('restored required shell assets allow the update to install successfully', async () => {
-    const { page } = state;
+    const { page, baseCache } = state;
+    // Isolate the successful-update behavior from the deliberately failed and
+    // runtime-cache stress cases above. Chromium legitimately keeps the old
+    // worker active while those fetch events unwind, which would make this
+    // phase test the previous case's timing rather than update recovery.
+    state.swOverride = false;
     state.shellFailure = false;
-    // A failed install of one script body is not guaranteed to retry identical
-    // bytes. Serve a distinct recovery revision so this phase proves a new,
-    // successful worker rather than observing the failed attempt's partial cache.
+    state.swRevision = 0;
+    await evalJs(page, `(async () => {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.unregister();
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(key => key.startsWith('er-prodcalc-')).map(key => caches.delete(key)));
+      return true;
+    })()`, true);
+    const resetLoad = page.waitForEvent('Page.loadEventFired', 30000, 'fixture reset reload');
+    await page.send('Page.reload');
+    await resetLoad;
+    await waitFor(page, `!!navigator.serviceWorker.controller`, { description: 'reset base worker to control page' });
+    await waitForCacheState(page, { present: [baseCache, 'unrelated-app-cache'] });
+
+    state.swOverride = true;
+    // The recovery uses a distinct script revision and cache name so this phase
+    // cannot mistake the failed install's partial cache for a successful worker.
     state.swRevision = 2;
 
     await evalJs(
@@ -456,7 +492,7 @@ describe('clean-profile service-worker lifecycle', () => {
   });
 
   it('Reload applies the new worker, swaps the cache, and clears the chip', async () => {
-    const { page, updateCache, baseCache } = state;
+    const { page, updateCache, failedUpdateCache, baseCache } = state;
     const load = page.waitForEvent('Page.loadEventFired', 30000, 'reload after update');
     await evalJs(page, `document.getElementById('trust-update-reload').click()`);
     await load;
@@ -471,7 +507,7 @@ describe('clean-profile service-worker lifecycle', () => {
     // CacheStorage; controller presence alone can precede the activation task.
     const keys = await waitForCacheState(page, {
       present: [updateCache, 'unrelated-app-cache'],
-      absent: [baseCache],
+      absent: [baseCache, failedUpdateCache],
     });
     assert.ok(keys.includes(updateCache), `expected updated cache ${updateCache}, found ${keys.join(', ')}`);
     assert.ok(!keys.includes(baseCache), `old cache ${baseCache} must be cleaned up on activate; found ${keys.join(', ')}`);

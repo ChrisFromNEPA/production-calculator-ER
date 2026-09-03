@@ -35,9 +35,10 @@
     Object.entries(plan.acquire || {}).forEach(([item, info]) => {
       info = info || {};
       const sites = Array.isArray(info.from) ? info.from : [];
+      const preferred = sites.includes(info.preferred) ? info.preferred : sites[0];
       const chosen = mineSites[item] && sites.includes(mineSites[item])
         ? mineSites[item]
-        : (info.preferred || sites[0] || '');
+        : (preferred || '');
       if (!chosen) return;
       const target = info.to || refineDestination;
       add(chosen, { kind: 'mine', item, qty: info.qty || 0, site: chosen, sites });

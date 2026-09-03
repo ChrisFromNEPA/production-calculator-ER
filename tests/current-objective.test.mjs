@@ -11,6 +11,22 @@ const coreSource = readFileSync(join(root, 'src/app-core.js'), 'utf8');
 const cssSource = readFileSync(join(root, 'src/styles.css'), 'utf8');
 
 describe('current colony objective', () => {
+  it('falls back from an invalid preferred mine to a valid acquire site', () => {
+    const queue = buildColonyWorkQueue({
+      refineDestination: 'DMC',
+      acquire: {
+        carbon: {
+          qty: 4,
+          from: ['Andromeda', 'Brooklyn'],
+          preferred: 'not-a-real-site',
+        },
+      },
+    }, {});
+
+    assert.equal(queue[0].colony, 'Andromeda');
+    assert.equal(queue[0].actions[0].site, 'Andromeda');
+  });
+
   it('advances in semantic work order and never reselects completed cargo', () => {
     const queue = buildColonyWorkQueue({
       refineDestination: 'DMC', destination: 'Paris',

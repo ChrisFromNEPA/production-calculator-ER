@@ -993,6 +993,14 @@ function toggleObtainCheck(cb, container) {
   syncApplyPlanReadiness();
 }
 
+function selectedObtainSite(name, info) {
+  var from = (info && info.from) || [];
+  var selected = OBTAIN_SITE[name];
+  if (selected && from.indexOf(selected) !== -1) return selected;
+  if (info && info.preferred && from.indexOf(info.preferred) !== -1) return info.preferred;
+  return from.length ? from[0] : 'No mine site';
+}
+
 // Handle a mine-site chip click: remember the choice and re-file the material
 // under the chosen colony by re-rendering the obtain section in place.
 function pickObtainSite(chip) {
@@ -1030,10 +1038,7 @@ function renderAcquireSection(plan) {
   var groups = {};
   entries.forEach(function (e) {
     var name = e[0], info = e[1];
-    var from = info.from || [];
-    var chosen = (OBTAIN_SITE[name] && from.indexOf(OBTAIN_SITE[name]) !== -1)
-      ? OBTAIN_SITE[name]
-      : (info.preferred || (from.length ? from[0] : NO_SITE));
+    var chosen = selectedObtainSite(name, info);
     (groups[chosen] = groups[chosen] || []).push({ item: name, info: info, chosen: chosen });
   });
 
