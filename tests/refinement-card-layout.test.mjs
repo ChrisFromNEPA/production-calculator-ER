@@ -20,6 +20,21 @@ describe('refinement card input-to-output connector', () => {
     assert.match(flowCss, /\.flow-output\s*\{[^}]*width:\s*100%/s);
   });
 
+  it('gives desktop output cards a compact two-row grid with flexible names', () => {
+    const outputCss = flowCss.slice(flowCss.indexOf('.flow-chip.output {'), flowCss.indexOf('@media (max-width: 820px)'));
+    assert.match(outputCss, /\.flow-chip\.output\s*\{[^}]*display:\s*grid/s);
+    assert.match(outputCss, /grid-template-columns:\s*auto\s+minmax\(0,\s*1fr\)\s+auto/s);
+    assert.match(outputCss, /grid-template-areas:[^;]*"process process process"[^;]*"icon name quantity"/s);
+    assert.match(outputCss, /\.flow-chip\.output\s*>\s*\.flow-name\s*\{[^}]*grid-area:\s*name/s);
+    assert.match(outputCss, /\.flow-chip\.output\s*>\s*\.flow-qty\s*\{[^}]*grid-area:\s*quantity/s);
+  });
+
+  it('gives repeated refinement cards a full-width output-name row', () => {
+    const outputCss = flowCss.slice(flowCss.indexOf('.flow-chip.output {'), flowCss.indexOf('@media (max-width: 820px)'));
+    assert.match(outputCss, /\.colony-work-refine-card \.flow-chip\.output\s*\{[^}]*grid-template-columns:\s*auto\s+minmax\(0,\s*1fr\)/s);
+    assert.match(outputCss, /\.colony-work-refine-card \.flow-chip\.output\s*\{[^}]*grid-template-areas:[^;]*"process process"[^;]*"icon quantity"[^;]*"name name"/s);
+  });
+
   it('turns the connector downward on narrow cards', () => {
     assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.recipe-flow\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s);
     assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.flow-arrow\.big\s*\{[^}]*transform:\s*rotate\(90deg\)/s);

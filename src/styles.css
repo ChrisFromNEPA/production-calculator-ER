@@ -2571,10 +2571,31 @@ tr td:first-child { white-space: nowrap; }
 .flow-arrow.big { transform: rotate(90deg); justify-self: center; font-size: 1.25rem; color: var(--accent); text-shadow: 0 0 8px var(--accent); }
 .flow-output { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; width: 100%; }
 .flow-chip.output {
-  display: flex; flex-direction: row; align-items: center; gap: 0.6rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "process process process"
+    "icon name quantity";
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0.35rem;
   background: var(--bg); border: 1px solid var(--accent-dim);
   border-radius: 5px; padding: 0.55rem 0.75rem;
   box-shadow: 0 0 8px #ff2d9515; min-width: 0; max-width: 100%;
+}
+.flow-chip.output > .proc { grid-area: process; justify-self: start; }
+.flow-chip.output > .icon,
+.flow-chip.output > .icon-badge { grid-area: icon; }
+.flow-chip.output > .flow-name {
+  grid-area: name;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.flow-chip.output > .flow-qty {
+  grid-area: quantity;
+  justify-self: end;
+  margin-left: 0;
 }
 /* the output is the point of the step — give it the largest icon */
 .flow-chip.output .icon,
@@ -2583,9 +2604,20 @@ tr td:first-child { white-space: nowrap; }
 .flow-chip.output .icon-badge { font-size: 1.125rem; }
 .flow-chip.output .flow-name {
   font-size: 0.8125rem; font-weight: 600; line-height: 1.25;
-  max-width: none; overflow-wrap: anywhere; word-break: break-word;
+  max-width: none; overflow-wrap: break-word; word-break: normal;
 }
 .flow-chip.output .flow-qty { font-size: 0.8125rem; }
+
+/* Refinement cards repeat in the colony-work grid, so their output chips are
+   narrower than the single final-manufacture card. Give the item name a full
+   row while keeping the process, icon, and quantity compact above it. */
+.colony-work-refine-card .flow-chip.output {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "process process"
+    "icon quantity"
+    "name name";
+}
 
 @media (max-width: 820px) {
   main { padding-inline: clamp(0.5rem, 4vw, 1.25rem); }
