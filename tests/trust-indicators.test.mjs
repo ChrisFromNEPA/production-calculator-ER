@@ -137,7 +137,7 @@ describe('shell contract for the indicators', () => {
   });
 
   it('keeps the shell precache honest about its own version', () => {
-    assert.match(sw, /const CACHE\s*=\s*['"]er-prodcalc-v0\.2\.48-shell['"]/);
+    assert.match(sw, /const CACHE\s*=\s*['"]er-prodcalc-v0\.2\.49-shell['"]/);
     assert.match(sw, /'\.\/src\/ui\/trust-indicators\.js'/);
     const installStart = sw.indexOf("self.addEventListener('install'");
     const messageStart = sw.indexOf("self.addEventListener('message'", installStart);

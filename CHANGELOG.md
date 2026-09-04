@@ -4,7 +4,15 @@ All notable public releases are documented here.
 
 ## [Unreleased]
 
-No unreleased changes.
+### Fixed
+
+- Restyled the current Refine/Manufacture objective marker as a contained,
+  theme-aware badge instead of black text leaking from the card's accent rail.
+- Reflowed recipe input and output rows on narrow screens so item names wrap at
+  word boundaries rather than collapsing character by character at larger text
+  sizes.
+- Reduced nested plan spacing on mobile so the complete recipe cards remain
+  inside the viewport through the supported 150% text scale.
 
 ## [1.4.2] — 2026-09-03
 
