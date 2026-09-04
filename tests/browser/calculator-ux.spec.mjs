@@ -567,6 +567,106 @@ describe('real-browser calculator UX smoke', () => {
     }
   });
 
+  smokeIt('keeps Refine and Manufacture objectives readable on narrow screens', async () => {
+    await activateTab('calc');
+    const failures = [];
+    try {
+    for (const [width, scale] of [
+      [360, 100], [360, 150], [430, 100], [430, 150],
+      [663, 100], [663, 150], [768, 100], [768, 150],
+    ]) {
+      await setViewport(width, 844);
+      await evalJs(state.page, `(() => {
+        resetCalculatorForNewPlan();
+        applyFontScale(${scale});
+        document.getElementById('calc-item').value = 'Emergency MediKit';
+        document.getElementById('calc-qty').value = '300';
+        document.getElementById('calc-run').click();
+        return true;
+      })()`);
+      await waitFor(state.page, `!!document.querySelector('#calc-result .recipe-card.refine')`, 'mobile refine card');
+      const stateAtWidth = await evalJs(state.page, `(() => {
+        const lineCount = el => {
+          const node = el.firstChild;
+          if (!node || node.nodeType !== Node.TEXT_NODE) return 0;
+          const tops = new Set();
+          const range = document.createRange();
+          for (let i = 0; i < node.length; i += 1) {
+            range.setStart(node, i);
+            range.setEnd(node, i + 1);
+            const rect = range.getBoundingClientRect();
+            if (rect.width > 0) tops.add(Math.round(rect.top));
+          }
+          return tops.size;
+        };
+        const advanceTo = selector => {
+          for (let step = 0; step < 80; step += 1) {
+            const target = document.querySelector(selector);
+            if (target) return target;
+            const current = document.querySelector('#calc-result [data-current-objective="true"]');
+            if (!current) return null;
+            const control = current.querySelector('input[type="checkbox"]:not(:checked), button:not(:disabled)');
+            if (!control) return null;
+            control.click();
+          }
+          return null;
+        };
+        const inspect = card => {
+          if (!card) return null;
+          const badge = getComputedStyle(card, '::before');
+          const output = card.querySelector('.flow-chip.output');
+          const name = output.querySelector('.flow-name');
+          const outputRect = output.getBoundingClientRect();
+          const nameRect = name.getBoundingClientRect();
+          return {
+            process: card.classList.contains('refine') ? 'refine' : 'manufacture',
+            runtimeCurrent: card.dataset.currentObjective,
+            ariaCurrent: card.getAttribute('aria-current'),
+            name: name.textContent.trim(),
+            nameLines: lineCount(name),
+            nameWidth: nameRect.width,
+            fontSize: parseFloat(getComputedStyle(name).fontSize),
+            inputNames: Array.from(card.querySelectorAll('.flow-chip.input .flow-name')).map(inputName => ({
+              name: inputName.textContent.trim(),
+              lines: lineCount(inputName),
+              width: inputName.getBoundingClientRect().width,
+              fontSize: parseFloat(getComputedStyle(inputName).fontSize),
+            })),
+            outputOverflow: output.scrollWidth > output.clientWidth + 1,
+            badgeColor: badge.color,
+            badgeWidth: parseFloat(badge.width),
+            badgeFontSize: parseFloat(badge.fontSize),
+            badgeWhiteSpace: badge.whiteSpace,
+            badgeLeft: badge.left,
+            badgeRight: badge.right,
+            cardRight: card.getBoundingClientRect().right,
+            outputRight: outputRect.right,
+          };
+        };
+        const refine = inspect(advanceTo('#calc-result .recipe-card.refine[data-current-objective="true"]'));
+        const manufacture = inspect(advanceTo('#calc-result .section[data-section="manufacture"] .recipe-card.manufacture[data-current-objective="true"]'));
+        return { refine, manufacture };
+      })()`);
+      assert.ok(stateAtWidth.refine, `runtime did not advance to a Refine objective at ${width}px/${scale}%`);
+      assert.ok(stateAtWidth.manufacture, `runtime did not advance to a Manufacture objective at ${width}px/${scale}%`);
+      assert.equal(stateAtWidth.refine.process, 'refine');
+      assert.equal(stateAtWidth.manufacture.process, 'manufacture');
+
+      for (const card of [stateAtWidth.refine, stateAtWidth.manufacture]) {
+        if (card.runtimeCurrent !== 'true' || card.ariaCurrent !== 'step') failures.push({ width, scale, issue: 'runtime objective state missing', card });
+        if (card.badgeColor === 'rgb(0, 0, 0)') failures.push({ width, scale, issue: 'black objective label', card });
+        if (card.badgeWhiteSpace !== 'nowrap' || card.badgeWidth < card.badgeFontSize * 8 || parseFloat(card.badgeLeft) < -1) failures.push({ width, scale, issue: 'collapsed objective label', card });
+        if (card.nameLines > 2 || card.nameWidth < card.fontSize * 3) failures.push({ width, scale, issue: 'character-by-character item name', card });
+        if (card.inputNames.some(name => name.lines > 2 || name.width < name.fontSize * 3)) failures.push({ width, scale, issue: 'character-by-character input name', card });
+        if (card.outputOverflow || card.outputRight > width + 1 || card.cardRight > width + 1) failures.push({ width, scale, issue: 'recipe output overflow', card });
+      }
+    }
+    } finally {
+      await evalJs(state.page, `applyFontScale(100)`);
+    }
+    assert.deepEqual(failures, [], `mobile recipe-step readability failures: ${JSON.stringify(failures)}`);
+  });
+
   smokeIt('keeps Gear 1.10 inside a phone viewport without horizontal page overflow', async () => {
     await setViewport(360, 640);
     await activateTab('patch-changes');
