@@ -567,13 +567,14 @@ describe('real-browser calculator UX smoke', () => {
     }
   });
 
-  smokeIt('keeps Refine and Manufacture objectives readable on narrow screens', async () => {
+  smokeIt('keeps Refine and Manufacture objectives readable across card widths', async () => {
     await activateTab('calc');
     const failures = [];
     try {
     for (const [width, scale] of [
       [360, 100], [360, 150], [430, 100], [430, 150],
       [663, 100], [663, 150], [768, 100], [768, 150],
+      [1024, 100], [1280, 100], [1920, 100], [2292, 100],
     ]) {
       await setViewport(width, 844);
       await evalJs(state.page, `(() => {
