@@ -117,6 +117,20 @@ function loadRuntime(localStorageData, savedPlans) {
 }
 
 describe('R1: loadSavedPlan validates saved destinations (review finding)', () => {
+  it('preserves saved Andromeda refinement intent while displaying one canonical choice', () => {
+    const rt = loadRuntime(
+      { cmg_destination: 'Berlin', cmg_refine_destination: 'Andromeda City' },
+      [{ id: 'alias', kind: 'single', item: 'x', qty: 1, dest: 'Berlin', refineDest: 'Andromeda City', name: 'legacy alias' }]
+    );
+    assert.equal(rt.refine(), 'Andromeda');
+    assert.equal(rt.storage.data.cmg_refine_destination, 'Andromeda');
+    const options = rt.elements['calc-refine-dest'].options.filter(o => o.textContent === 'Andromeda City');
+    assert.equal(options.length, 1);
+    assert.equal(options[0].value, 'Andromeda');
+    rt.sandbox.loadSavedPlan('alias');
+    assert.equal(rt.refine(), 'Andromeda');
+    assert.equal(rt.elements['calc-refine-dest'].value, 'Andromeda');
+  });
   it('rejects an Apartment saved dest and falls back safely, persisting the repair', () => {
     const rt = loadRuntime(
       { cmg_destination: 'Berlin', cmg_refine_destination: 'Berlin' },

@@ -1077,6 +1077,11 @@ tr td:first-child { white-space: nowrap; }
   border-bottom: 1px solid var(--border);
 }
 .plan-hero-note::before { content: '▸'; color: var(--accent); text-shadow: 0 0 6px rgba(255,45,149,.5); }
+.plan-hero-note > span { min-width: 0; }
+.single-head .plan-summary-qty { white-space: nowrap; flex-shrink: 0; }
+.content-link, .content-link:visited { color: var(--text); text-decoration: underline; text-underline-offset: .2em; }
+.content-link:hover { text-decoration-thickness: .15em; }
+.content-link:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 .plan-hero-note b { color: var(--text); font-weight: 600; }
 .plan-hero-note.has-stock b { color: var(--cyan); }
 
@@ -2231,7 +2236,7 @@ tr td:first-child { white-space: nowrap; }
 .colonies-search, .colonies-filter { display: flex; flex-direction: column; gap: 0.25rem; color: var(--muted); font-size: 0.68rem; font-weight: 600; }
 .colonies-search { flex: 1 1 280px; }
 .colonies-search input, .colonies-filter select { width: 100%; min-height: 2.35rem; }
-.colonies-filter { flex: 0 1 190px; }
+.colonies-filter { flex: 0 0 18rem; max-width: 100%; }
 .colonies-legacy-filter { padding-bottom: 0.55rem; }
 .colonies-world-data { margin-left: auto; }
 .colonies-world-data summary { cursor: pointer; min-height: 2.35rem; display: inline-flex; align-items: center; padding: 0.4rem 0.65rem; border: 1px solid var(--line-bright); border-radius: 7px; color: var(--text); font-size: 0.72rem; }

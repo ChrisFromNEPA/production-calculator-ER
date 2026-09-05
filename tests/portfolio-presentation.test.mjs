@@ -45,7 +45,7 @@ describe('employer-facing public presentation', () => {
   it('keeps the portfolio screenshot in the Pages artifact and the service-worker version current', () => {
     assert.equal(existsSync(join(root, 'docs/assets/calculator-overview.png')), true);
     assert.ok(publicFiles.runtime.includes('docs/assets/calculator-overview.png'));
-    assert.match(sw, /const CACHE = 'er-prodcalc-v0\.2\.49-shell'/);
+    assert.match(sw, /const CACHE = 'er-prodcalc-v0\.2\.50-shell'/);
   });
 
   it('keeps the project intro bounded and usable at mobile widths', () => {

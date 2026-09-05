@@ -507,7 +507,7 @@
     <!-- COMBAT STATS REFERENCE — ER Balance Sheet (window.BALANCE_STATS) -->
     <div class="gear-balance-browser" id="gear-balance-browser">
       <div class="gear-balance-head">
-        <div><h4>⚔️ Combat Stats Reference</h4><p>The reference list below is for comparison. To equip an item, click a compatible loadout slot above; craftable items link back to calculator data. <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&amp;single=true" target="_blank" rel="noopener noreferrer">Open the published source sheet</a>.</p></div>
+        <div><h4>⚔️ Combat Stats Reference</h4><p>The reference list below is for comparison. To equip an item, click a compatible loadout slot above; craftable items link back to calculator data. <a class="content-link" href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&amp;single=true" target="_blank" rel="noopener noreferrer">Open the published source sheet</a>.</p></div>
         <div class="gear-balance-status"><strong id="gear-balance-count" aria-live="polite">Loading…</strong><span class="gear-balance-meta muted" id="gear-balance-meta"></span></div>
       </div>
       <div class="gear-balance-controls">
@@ -534,7 +534,7 @@
   <!-- DRUGS -->
   <section id="view-drugs" class="view" role="tabpanel" aria-label="Drugs">
     <h3 class="view-title">💊 Drug / Booster Production</h3>
-    <p class="muted" style="font-size:0.75rem">Combat boosters — effects from the ER Balance Sheet snapshot, code combination, tier, and effect duration. Positive and negative effects are separated using the published stat direction. <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&amp;single=true" target="_blank" rel="noopener noreferrer">Source sheet</a>.</p>
+    <p class="muted" style="font-size:0.75rem">Combat boosters — effects from the ER Balance Sheet snapshot, code combination, tier, and effect duration. Positive and negative effects are separated using the published stat direction. <a class="content-link" href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_DqXbgxfJmrzLJvFov-iqiRwPeSDpaqk_r3fVqfn7-8bfjAgT2ZWfQLiM_D41thtJE-LO5CtHWt50/pubhtml?gid=29503079&amp;single=true" target="_blank" rel="noopener noreferrer">Source sheet</a>.</p>
     <div class="drug-toolbar">
       <label>Sort by
         <select id="drug-sort">
@@ -627,7 +627,7 @@
     <h3 class="view-title">📝 Community Notes</h3>
     <p class="muted" style="font-size:0.75rem;max-width:720px">A neutral home for contribution notes, data corrections, and public project context.</p>
     <div class="panel">
-      <p>Use the repository issue tracker for reproducible data corrections and feature proposals. Do not post private inventories, account details, credentials, or personal information.</p>
+      <p><a class="content-link" href="https://github.com/ChrisFromNEPA/production-calculator-ER/issues">Report an issue or suggest an improvement</a> in the repository issue tracker. Include steps to reproduce data corrections and describe feature proposals. Do not post private inventories, account details, credentials, or personal information.</p>
     </div>
   </section>
 
@@ -643,7 +643,7 @@
       <div id="colonies-overview" class="colonies-overview" aria-label="Colony overview"><div class="col-metric"><b id="col-metric-production">—</b><span>production colonies</span></div><div class="col-metric"><b id="col-metric-owned">—</b><span>your faction</span></div><div class="col-metric"><b id="col-metric-dominion">—</b><span>Global Dominion worlds</span></div><div class="col-metric"><b id="col-metric-taxed">—</b><span>taxed worlds</span></div></div>
       <div id="colonies-toolbar" class="col-toolbar colonies-toolbar">
         <label class="colonies-search"><span>Find a colony or resource</span><input id="col-search" placeholder="Search ore, world, or faction…" aria-label="Filter colonies and resources" /></label>
-        <label class="colonies-filter"><span>Show</span><select id="col-filter" aria-label="Filter colony cards"><option value="all">Production and owned worlds</option><option value="mine">My faction's worlds</option><option value="global-dominion">Global Dominion worlds</option><option value="reference">Other known worlds</option></select></label>
+        <label class="colonies-filter"><span>Show</span><select id="col-filter" aria-label="Filter colony cards"><option value="all">Production + owned</option><option value="mine">My faction's worlds</option><option value="global-dominion">Global Dominion worlds</option><option value="reference">Other known worlds</option></select></label>
         <label class="checkbox-label colonies-legacy-filter"><input type="checkbox" id="col-priced-only" /> production only</label>
         <details id="colonies-world-data" class="colonies-world-data"><summary>World data</summary><div><span id="colony-world-status" class="muted" aria-live="polite">Saved on this device</span><button id="colony-world-export" class="ghost" type="button">Export</button><button id="colony-world-import" class="ghost" type="button">Import</button><button id="colony-world-reset" class="ghost danger" type="button">Reset</button><input id="colony-world-import-file" type="file" accept="application/json,.json" hidden aria-label="Import colony world data" /></div></details>
       </div>

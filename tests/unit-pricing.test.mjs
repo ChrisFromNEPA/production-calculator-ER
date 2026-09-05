@@ -157,15 +157,20 @@ describe('per-unit pricing table (shipped app-core renderer)', () => {
     assert.equal(renderPerUnitPricing(allUnpriced), '');
   });
 
-  it('planRequestedQty reads the tray without one, and stays null without globals', () => {
-    // No CALC_TRAY / LAST_SINGLE in this realm → null, never a crash.
+  it('requested quantity belongs to the computed plan, not a previous calculation or pending tray', () => {
     assert.equal(planRequestedQty('Linner PP7'), null);
-    // With a tray global it resolves the queued quantity.
-    globalThis.CALC_TRAY = [{ item: 'Linner PP7', qty: 3 }, { item: 'Emergency MediKit', qty: 7 }];
+    globalThis.CALC_TRAY = [{ item: 'Emergency MediKit', qty: 99 }];
     try {
-      assert.equal(planRequestedQty('Linner PP7'), 3);
-      assert.equal(planRequestedQty('Emergency MediKit'), 7);
-      assert.equal(planRequestedQty('something else'), null);
+      for (const qty of [10, 20]) {
+        const { plan } = compute([{ item: 'Emergency MediKit', qty }], {}, {}, null, 'Paris', null);
+        assert.equal(planRequestedQty('Emergency MediKit', plan), qty);
+        const cells = rowTds(renderPerUnitPricing(plan), 'Emergency Medikit');
+        assert.equal(cells[1], String(qty));
+        assert.match(cells[2], qty === 10 ? /^12/ : /^21/);
+      }
+      const { plan } = compute([{ item: 'Emergency MediKit', qty: 4 }, { item: 'Emergency MediKit', qty: 6 }], {}, {}, null, 'Paris', null);
+      assert.equal(planRequestedQty('Emergency MediKit', plan), 10);
+      assert.equal(planRequestedQty('something else', plan), null);
     } finally {
       delete globalThis.CALC_TRAY;
     }

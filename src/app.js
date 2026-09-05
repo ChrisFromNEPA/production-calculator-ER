@@ -547,7 +547,7 @@ function renderTransportSection(plan) {
     html += '<div class="transport-group">' +
       '<div class="transport-group-head">' +
         '<span class="transport-group-icon">📦</span>' +
-        '<span class="transport-group-colony">' + esc(colony) + '</span>' +
+        '<span class="transport-group-colony">' + esc(displayColonyName(colony)) + '</span>' +
         '<span class="transport-group-arrow">➜</span>' +
         '<span class="tag dest">' + esc(items[0]?.to || REFINE_DESTINATION || DESTINATION) + '</span>' +
         '<span class="transport-group-count">' + items.length + ' item' + (items.length !== 1 ? 's' : '') + '</span>' +
@@ -724,7 +724,7 @@ function colonyRows() {
     row.lore = loreForRow(row);
     if (row.lore) {
       usedLore[row.lore.id] = true;
-      row.name = row.lore.name;
+      row.name = displayColonyName(row.lore.name);
     }
     rows.push(row);
   });
@@ -736,7 +736,7 @@ function colonyRows() {
     if (matchedLore && !usedLore[matchedLore.id]) {
       row.lore = matchedLore;
       usedLore[row.lore.id] = true;
-      row.name = row.lore.name;
+      row.name = displayColonyName(row.lore.name);
       row.colony = row.lore.app_location || null;
     }
     rows.push(row);
@@ -747,7 +747,7 @@ function colonyRows() {
   colonyLoreRecords().forEach(function (lore) {
     if (usedLore[lore.id]) return;
     rows.push({
-      name: lore.name,
+      name: displayColonyName(lore.name),
       colony: lore.app_location || null,
       world: null,
       priced: false,
@@ -833,7 +833,7 @@ function renderColonyCard(r, mines, q) {
   return `<article class="colonies-card${own ? ' colonies-card-owned' : ''}" data-colony-card="${enc}">
     <div class="colonies-card-head"><div><span class="eyebrow">${r.priced ? 'Production world' : 'Owned world'}</span><h5>${esc(r.name)}</h5></div>${r.world ? `<button class="icon-action faction-audio" type="button" aria-label="Play welcome audio for ${esc(r.name)}" onclick="playAudio('voice_extracted/${r.world}.ogg',0.5)">🔊</button>` : ''}</div>
     <div class="colonies-card-status"><div class="owner-list" aria-label="Actual owner of ${esc(r.name)}">${colonyOwnerLabel(owners)}</div><span class="colony-tax-value">Tax <b>${rate}%</b></span></div>
-    ${lore ? `<div class="colony-lore-teaser">${esc(lore.location_context || 'Known world record')} · ${esc(lore.security?.visual || 'Security visual not recorded')}</div>` : ''}
+    ${lore ? `<div class="colony-lore-teaser">${esc(lore.location_context || 'Known world record')}</div>` : ''}
     <div class="colonies-resources"><span class="colonies-label">Mines here</span><div class="resource-list">${resources}</div></div>
     ${renderColonyLore(lore, yields)}
     <details class="colony-editor"><summary data-colony-edit="${enc}">Edit world state</summary><div class="colony-editor-body"><fieldset><legend>Actual owner</legend><label class="owner-check owner-check-clear"><input type="radio" name="colony-owner-${enc}" data-colony-clear="${enc}"${owners.length ? '' : ' checked'} /> Owner not set</label>${ownerOptions}</fieldset><p class="muted editor-hint">Global Dominion is the LED/FDC alliance; it is not a second owner. Only the actual owner receives the 85% return. Tax changes production cost.</p><label class="tax-editor">Colony tax <span><input type="number" min="0" max="500" step="5" value="${rate}" data-ct-tax="${enc}" aria-label="Tax percent at ${esc(r.name)}" /> %</span></label></div></details>
@@ -1056,7 +1056,7 @@ function renderAcquireSection(plan) {
     html += '<div class="transport-group">' +
       '<div class="transport-group-head">' +
         '<span class="transport-group-icon">⛏️</span>' +
-        '<span class="transport-group-colony">' + esc(colony) + '</span>' +
+        '<span class="transport-group-colony">' + esc(displayColonyName(colony)) + '</span>' +
         '<span class="transport-group-count">' + items.length + ' item' + (items.length !== 1 ? 's' : '') + '</span>' +
       '</div>' +
       '<div class="flow-grid">';
@@ -1071,7 +1071,7 @@ function renderAcquireSection(plan) {
             from.map(function (s) {
               return '<button type="button" class="mine-pick' + (s === t.chosen ? ' active' : '') + '"' +
                 ' data-obtain-item="' + esc(t.item) + '" data-site="' + esc(s) + '"' +
-                (s === t.chosen ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>' + esc(s) + '</button>';
+                (s === t.chosen ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>' + esc(displayColonyName(s)) + '</button>';
             }).join('') +
           '</div>'
         : '';
@@ -1176,7 +1176,7 @@ function renderColonyWorkSection(plan) {
     var refineCount = group.actions.filter(function (a) { return a.kind === 'refine'; }).length;
     html += '<div class="colony-work-group" data-work-colony="' + esc(group.colony) + '">' +
       '<div class="colony-work-head colony-work-toggle" data-colony-work-toggle role="button" tabindex="0" aria-expanded="true"><span class="transport-group-icon">🧭</span>' +
-        '<span class="transport-group-colony">' + esc(group.colony) + '</span>' +
+        '<span class="transport-group-colony">' + esc(displayColonyName(group.colony)) + '</span>' +
         '<span class="colony-work-count">' +
           (mineCount ? '⛏ ' + mineCount + ' mine' + (mineCount !== 1 ? 's' : '') : '') +
           (moveCount ? (mineCount ? ' · ' : '') + '📦 ' + moveCount + ' move' + (moveCount !== 1 ? 's' : '') : '') +
@@ -1196,7 +1196,7 @@ function renderColonyWorkSection(plan) {
             action.sites.map(function (site) {
               return '<button type="button" class="mine-pick' + (site === action.site ? ' active' : '') +
                 '" data-obtain-item="' + esc(action.item) + '" data-site="' + esc(site) +
-                '" aria-pressed="' + (site === action.site ? 'true' : 'false') + '">' + esc(site) + '</button>';
+                '" aria-pressed="' + (site === action.site ? 'true' : 'false') + '">' + esc(displayColonyName(site)) + '</button>';
             }).join('') + '</div>' : '';
         var batchHtml = mineTotal > 0
           ? renderMiningProgress(action.item, mineTotal, miningProgressFor(action.item, mineTotal), mineRemaining) +
@@ -1207,7 +1207,7 @@ function renderColonyWorkSection(plan) {
         html += '<div class="flow-card get colony-work-action' + (done ? ' done' : '') + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' +
           '<label class="transport-check"><input type="checkbox" class="obtain-cb" data-obtain-key="' + esc(action.item) + '"' + (done ? ' checked' : '') + ' /><span class="checkmark"></span></label>' +
           '<div class="flow-card-body"><div class="flow-chip">' + iconFor(action.item) + '<span class="flow-name">Mine ' + esc(displayName(action.item)) + '</span><span class="flow-qty need">' + fmt(action.qty) + '</span></div>' +
-          '<div class="flow-need">mine at ' + esc(action.site) + '</div>' + pickHtml + batchHtml + '</div></div>';
+          '<div class="flow-need">mine at ' + esc(displayColonyName(action.site)) + '</div>' + pickHtml + batchHtml + '</div></div>';
         return;
       }
 
@@ -1227,10 +1227,10 @@ function renderColonyWorkSection(plan) {
           return '<span class="colony-work-move-item">' + iconFor(item.item) + ' ' +
             esc(displayName(item.item)) + ' ×' + fmt(item.qty) + ' → ' + esc(item.to) + '</span>';
         }).join('');
-        var moveButton = '<button type="button" class="move-all-cargo-btn' + (batchDone ? ' done' : '') + '" data-move-all-cargo data-move-label="' + esc('Move all cargo from ' + batchOrigin + ' →') + '" aria-label="' + (batchDone ? 'Cargo moved' : 'Move all cargo from ' + esc(batchOrigin)) + '"' + (batchDone ? ' disabled' : '') + '>' + (batchDone ? '✓ Cargo moved' : 'Move all cargo →') + '</button>';
+        var moveButton = '<button type="button" class="move-all-cargo-btn' + (batchDone ? ' done' : '') + '" data-move-all-cargo data-move-label="' + esc('Move all cargo from ' + displayColonyName(batchOrigin) + ' →') + '" aria-label="' + (batchDone ? 'Cargo moved' : 'Move all cargo from ' + esc(displayColonyName(batchOrigin))) + '"' + (batchDone ? ' disabled' : '') + '>' + (batchDone ? '✓ Cargo moved' : 'Move all cargo →') + '</button>';
         html += '<div class="flow-card move move-batch-action colony-work-action' + (batchDone ? ' done' : '') + objectiveAttrs(objective && objective.id === window.CMG_COLONY_WORK.workActionId(action)) + '>' +
-          '<label class="transport-check"><input type="checkbox" class="transfer-cb" aria-label="Move all cargo from ' + esc(batchOrigin) + '" data-transfer-key="' + esc(batchKey) + '"' + (batchDone ? ' checked' : '') + ' /><span class="checkmark"></span></label>' +
-          '<div class="flow-card-body"><div class="flow-chip">📦<span class="flow-name">Move all cargo from ' + esc(batchOrigin) + '</span><span class="flow-qty owned">' + action.items.length + ' lot' + (action.items.length !== 1 ? 's' : '') + '</span></div>' +
+          '<label class="transport-check"><input type="checkbox" class="transfer-cb" aria-label="Move all cargo from ' + esc(displayColonyName(batchOrigin)) + '" data-transfer-key="' + esc(batchKey) + '"' + (batchDone ? ' checked' : '') + ' /><span class="checkmark"></span></label>' +
+          '<div class="flow-card-body"><div class="flow-chip">📦<span class="flow-name">Move all cargo from ' + esc(displayColonyName(batchOrigin)) + '</span><span class="flow-qty owned">' + action.items.length + ' lot' + (action.items.length !== 1 ? 's' : '') + '</span></div>' +
           '<div class="colony-work-move-items">' + batchDetails + '</div>' + moveButton + '</div></div>';
         return;
       }
@@ -1690,10 +1690,10 @@ function renderRouteSummary(plan) {
   var flow = [];
   flow.push('<span><b>Obtain</b> materials at ' + esc(sourceLabel) + '.</span>');
   if (hasRefinement && REFINE_DESTINATION !== DESTINATION) {
-    flow.push('<span><b>Refine</b> intermediates at ' + esc(REFINE_DESTINATION) + '.</span>');
-    flow.push('<span><b>Move</b> completed intermediates to ' + esc(DESTINATION) + '.</span>');
+    flow.push('<span><b>Refine</b> intermediates at ' + esc(displayColonyName(REFINE_DESTINATION)) + '.</span>');
+    flow.push('<span><b>Move</b> completed intermediates to ' + esc(displayColonyName(DESTINATION)) + '.</span>');
   }
-  flow.push('<span><b>Manufacture</b> the final item at ' + esc(DESTINATION) + '.</span>');
+  flow.push('<span><b>Manufacture</b> the final item at ' + esc(displayColonyName(DESTINATION)) + '.</span>');
   var directHtml = directRoutes.length
     ? '<div class="route-summary-direct"><b>Direct to production:</b> ' + directRoutes.map(function (move) {
         return esc(displayName(move.item)) + ' · ' + esc(move.from) + ' → ' + esc(move.to);
@@ -1809,6 +1809,9 @@ function renderPlan(item, qty, targetEl) {
   // Stock of the requested item no longer cancels the request — the plan always
   // makes the amount asked for — so this is now purely informational.
   const alreadyHave = INV_TOTAL[item] || 0;
+  const produced = plan.manufacture.filter(step => step.item === item)
+    .reduce((total, step) => total + step.produced, 0);
+  const extra = Math.max(0, produced - qty);
   const dashboardHtml = renderMaterialDashboard(plan);
   const statsHtml = renderPlanStats(plan);
 
@@ -1830,22 +1833,22 @@ function renderPlan(item, qty, targetEl) {
         <span class="plan-summary-qty">× ${fmt(qty)}</span>
       </div>
       <div class="single-head-route">
-        <span class="single-head-badge">Manufacture at ${esc(DESTINATION)}</span>
-        ${REFINE_DESTINATION !== DESTINATION ? `<span class="single-head-badge refine">Refine at ${esc(REFINE_DESTINATION)}</span>` : ''}
+        <span class="single-head-badge">Manufacture at ${esc(displayColonyName(DESTINATION))}</span>
+        ${REFINE_DESTINATION !== DESTINATION ? `<span class="single-head-badge refine">Refine at ${esc(displayColonyName(REFINE_DESTINATION))}</span>` : ''}
       </div>
       <div class="single-head-note">${fmt(plan.refine.length)} refinement · ${fmt(plan.manufacture.length)} manufacture action${plan.manufacture.length === 1 ? '' : 's'} · follow the colony itinerary below</div>
     </div>
     <div class="card plan">
-      <div class="plan-hero-note${alreadyHave > 0 ? ' has-stock' : ''}">${alreadyHave > 0
-        ? 'Holding <b>' + fmt(alreadyHave) + '</b> · plan makes <b>' + fmt(qty) + '</b> more → <b>' + fmt(alreadyHave + qty) + '</b> total. Existing stock is left alone.'
-        : 'This production run makes <b>' + fmt(qty) + ' × ' + esc(displayName(item)) + '</b>.'}</div>
+      <div class="plan-hero-note${alreadyHave > 0 ? ' has-stock' : ''}"><span>Requested: <b>${fmt(qty)}</b>.
+        This run produces <b>${fmt(produced)} × ${esc(displayName(item))}</b>${extra > 0 ? ', including <b>' + fmt(extra) + ' extra</b>' : ''}.
+        ${alreadyHave > 0 ? 'Holding <b>' + fmt(alreadyHave) + '</b> already → <b>' + fmt(alreadyHave + produced) + '</b> total after production. Existing stock is left alone.' : ''}</span></div>
       ${statsHtml}
       ${drugPlanHtml}
       <div id="calc-paths" class="calc-paths" hidden></div>
       ${dashboardHtml}
 
       ${planSection('colony-work', 1, 'Visit, mine, move & refine by colony', colonyWorkHtml)}
-      ${planSection('manufacture', 2, 'Manufacture at ' + esc(DESTINATION),
+      ${planSection('manufacture', 2, 'Manufacture at ' + esc(displayColonyName(DESTINATION)),
         (drugRef ? drugProductionInstruction(drugRef) : '') + manufactureHtml)}
       ${renderMiningPanel(plan)}
       <div class="apply-plan-note">Applying the plan records completed products in inventory. Any unused batch surplus stays at the colony where it was produced; refinement leftovers stay at the refinement colony until you move them.</div>
@@ -2061,7 +2064,7 @@ function runMultiPlan(options) {
     if (scratch) { STORE.INV_TOTAL = tmpTotal; STORE.INV_LOCATIONS = tmpLocs; }
   }
 
-  let html = `<div class="multi-head">Combined production plan · ${CALC_TRAY.length} item(s) → ${esc(DESTINATION)}${REFINE_DESTINATION !== DESTINATION ? ' · refine at ' + esc(REFINE_DESTINATION) : ''}${scratch ? ' · ignoring current inventory' : ''}</div>`;
+  let html = `<div class="multi-head">Combined production plan · ${CALC_TRAY.length} item(s) → ${esc(displayColonyName(DESTINATION))}${REFINE_DESTINATION !== DESTINATION ? ' · refine at ' + esc(displayColonyName(REFINE_DESTINATION)) : ''}${scratch ? ' · ignoring current inventory' : ''}</div>`;
 
   // Dashboard + stats for combined plan
   const statsHtml = renderPlanStats(plan);
@@ -2079,7 +2082,7 @@ function runMultiPlan(options) {
   const mManufacture = plan.manufacture.length ? plan.manufacture.map(s => stepCard(s, true,
     mColonyObjective && mColonyObjective.id === window.CMG_COLONY_WORK.workActionId({ ...s, kind: 'manufacture' }))).join('') : '<div class="muted">No manufacturing step.</div>';
   html += planSection('colony-work', 1, 'Visit, mine, move & refine by colony', mColonyWork);
-  html += planSection('manufacture', 2, 'Manufacture at ' + esc(DESTINATION), mManufacture);
+  html += planSection('manufacture', 2, 'Manufacture at ' + esc(displayColonyName(DESTINATION)), mManufacture);
   html += renderMiningPanel(plan);
 
   if (CALC_TRAY.length) {
@@ -2148,8 +2151,8 @@ function loadSavedPlan(id) {
   // "apartment" save) falls back to the current valid destination instead of
   // being reintroduced. The repaired state is persisted below.
   const validDest = validFinalProduction(p.dest) ? p.dest : DESTINATION;
-  const savedRefineDest = validRefinement(p.refineDest) ? p.refineDest
-    : validRefinement(p.dest) ? p.dest : validDest;
+  const savedRefineDest = validRefinement(p.refineDest) ? normalizeRefinementLocation(p.refineDest)
+    : validRefinement(p.dest) ? normalizeRefinementLocation(p.dest) : validDest;
   const destSel = document.getElementById('calc-dest');
   if (destSel && validDest) destSel.value = validDest;
   DESTINATION = validDest;
@@ -2177,7 +2180,7 @@ function normalizeSavedPlans() {
   SAVED_PLANS = (Array.isArray(SAVED_PLANS) ? SAVED_PLANS : []).filter(p => p && typeof p === 'object').map(p => {
     const dest = validFinalProduction(p.dest) ? p.dest : fallbackDest;
     const refineDest = validRefinement(p.refineDest)
-      ? p.refineDest
+      ? normalizeRefinementLocation(p.refineDest)
       : validRefinement(dest) ? dest : fallbackDest;
     if (p.dest !== dest || p.refineDest !== refineDest) {
       repaired = true;

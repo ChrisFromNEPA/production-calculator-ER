@@ -6,6 +6,15 @@ All notable public releases are documented here.
 
 ### Fixed
 
+- Corrected requested quantities and batch-rounded output summaries, including
+  existing-stock totals; clarified that total surplus includes intermediates.
+- Kept calculator summary sentences and Gear 1.10 goal scores readable on phones.
+- Improved reference-link contrast, widened the colony filter, and linked the
+  Community Notes issue tracker.
+- Standardized colony display names and removed the duplicate Andromeda
+  refinement choice while preserving legacy saved refinement selections.
+- Kept raw colony security observations in the detailed intel section and
+  allowed explicitly Unaffiliated profiles to complete onboarding.
 - Restyled the current Refine/Manufacture objective marker as a contained,
   theme-aware badge instead of black text leaking from the card's accent rail.
 - Reflowed recipe input and output rows on narrow screens so item names wrap at

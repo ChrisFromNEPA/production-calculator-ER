@@ -13,7 +13,7 @@ const player = readFileSync(join(root, 'src/views/player.js'), 'utf8');
 const css = readFileSync(join(root, 'src/styles/ux-release.css'), 'utf8');
 
 test('profile gate requires a real name and faction before navigation', async (t) => {
-  await t.test('stores a reusable completeness predicate and rejects unaffiliated defaults', () => {
+  await t.test('stores a reusable completeness predicate with unaffiliated support', () => {
     assert.match(store, /function isProfileComplete\(/);
     assert.match(store, /UNAFFILIATED/);
     assert.match(store, /isProfileComplete/);
