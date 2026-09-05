@@ -27,7 +27,7 @@ describe('calculator UX improvements', () => {
   });
 
   it('uses complete plain-language result and route summaries', () => {
-    assert.match(app, /This production run makes[^<]*<b>.*displayName\(item\)/s);
+    assert.match(app, /This run produces <b>\$\{fmt\(produced\)\}.*displayName\(item\)/s);
     assert.match(app, /function renderRouteSummary\(/);
     assert.match(app, /<b>Refine<\/b> intermediates at/);
     assert.match(app, /<b>Manufacture<\/b> the final item at/);

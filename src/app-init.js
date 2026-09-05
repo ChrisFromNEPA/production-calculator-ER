@@ -70,7 +70,7 @@ function refreshActivePublicView() {
 window.refreshActivePublicView = refreshActivePublicView;
 
 function requiredFactionOptions() {
-  const factions = (window.ER_FACTIONS?.selectable || []).filter(f => f.id !== 'UNAFFILIATED');
+  const factions = window.ER_FACTIONS?.selectable || [];
   return '<option value="" disabled selected>Choose a faction…</option>' + factions.map(f =>
     `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
 }

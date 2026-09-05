@@ -57,7 +57,7 @@ describe('production destination boundaries', () => {
     // refinementLocationList() allowlist helper (t_db1c1893) so saved-state
     // and saved-plan loads validate against the identical list. Manhattan
     // itself stays available.
-    assert.match(core, /const skip = new Set\(\['nyc manhattan', 'xenomorph hunt \(capped on kills\)', 'apartment'\]\);\n  return allKnownLocations\(\)\.filter/);
+    assert.match(core, /const skip = new Set\(\['nyc manhattan', 'xenomorph hunt \(capped on kills\)', 'apartment'\]\);\n  return \[\.\.\.new Set\(allKnownLocations\(\)\.filter/);
     assert.match(core, /refinementLocations = refinementLocationList\(\)/);
   });
 

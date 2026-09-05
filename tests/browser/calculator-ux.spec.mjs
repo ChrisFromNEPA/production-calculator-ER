@@ -418,6 +418,23 @@ describe('real-browser calculator UX smoke', () => {
     assert.equal(snapshot.executionPresent, false);
     assert.equal(snapshot.planVisible, true);
     assert.equal(await evalJs(state.page, 'document.title'), 'Empire Rising Production Calculator');
+    const quantities = await evalJs(state.page, `(() => {
+      const read = () => ({
+        requested: document.querySelector('#calc-result .unit-table tbody tr td:nth-child(2)').textContent.trim(),
+        summary: document.querySelector('#calc-result .plan-hero-note').textContent.replace(/\\s+/g, ' ').trim(),
+      });
+      const first = read();
+      document.getElementById('calc-qty').value = '20';
+      document.getElementById('calc-run').click();
+      const next = read();
+      document.getElementById('calc-qty').value = '10';
+      document.getElementById('calc-run').click();
+      return { first, next };
+    })()`);
+    assert.equal(quantities.first.requested, '10');
+    assert.match(quantities.first.summary, /produces 12 × Emergency Medikit, including 2 extra/);
+    assert.equal(quantities.next.requested, '20');
+    assert.match(quantities.next.summary, /produces 21 × Emergency Medikit, including 1 extra/);
   });
 
   smokeIt('keeps invalid quantity from leaving stale execution markup', async () => {

@@ -140,13 +140,13 @@ function setPlayerFaction(name, faction) {
   return true;
 }
 
-// A profile is ready for app navigation only after the player has supplied a
-// name and selected a real faction. Legacy/neutral profiles stay readable so
-// their inventory can be repaired through onboarding, but they do not unlock
-// the workbench or other tabs.
+// A name and an explicit faction choice complete a profile. Unaffiliated is
+// a valid choice; an empty placeholder or unknown faction is not.
 function isProfileComplete(name, faction) {
   const playerName = String(name == null ? '' : name).trim();
-  return !!playerName && normalizeFaction(faction) !== DEFAULT_FACTION;
+  const choice = String(faction == null ? '' : faction).trim().toUpperCase();
+  return !!playerName && !!choice &&
+    (choice === DEFAULT_FACTION || choice === 'CIVILIAN' || normalizeFaction(choice) !== DEFAULT_FACTION);
 }
 
 function migrateLocationNames(store) {

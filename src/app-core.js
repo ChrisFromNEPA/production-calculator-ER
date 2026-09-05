@@ -187,25 +187,43 @@ function storageList() {
 // entry point — selector population, saved-state load, saved-plan load and
 // the what-if handler — validates through these helpers, so a rejected
 // legacy location can never re-enter through a side door.
+function displayColonyName(location) {
+  const names = {
+    andromeda: 'Andromeda City', andromedacity: 'Andromeda City',
+    keplersdome: "Kepler's Dome", necarsfield: "Necar's Field",
+    demorganscastle: "DeMorgan's Castle", nycbrooklyn: 'Brooklyn',
+    nycgroundzero: 'Ground Zero', nycmanhattan: 'Manhattan',
+  };
+  return names[String(location).replace(/[^a-z0-9]/gi, '').toLowerCase()] || location;
+}
+
+// Keep the existing mining/inventory key; collapse only the duplicate
+// refinement choice and normalize saved refinement aliases at the boundary.
+function normalizeRefinementLocation(location) {
+  return location === 'Andromeda City' ? 'Andromeda' : location;
+}
+
 function refinementLocationList() {
   const skip = new Set(['nyc manhattan', 'xenomorph hunt (capped on kills)', 'apartment']);
-  return allKnownLocations().filter(c => !skip.has(c.toLowerCase()));
+  return [...new Set(allKnownLocations().filter(c => !skip.has(c.toLowerCase()))
+    .map(normalizeRefinementLocation))];
 }
 function validFinalProduction(loc) {
   return !!loc && colonyList().includes(loc);
 }
 function validRefinement(loc) {
-  return !!loc && refinementLocationList().includes(loc);
+  return !!loc && refinementLocationList().includes(normalizeRefinementLocation(loc));
 }
 
 function populateDestinations() {
+  REFINE_DESTINATION = normalizeRefinementLocation(REFINE_DESTINATION);
   const sel = document.getElementById('calc-dest');
   let colonies = colonyList();
   if (sel) {
     sel.innerHTML = '';
     colonies.forEach(c => {
       const o = document.createElement('option');
-      o.value = c; o.textContent = c;
+      o.value = c; o.textContent = displayColonyName(c);
       sel.appendChild(o);
     });
   }
@@ -223,7 +241,7 @@ function populateDestinations() {
     refineSel.innerHTML = '';
     refinementLocations.forEach(c => {
       const o = document.createElement('option');
-      o.value = c; o.textContent = c;
+      o.value = c; o.textContent = displayColonyName(c);
       refineSel.appendChild(o);
     });
     const refineTarget = REFINE_DESTINATION && refinementLocations.includes(REFINE_DESTINATION)
@@ -320,6 +338,11 @@ function syncCombinedSelector() {
 // the selectors, and persist whatever was repaired so the next load is clean.
 function normalizeSavedDestinations() {
   let repaired = false;
+  const normalizedRefine = normalizeRefinementLocation(REFINE_DESTINATION);
+  if (normalizedRefine !== REFINE_DESTINATION) {
+    REFINE_DESTINATION = normalizedRefine;
+    repaired = true;
+  }
   if (DESTINATION && !validFinalProduction(DESTINATION)) {
     DESTINATION = 'Berlin';
     window.ENGINE.DESTINATION = DESTINATION;
@@ -1207,17 +1230,8 @@ function costBreakdown(cost, plan) {
 //   Cost/unit         — this item's share of the plan's real spend, ÷ units
 //   Net faction cost/unit — same, minus the faction rebate share on colonies
 //                        we own (Cost/unit − 85% of the owned-colony share)
-function planRequestedQty(item) {
-  try {
-    if (typeof CALC_TRAY !== 'undefined' && CALC_TRAY && CALC_TRAY.length) {
-      const t = CALC_TRAY.find(x => x.item === item);
-      if (t && t.qty) return t.qty;
-    }
-    if (typeof LAST_SINGLE !== 'undefined' && LAST_SINGLE && LAST_SINGLE.item === item && LAST_SINGLE.qty) {
-      return LAST_SINGLE.qty;
-    }
-  } catch (e) {}
-  return null;
+function planRequestedQty(item, plan) {
+  return plan?.requestedQuantities?.[item] ?? null;
 }
 
 // Per-item ACTUAL cost attribution from the plan ledger.
@@ -1314,7 +1328,7 @@ function renderPerUnitPricing(plan) {
 
     const unit = total / s.produced;
     const netFactionUnit = (total - activeFactionReturnRate() * owned) / s.produced;
-    const req = planRequestedQty(s.item);
+    const req = planRequestedQty(s.item, plan);
     const tip = 'One unit of ' + esc(displayName(s.item)) + '\'s share of the plan\'s actual costs — its processing fees (colony tax, slot upkeep and session drift included) plus its materials, allocated down the recipe chain. Rows add up to the Investment and faction cost totals above. Faction figure nets out the ' + rebatePct + '% configured return on colonies owned by ' + factionName + '.';
 
     return `<tr>
@@ -1412,7 +1426,7 @@ function renderPlanStats(plan) {
     { cls: 'mat', icon: '⚗', val: fmt(rawCount), label: 'raw materials' },
     { cls: 'stp', icon: '⚙', val: fmt(refineCount + mfgCount), label: 'production actions', detail: `${fmt(refineCount)} refine · ${fmt(mfgCount)} manufacture` }
   ];
-  if (surplusTotal > 0) tiles.push({ cls: 'spl', icon: '＋', val: '+' + fmt(surplusTotal), label: 'batch surplus' });
+  if (surplusTotal > 0) tiles.push({ cls: 'spl', icon: '＋', val: '+' + fmt(surplusTotal), label: 'total batch surplus', detail: 'final + intermediate items' });
 
   const kpiHtml = `<div class="kpi-strip">${tiles.map((t, i) =>
     `<div class="kpi-tile kpi-${t.cls} stagger-${i}">
@@ -2327,4 +2341,3 @@ function hydrateWorkspaceRuntime() {
   if (typeof window.refreshAll === 'function') window.refreshAll();
 }
 window.CMG_HYDRATE_WORKSPACE = hydrateWorkspaceRuntime;
-

@@ -696,6 +696,7 @@ function compute(itemOrItems, qtyOrChosen, chosenOpt, extLedger, extInvLoc, dest
   return {
     plan: {
       transport, acquire, refine, manufacture, steps, surplus,
+      requestedQuantities: { ...requestedQty },
       destination: dest,
       refineDestination: refineDest,
       finalTransport,

@@ -493,7 +493,7 @@
       const now = goalScore(before, goal);
       const next = goalScore(after, goal);
       const delta = next - now;
-      return `<span class="patch-chip patch-goalchip" title="${escText(goal.label)} — ${escText(goal.formula)}"><span aria-hidden="true">${goal.icon}</span> ${escText(goal.label)} <small class="patch-goalchip-formula">(${escText(goal.formula)})</small> <b>${escText(comparisonText(now, next))}</b>${delta !== 0 ? `<em class="patch-delta-chip ${delta > 0 ? 'is-up' : 'is-down'}">${signed(delta)} patch</em>` : ''}</span>`;
+      return `<span class="patch-chip patch-goalchip" title="${escText(goal.label)} — ${escText(goal.formula)}"><span class="patch-goalchip-label"><span aria-hidden="true">${goal.icon}</span> ${escText(goal.label)}</span><small class="patch-goalchip-formula">${escText(goal.formula)}</small><b>${escText(comparisonText(now, next))}</b>${delta !== 0 ? `<em class="patch-delta-chip ${delta > 0 ? 'is-up' : 'is-down'}">${signed(delta)} patch</em>` : ''}</span>`;
     }).join('');
     const rows = keys.map(key => {
       const delta = (after[key] || 0) - (before[key] || 0);

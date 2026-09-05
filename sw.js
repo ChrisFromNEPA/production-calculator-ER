@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'er-prodcalc-';
-const CACHE = 'er-prodcalc-v0.2.49-shell';
-const RUNTIME_CACHE = 'er-prodcalc-v0.2.49-runtime';
+const CACHE = 'er-prodcalc-v0.2.50-shell';
+const RUNTIME_CACHE = 'er-prodcalc-v0.2.50-runtime';
 const MAX_RUNTIME_ENTRIES = 32;
 const OPTIONAL_RUNTIME_DIRECTORIES = [
   'src/vendor/', 'maps/', 'icons/',
